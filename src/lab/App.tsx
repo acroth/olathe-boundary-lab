@@ -1,174 +1,135 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapRef, ViewState } from 'react-map-gl/maplibre';
-import { areaGeom, dataBase, loadStatic, type Edit, type Level, type Static } from './data';
-import type { LevelResult } from './model/engine';
-import { newId, planFromPreset, usePlan, useUI, type Plan } from './store';
-import { decodePlan, encodePlan } from './url';
-import MapPanel from './map/MapPanel';
-import Sidebar from './ui/Sidebar';
-import MapToolbar from './ui/MapToolbar';
-import TopBar from './ui/TopBar';
-import Legend from './ui/Legend';
-import Rail from '@/components/Rail';
 import { Loader2 } from 'lucide-react';
-import { visibleSet } from './visible';
+import Rail from '@/components/Rail';
+import { facesGeometry, LEVELS, loadStatic, type Level, type Static } from './data';
+import { useDrawCallbacks } from './hooks/useDrawCallbacks';
+import { useModelResults, type Results } from './hooks/useModelResults';
+import { applyLinkedState, writeLinkedState } from './linkedState';
+import MapPanel from './map/MapPanel';
 import { schoolNumbers, type SchoolNumber } from './numbers';
 import { buildPlan } from './planBuilder';
-import type { DrawCallbacks } from './map/drawing';
+import { usePlan, useUI } from './store';
+import Legend from './ui/Legend';
+import MapToolbar from './ui/MapToolbar';
+import Sidebar from './ui/Sidebar';
+import TopBar from './ui/TopBar';
+import { visibleSet } from './visible';
 
-export interface Results { levels: Record<Level, LevelResult>; feeder: { es: number; split: { ms: number; share: number }[] }[] }
+export type { Results };
 
 const INITIAL_VIEW = { longitude: -94.80, latitude: 38.895, zoom: 11.2 };
+const LINK_UPDATE_DELAY_MS = 300;
+const TOAST_MS = 3500;
+const NEXT_SHEET_SIZE = { peek: 'half', half: 'full', full: 'peek' } as const;
+const BUILDER_SUBTITLE: Record<Level, string> = {
+  es: 'Pick a district concept for each closing school',
+  ms: 'Pick a middle school concept',
+  hs: 'No district concept changes high schools',
+};
+
+/** The bounding box of every attendance area in the chosen high school areas; null when there are none. */
+function boundsOfAreas(staticData: Static, areas: string[]): [[number, number], [number, number]] | null {
+  let west = 180, south = 90, east = -180, north = -90;
+  for (const level of LEVELS) {
+    for (const feature of staticData.zones[level].features) {
+      if (!areas.includes(staticData.schools[feature.properties!.school].area)) continue;
+      const geometry = feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+      const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+      for (const polygon of polygons) {
+        for (const [longitude, latitude] of polygon[0]) {
+          west = Math.min(west, longitude); south = Math.min(south, latitude);
+          east = Math.max(east, longitude); north = Math.max(north, latitude);
+        }
+      }
+    }
+  }
+  return east > west ? [[west, south], [east, north]] : null;
+}
+
+/** Map padding that keeps fitted areas clear of the floating panel, top bar and legend. */
+export function mapPadding() {
+  const { sheet, panelOpen } = useUI.getState();
+  if (window.innerWidth >= 768) return { top: 90, left: panelOpen ? 420 : 40, right: 260, bottom: 40 };
+  const sheetHeight = { peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[sheet];
+  return { top: 132, left: 16, right: 16, bottom: sheetHeight + 16 };
+}
 
 export default function App() {
-  const [S, setS] = useState<Static | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [resA, setResA] = useState<Results | null>(null);
-  const resRef = useRef<Results | null>(null); resRef.current = resA;
-  const [resB, setResB] = useState<Results | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [staticData, setStaticData] = useState<Static | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [fallback, setFallback] = useState(0);
   const [view, setView] = useState<Partial<ViewState>>(INITIAL_VIEW);
   const mapRef = useRef<MapRef | null>(null);
-  const plan = usePlan(s => s.plan);
+  const plan = usePlan(state => state.plan);
   const ui = useUI();
-  const worker = useRef<Worker | null>(null);
-  const reqId = useRef(0);
-
-  const faceGeom = useCallback((ids: number[]): GeoJSON.MultiPolygon => {
-    const coords: any[] = [];
-    for (const id of ids) { const g: any = S!.faces.features[id]?.geometry; if (!g) continue; if (g.type === 'Polygon') coords.push(g.coordinates); else coords.push(...g.coordinates); }
-    return { type: 'MultiPolygon', coordinates: coords };
-  }, [S]);
 
   useEffect(() => {
-    loadStatic().then(st => {
-      setS(st);
-      const hash = new URLSearchParams(location.hash.slice(1));
-      const enc = hash.get('plan');
-      const fg = (ids: number[]) => { const coords: any[] = []; for (const id of ids) { const g: any = st.faces.features[id]?.geometry; if (g) coords.push(...(g.type === 'Polygon' ? [g.coordinates] : g.coordinates)); } return { type: 'MultiPolygon', coordinates: coords } as GeoJSON.MultiPolygon; };
-      const p = enc ? decodePlan(enc, st.presets, fg, r => areaGeom(st, r)) : null;
-      const bq = hash.get('build');
-      if (bq && st.combos) {   // build=1.1.1.1.1 or build=1.1.1.1.1~630,PR-BE (explicit moves)
-        const [a, m] = bq.split('~'); const sel = a.split('.').map(Number);
-        const moves = m !== undefined ? Object.fromEntries(st.combos.moves.map(x => [x.id, m.split(',').includes(x.id)])) : null;
-        const msq = hash.get('ms'); const ms = msq !== null && /^\d$/.test(msq) ? Number(msq) : 1;
-        if (sel.length === st.combos.schools.length && sel.every(x => x > 0)) useUI.getState().set({ mode: 'build', tool: 'pan', build: { sel, moves, ms } });
-      }
-      const lq = hash.get('level'); if (lq === 'ms' || lq === 'hs') useUI.getState().set({ level: lq });
-      if ((p && !bq) || hash.get('mode') === 'draw') useUI.getState().set({ mode: 'draw' });   // shared free-draw links open in free draw
-      usePlan.getState().setPlan(p ?? planFromPreset(st.presets.find(x => x.id === 'district')!));
-      usePlan.temporal.getState().clear();
-      const cmp = hash.get('compare');
-      if (cmp) { const b = decodePlan(cmp, st.presets, fg, r => areaGeom(st, r)); if (b) useUI.getState().set({ compare: b }); }
-    }).catch(e => setErr(String(e)));
-    // Background thread when the host allows it; otherwise the same code runs on the page.
-    const inline = () => {
-      const et = new EventTarget() as any;
-      et.postMessage = (d: any) => import('./compute').then(m => m.handle(d)).then(r => et.dispatchEvent(new MessageEvent('message', { data: r })));
-      et.terminate = () => {};
-      return et as Worker;
-    };
-    try {
-      const w = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
-      w.addEventListener('error', () => { if (worker.current === w) { worker.current = inline(); reqId.current++; setFallback(f => f + 1); } });
-      worker.current = w;
-    } catch { worker.current = inline(); }
-    return () => worker.current?.terminate();
+    loadStatic().then(data => {
+      setStaticData(data);
+      applyLinkedState(data);
+    }).catch(error => setLoadError(String(error)));
   }, []);
 
   // option builder: the plan follows the chosen concepts
   useEffect(() => {
-    if (!S || ui.mode !== 'build' || !S.combos) return;
-    usePlan.getState().setPlan(buildPlan(S, ui.build.sel, ui.build.moves, ui.build.ms));
-  }, [S, ui.mode, ui.build]);
+    if (!staticData || ui.mode !== 'build' || !staticData.combos) return;
+    usePlan.getState().setPlan(buildPlan(staticData, ui.build.sel, ui.build.moves, ui.build.ms));
+  }, [staticData, ui.mode, ui.build]);
 
-  // recompute when the plan (or compare plan) changes
-  useEffect(() => {
-    if (!S || !worker.current) return;
-    const id = ++reqId.current;
-    const strip = (p: Plan) => ({ closures: p.closures, edits: p.edits, includePreK: ui.includePreK });
-    const plans: Record<string, any> = { A: strip(plan) };
-    if (ui.compare) plans.B = strip(ui.compare);
-    setBusy(true);
-    const t = setTimeout(() => worker.current!.postMessage({ id, plans, base: dataBase() }), 30);
-    const onMsg = (ev: MessageEvent) => {
-      if (ev.data.id !== reqId.current) return;
-      setBusy(false);
-      if (ev.data.error) { console.error(ev.data.error); useUI.getState().set({ toast: 'Calculation error: ' + ev.data.error.split('\n')[0] }); return; }
-      setResA(ev.data.res.A); setResB(ev.data.res.B ?? null);
-    };
-    worker.current.addEventListener('message', onMsg);
-    return () => { clearTimeout(t); worker.current?.removeEventListener('message', onMsg); };
-  }, [S, plan, ui.compare, ui.includePreK, fallback]);
+  const { planResults, compareResults, isUpdating } = useModelResults(staticData, plan, ui.compare, ui.includePreK);
+  const latestResults = useRef<Results | null>(null);
+  latestResults.current = planResults;
 
   // keep the plan in the URL
   useEffect(() => {
-    if (!S) return;
-    const t = setTimeout(() => {
-      const h = new URLSearchParams();
-      if (useUI.getState().mode === 'build') {
-        const b = useUI.getState().build;
-        h.set('build', b.sel.join('.') + (b.moves ? '~' + Object.keys(b.moves).filter(k => b.moves![k]).join(',') : ''));
-        if (b.ms !== 1) h.set('ms', String(b.ms));
-      } else h.set('plan', encodePlan(plan, S.presets));
-      if (ui.level !== 'es') h.set('level', ui.level);
-      if (ui.compare) h.set('compare', encodePlan(ui.compare, S.presets));
-      try { history.replaceState(null, '', '#' + h.toString()); } catch { /* sandboxed */ }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [plan, ui.compare, S, ui.mode, ui.build, ui.level]);
+    if (!staticData) return;
+    const update = setTimeout(() => writeLinkedState(staticData, plan, ui.level, ui.compare), LINK_UPDATE_DELAY_MS);
+    return () => clearTimeout(update);
+  }, [plan, ui.compare, staticData, ui.mode, ui.build, ui.level]);
 
-  useEffect(() => { if (!ui.toast) return; const t = setTimeout(() => useUI.getState().set({ toast: null }), 3500); return () => clearTimeout(t); }, [ui.toast]);
+  useEffect(() => {
+    if (!ui.toast) return;
+    const hide = setTimeout(() => useUI.getState().set({ toast: null }), TOAST_MS);
+    return () => clearTimeout(hide);
+  }, [ui.toast]);
 
   // undo / redo keys
   useEffect(() => {
-    const k = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? usePlan.temporal.getState().redo() : usePlan.temporal.getState().undo(); }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'z') return;
+      event.preventDefault();
+      const history = usePlan.temporal.getState();
+      if (event.shiftKey) history.redo();
+      else history.undo();
     };
-    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const drawCb: DrawCallbacks = useMemo(() => ({
-    getBrush: () => useUI.getState().brush,
-    getLevel: () => useUI.getState().level,
-    getEdits: () => usePlan.getState().plan.edits,
-    addEdit: (e) => usePlan.getState().addEdit({ ...e, id: newId() } as Edit),
-    extendBlocks: (faces) => {
-      const { brush, level } = useUI.getState();
-      const st = usePlan.getState(); const last = st.plan.edits[st.plan.edits.length - 1];
-      if (last && last.kind === 'blocks' && last.school === brush && last.level === level) {
-        const all = [...new Set([...(last.faces ?? []), ...faces])];
-        st.updateEdit(last.id, { faces: all, geom: faceGeom(all) });
-      } else st.addEdit({ id: newId(), level, school: brush, kind: 'blocks', faces, geom: faceGeom(faces) });
-    },
-    removeEdit: (id) => usePlan.getState().removeEdit(id),
-    updateGeom: (id, g) => usePlan.getState().updateEdit(id, { geom: g, faces: undefined }),
-    toast: (s) => useUI.getState().set({ toast: s }),
-    selectEdit: (id) => useUI.getState().set({ selectedEdit: id }),
-    getSnap: () => useUI.getState().snap,
-    getZones: () => resRef.current?.levels[useUI.getState().level]?.zones ?? { type: 'FeatureCollection', features: [] },
-    getPickBy: () => useUI.getState().pickBy,
-  }), [faceGeom]);
+  const faceGeometry = useCallback((faceIds: number[]) => facesGeometry(staticData!, faceIds), [staticData]);
+  const drawCallbacks = useDrawCallbacks(faceGeometry, latestResults);
 
   const diffHomes = useMemo(() => {
-    if (!ui.diff || !resA || !resB) return null;
-    const a = resA.levels[ui.level].assign, b = resB.levels[ui.level].assign, d = new Uint8Array(a.length);
-    for (let i = 0; i < a.length; i++) d[i] = a[i] !== b[i] ? 1 : 0;
-    return d;
-  }, [ui.diff, resA, resB, ui.level]);
+    if (!ui.diff || !planResults || !compareResults) return null;
+    const planAssignment = planResults.levels[ui.level].assign, compareAssignment = compareResults.levels[ui.level].assign;
+    const differs = new Uint8Array(planAssignment.length);
+    for (let home = 0; home < planAssignment.length; home++) differs[home] = planAssignment[home] !== compareAssignment[home] ? 1 : 0;
+    return differs;
+  }, [ui.diff, planResults, compareResults, ui.level]);
 
-  const vis = useMemo(() => (S ? visibleSet(S, resA, ui.areas, plan.closures) : new Set<number>()), [S, resA, ui.areas, plan.closures]);
+  const visibleSchools = useMemo(() => {
+    return staticData ? visibleSet(staticData, planResults, ui.areas, plan.closures) : new Set<number>();
+  }, [staticData, planResults, ui.areas, plan.closures]);
   const planNumbers = useMemo(() => {
-    if (!S) return new Map<number, SchoolNumber>();
-    return schoolNumbers(S, plan, resA?.levels[ui.level] ?? null, ui.level, ui.year);
-  }, [S, plan, resA, ui.level, ui.year]);
+    if (!staticData) return new Map<number, SchoolNumber>();
+    return schoolNumbers(staticData, plan, planResults?.levels[ui.level] ?? null, ui.level, ui.year);
+  }, [staticData, plan, planResults, ui.level, ui.year]);
   const compareNumbers = useMemo(() => {
-    if (!S || !ui.compare) return new Map<number, SchoolNumber>();
-    return schoolNumbers(S, ui.compare, resB?.levels[ui.level] ?? null, ui.level, ui.year);
-  }, [S, ui.compare, resB, ui.level, ui.year]);
+    if (!staticData || !ui.compare) return new Map<number, SchoolNumber>();
+    return schoolNumbers(staticData, ui.compare, compareResults?.levels[ui.level] ?? null, ui.level, ui.year);
+  }, [staticData, ui.compare, compareResults, ui.level, ui.year]);
 
   // say so when an edit or a year change leaves the district's published figures
   const previousFigures = useRef<{ level: Level; hasDistrictFigures: boolean } | null>(null);
@@ -180,61 +141,70 @@ export default function App() {
     const leftDistrictFigures = previous?.hasDistrictFigures && previous.level === ui.level && !hasDistrictFigures;
     if (leftDistrictFigures) useUI.getState().set({ toast: 'The district published no figures for this plan and year, so these are model estimates (~).' });
   }, [planNumbers, ui.level]);
-  // zoom to the areas shown
-  const areaKey = ui.areas.slice().sort().join(',');
-  useEffect(() => {
-    const m = mapRef.current?.getMap(); if (!S || !m) return;
-    let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
-    for (const lv of ['es', 'ms', 'hs'] as Level[]) for (const f of S.zones[lv].features) {
-      if (!ui.areas.includes(S.schools[f.properties!.school].area)) continue;
-      const g: any = f.geometry; for (const p of (g.type === 'Polygon' ? [g.coordinates] : g.coordinates)) for (const [x, y] of p[0]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
-    }
-    if (!(x1 > x0)) return;
-    m.fitBounds([[x0, y0], [x1, y1]], { padding: mapPad(), duration: 500 });
-  }, [areaKey, S, mapReady]);
 
-  if (err) return <div className="loading">Could not load data: {err}</div>;
-  if (!S) return <div className="loading">Loading district data…</div>;
-  const selected = plan.edits.find(e => e.id === ui.selectedEdit)?.geom ?? null;
-  const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, overlays: ui.overlays, view, onView: (v: ViewState) => setView(v), diffHomes };
-  const sheetNext = { peek: 'half', half: 'full', full: 'peek' } as const;
-  const setMode = (m: 'build' | 'draw') => ui.set(m === 'build' ? { mode: 'build', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
+  // zoom to the areas shown
+  const shownAreasKey = ui.areas.slice().sort().join(',');
+  useEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!staticData || !map) return;
+    const bounds = boundsOfAreas(staticData, ui.areas);
+    if (bounds) map.fitBounds(bounds, { padding: mapPadding(), duration: 500 });
+  }, [shownAreasKey, staticData, mapReady]);
+
+  if (loadError) return <div className="loading">Could not load data: {loadError}</div>;
+  if (!staticData) return <div className="loading">Loading district data…</div>;
+
+  const inBuilder = ui.mode === 'build';
+  const panelTitle = inBuilder ? 'Option builder' : 'Free draw';
+  const panelSubtitle = inBuilder ? BUILDER_SUBTITLE[ui.level] : 'Start from a plan, then redraw on the map';
+  const labClassName = `lab sheet-${ui.sheet} ${ui.panelOpen ? 'panel-open' : 'panel-closed'} mode-${ui.mode}`;
+  const selectedGeometry = plan.edits.find(edit => edit.id === ui.selectedEdit)?.geom ?? null;
+  const comparePlanName = ui.compare?.name || staticData.presets.find(preset => preset.id === ui.compare?.preset)?.name || 'other plan';
+
+  const sharedMapProps = {
+    staticData, visibleSchools, diffHomes, view,
+    showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, overlays: ui.overlays,
+    showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets,
+    onView: (nextView: ViewState) => setView(nextView),
+  };
+  const switchTool = (mode: 'build' | 'draw') => {
+    ui.set(mode === 'build' ? { mode: 'build', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
+  };
+  const handleMapRef = (map: MapRef | null) => {
+    mapRef.current = map;
+    (window as any).__lab = { map: map?.getMap(), S: staticData };
+    if (map) setMapReady(true);
+  };
 
   return (
-    <div className={'lab sheet-' + ui.sheet + (ui.panelOpen ? ' panel-open' : ' panel-closed') + ' mode-' + ui.mode}>
-      <Rail active={ui.mode} onMode={setMode} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />
+    <div className={labClassName}>
+      <Rail active={ui.mode} onMode={switchTool} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />
       <main className="lab-main">
         <div className={'maps' + (ui.compare ? ' split' : '')}>
-          <MapPanel {...common} result={resA?.levels ?? null} numbers={planNumbers} closures={plan.closures} tool={ui.mode === 'build' ? 'pan' : ui.tool} interactive drawCb={drawCb}
-            selectedGeom={selected} doneTick={ui.doneTick} title={ui.compare ? (plan.name || 'This plan') : undefined} onMapRef={m => { mapRef.current = m; (window as any).__lab = { map: m?.getMap(), S }; if (m) setMapReady(true); }} />
-          {ui.compare && <MapPanel {...common} result={resB?.levels ?? null} numbers={compareNumbers} closures={ui.compare.closures} tool="pan" interactive={false}
-            title={'Compare: ' + (ui.compare.name || S.presets.find(p => p.id === ui.compare!.preset)?.name || 'other plan')} />}
+          <MapPanel {...sharedMapProps} result={planResults?.levels ?? null} numbers={planNumbers} closures={plan.closures} tool={inBuilder ? 'pan' : ui.tool} interactive drawCallbacks={drawCallbacks}
+            selectedGeometry={selectedGeometry} doneTick={ui.doneTick} title={ui.compare ? (plan.name || 'This plan') : undefined} onMapRef={handleMapRef} />
+          {ui.compare && (
+            <MapPanel {...sharedMapProps} result={compareResults?.levels ?? null} numbers={compareNumbers} closures={ui.compare.closures} tool="pan" interactive={false} title={'Compare: ' + comparePlanName} />
+          )}
         </div>
-        <TopBar S={S} mapRef={mapRef} resA={resA} pad={mapPad} />
-        <aside className="panel" aria-label={ui.mode === 'build' ? 'Option builder' : 'Free draw'}>
-          <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: sheetNext[ui.sheet] })}><span /></button>
+        <TopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} />
+        <aside className="panel" aria-label={panelTitle}>
+          <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: NEXT_SHEET_SIZE[ui.sheet] })}><span /></button>
           <header className="panel-head">
             <div className="min-w-0">
-              <h2 className="text-[15px] font-semibold tracking-tight">{ui.mode === 'build' ? 'Option builder' : 'Free draw'}</h2>
-              <p className="truncate text-xs text-muted-foreground">{ui.mode === 'build' ? { es: 'Pick a district concept for each closing school', ms: 'Pick a middle school concept', hs: 'No district concept changes high schools' }[ui.level] : 'Start from a plan, then redraw on the map'}</p>
+              <h2 className="text-[15px] font-semibold tracking-tight">{panelTitle}</h2>
+              <p className="truncate text-xs text-muted-foreground">{panelSubtitle}</p>
             </div>
-            {busy && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
+            {isUpdating && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
           </header>
           <div className="panel-body lg">
-            <Sidebar S={S} resA={resA} resB={resB} busy={false} mapRef={mapRef} faceGeom={faceGeom} vis={vis} numbers={planNumbers} />
+            <Sidebar staticData={staticData} planResults={planResults} compareResults={compareResults} mapRef={mapRef} faceGeometry={faceGeometry} visibleSchools={visibleSchools} numbers={planNumbers} />
           </div>
         </aside>
-        {ui.mode === 'draw' && <MapToolbar S={S} vis={vis} />}
-        <Legend S={S} vis={vis} mapRef={mapRef} numbers={planNumbers} />
+        {!inBuilder && <MapToolbar staticData={staticData} visibleSchools={visibleSchools} />}
+        <Legend staticData={staticData} visibleSchools={visibleSchools} mapRef={mapRef} numbers={planNumbers} />
         {ui.toast && <div className="toast" role="status">{ui.toast}</div>}
       </main>
     </div>
   );
-}
-
-/** Map padding that keeps fitted areas clear of the floating panel, top bar and legend. */
-export function mapPad() {
-  const phone = window.innerWidth < 768; const st = useUI.getState();
-  if (phone) return { top: 132, left: 16, right: 16, bottom: ({ peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[st.sheet]) + 16 };
-  return { top: 90, left: st.panelOpen ? 420 : 40, right: 260, bottom: 40 };
 }

@@ -83,6 +83,18 @@ export async function loadStatic(base?: string): Promise<Static> {
   return { meta, schools: sj.schools, homes, streets, zones: { es: zes, ms: zms, hs: zhs }, faces, district, planning, presets, receivers: pj.receivers, combos };
 }
 
+/** The street blocks with these ids, as one shape. */
+export function facesGeometry(staticData: Pick<Static, 'faces'>, faceIds: number[]): GeoJSON.MultiPolygon {
+  const coordinates: GeoJSON.Position[][][] = [];
+  for (const faceId of faceIds) {
+    const geometry = staticData.faces.features[faceId]?.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon | undefined;
+    if (!geometry) continue;
+    if (geometry.type === 'Polygon') coordinates.push(geometry.coordinates);
+    else coordinates.push(...geometry.coordinates);
+  }
+  return { type: 'MultiPolygon', coordinates };
+}
+
 /** Geometry for an 'area' edit reference: "p750" = planning area 750, "z<level>:<school index>" = that school's current boundary. */
 export function areaGeom(S: Pick<Static, 'planning' | 'zones'>, ref: string): GeoJSON.Polygon | GeoJSON.MultiPolygon | null {
   if (ref[0] === 'p') { const f = S.planning.features.find(f => String(f.properties!.pa) === ref.slice(1) && f.geometry.type !== 'Point'); return (f?.geometry as any) ?? null; }

@@ -39,7 +39,9 @@ export default function About() {
       </ul>
 
       <h2 id="data">District numbers vs. modeled numbers</h2>
-      <p>The lab shows two kinds of numbers, and labels them wherever both appear. They will not always agree.</p>
+      <p>The lab shows two kinds of numbers because they answer different questions. <b>District numbers</b> are what the district officially
+        projects for the plans it published. <b>Modeled numbers</b> estimate what would likely happen under any boundary, including ones the
+        district never drew. Seeing both shows how far to trust the model, which results are too close to call, and what to ask the district.</p>
       <div className="split">
         <div>
           <h3>{D} From the district</h3>
@@ -60,9 +62,20 @@ export default function About() {
           </ul>
         </div>
       </div>
-      <p>When you use one of the district&rsquo;s options unchanged, the lab shows the district&rsquo;s figures first and the model next to them.
-        Once you change a boundary, only modeled numbers exist for the result. Modeled numbers are estimates built from public data and are
-        calibrated to match the district&rsquo;s totals, not independent forecasts.</p>
+      <p>District numbers come first. When a plan exactly matches one the district published, the map and scorecard show the district&rsquo;s
+        figure for each school and year it covers (2026&ndash;27 to 2031&ndash;32). Anything else, such as a custom mix, a hand edit, a later year
+        or a school the district didn&rsquo;t list, shows a modeled estimate marked with a <b>~</b>.</p>
+      <p>Where both exist, the lab says how they compare:</p>
+      <ul>
+        <li><b>Close:</b> within 3 percentage points, on the same side of the 85% target.</li>
+        <li><b>Differs:</b> more than 3 points apart.</li>
+        <li><b>Too close to call:</b> on opposite sides of 85%, at any gap.</li>
+      </ul>
+      <p>The model starts from the district&rsquo;s verified facts: functional capacity, fall 2026 enrollment, and the students moving from
+        Heritage, Scarborough and Walnut Grove. It is not fitted to the district&rsquo;s five-year forecasts, so a gap between the two is real
+        information rather than something adjusted away. Across the district&rsquo;s published plans for 2027&ndash;28 to 2031&ndash;32, the model
+        lands an average of 3.5 points from the district at elementary schools and 4.0 points at middle schools, and within 5 points about 73% and
+        68% of the time.</p>
 
       <h2 id="model">How the model works</h2>
       <ol>
@@ -70,8 +83,9 @@ export default function About() {
           blocks placed onto building footprints. Homes built after 2020 are added from newer footprints.</li>
         <li><b>Children per home.</b> Each home gets an expected number of elementary, middle and high school-age children from its census
           block&rsquo;s age counts. A 2010-to-2020 check within the district was used to tune how much those age patterns carry forward.</li>
-        <li><b>Matching the district.</b> For each school, those children are scaled so the school&rsquo;s total matches the district&rsquo;s
-          own enrollment and projections. For the five closing schools, students are placed according to the district&rsquo;s student-dot maps.</li>
+        <li><b>Matching the district&rsquo;s facts.</b> For each school, those children are scaled so the school&rsquo;s total matches the district&rsquo;s
+          fall 2026 enrollment, then follow the July 2026 enrollment forecast&rsquo;s trend. For the five closing schools, students are placed
+          according to the district&rsquo;s student-dot maps.</li>
         <li><b>Moving boundaries.</b> When an area changes schools, its homes carry their projected students with them. Each school&rsquo;s
           total is compared with its functional capacity, year by year. About half of Spanish immersion students are assumed to move with the
           program to Arbor Creek, following the district&rsquo;s estimate.</li>

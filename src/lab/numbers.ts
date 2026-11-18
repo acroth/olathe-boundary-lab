@@ -1,0 +1,152 @@
+// One number per school: the district's published figure when one exists, otherwise the model's estimate. The map, scorecard and
+// tables all read from here so they can't disagree.
+import type { Level, Static } from './data';
+import type { LevelResult } from './model/engine';
+import { buildPlan } from './planBuilder';
+import type { Plan } from './store';
+
+export type Source = 'district' | 'model';
+export type Agreement = 'close' | 'differs' | 'tooClose';
+
+export const AGREEMENT_LABEL: Record<Agreement, string> = { close: 'Close', differs: 'Differs', tooClose: 'Too close to call' };
+export const CLOSE_POINTS = 3;
+
+const ROUNDING_TOLERANCE = 1e-9;
+const FIRST_DISTRICT_TABLE_YEAR = 1;   // the district's tables start in 2026-27, index 1 of the app's years
+
+export interface SchoolNumber {
+  school: number;
+  year: number;
+  source: Source;
+  value: number;             // the headline utilization
+  district: number | null;   // the district's utilization, where it published one
+  model: number;
+  agreement: Agreement | null;
+}
+
+interface PublishedTable {
+  table: Record<string, number[]>;
+  cap: Record<string, number>;
+}
+
+/** Close: within CLOSE_POINTS on the same side of the target. Too close to call: on opposite sides of it, at any gap. */
+export function agreementOf(district: number, model: number, target: number): Agreement {
+  const districtIsOver = district > target + ROUNDING_TOLERANCE;
+  const modelIsOver = model > target + ROUNDING_TOLERANCE;
+  if (districtIsOver !== modelIsOver) return 'tooClose';
+  const gapInPoints = Math.abs(district - model) * 100;
+  return gapInPoints > CLOSE_POINTS + ROUNDING_TOLERANCE ? 'differs' : 'close';
+}
+
+function sameIds(first: string[], second: string[]): boolean {
+  return first.length === second.length && [...first].sort().join() === [...second].sort().join();
+}
+
+function editIds(plan: Plan, level: Level): string[] {
+  return plan.edits.filter(edit => edit.level === level).map(edit => edit.id);
+}
+
+/** The district option (1-4) this plan is exactly, unedited; null for a custom mix or a hand edit. */
+export function publishedOption(staticData: Static, plan: Plan): string | null {
+  const combos = staticData.combos;
+  if (!combos) return null;
+
+  const planEditIds = editIds(plan, 'es');
+  for (const [option, concepts] of Object.entries(combos.options)) {
+    const preset = staticData.presets.find(candidate => candidate.id === 'dc' + option);
+    if (!preset?.district || JSON.stringify(plan.closures) !== JSON.stringify(preset.closures)) continue;
+
+    const presetEditIds = preset.edits.filter(edit => edit.level === 'es').map(edit => edit.id);
+    if (plan.preset === preset.id && sameIds(planEditIds, presetEditIds)) return option;
+    if (sameIds(planEditIds, editIds(buildPlan(staticData, concepts, null), 'es'))) return option;
+  }
+  return null;
+}
+
+/** The middle school concept (1-5) this plan is exactly; null otherwise. */
+export function publishedConcept(staticData: Static, plan: Plan): number | null {
+  const planEditIds = editIds(plan, 'ms');
+  if (!planEditIds.length) return null;
+  const concept = staticData.combos?.ms?.concepts.find(candidate => {
+    const conceptEditIds = candidate.edits.map((_, editIndex) => `b-MS${candidate.id}-${editIndex}`);
+    return sameIds(planEditIds, conceptEditIds);
+  });
+  return concept?.id ?? null;
+}
+
+function publishedTable(staticData: Static, plan: Plan, level: Level): PublishedTable | null {
+  if (level === 'es') {
+    const option = publishedOption(staticData, plan);
+    return option ? staticData.presets.find(preset => preset.id === 'dc' + option)!.district! : null;
+  }
+  if (level === 'ms') {
+    const conceptId = publishedConcept(staticData, plan), middleSchools = staticData.combos?.ms;
+    if (!conceptId || !middleSchools) return null;
+    return { table: middleSchools.concepts.find(concept => concept.id === conceptId)!.table, cap: middleSchools.cap };
+  }
+  return null;
+}
+
+function districtUtilization(published: PublishedTable | null, schoolName: string, year: number): number | null {
+  const students = published?.table[schoolName]?.[year - FIRST_DISTRICT_TABLE_YEAR];
+  const capacity = published?.cap[schoolName];
+  return students !== undefined && capacity ? students / capacity : null;
+}
+
+/** Headline numbers for a level's open schools. */
+export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResult | null, level: Level, year: number): Map<number, SchoolNumber> {
+  const numbers = new Map<number, SchoolNumber>();
+  if (!result) return numbers;
+
+  const published = publishedTable(staticData, plan, level);
+  for (const school of staticData.schools) {
+    const schoolResult = result.schools[school.i];
+    if (school.level !== level || !schoolResult?.open) continue;
+
+    const district = districtUtilization(published, school.name, year);
+    const model = schoolResult.util[year];
+    numbers.set(school.i, {
+      school: school.i, year, model, district,
+      source: district === null ? 'model' : 'district',
+      value: district ?? model,
+      agreement: district === null ? null : agreementOf(district, model, staticData.meta.target),
+    });
+  }
+  return numbers;
+}
+
+const percent = (utilization: number) => `${(utilization * 100).toFixed(1)}%`;
+
+/** 84.0% for a district figure, ~81.0% for a model estimate: the same text on the map, scorecard and tables. */
+export function headline(schoolNumber: SchoolNumber): string {
+  const estimateMark = schoolNumber.source === 'model' ? '~' : '';
+  return estimateMark + percent(schoolNumber.value);
+}
+
+/** The map adds the model's estimate when it doesn't agree with the district. */
+export function mapLabel(schoolNumber: SchoolNumber): string {
+  const disagrees = schoolNumber.agreement === 'differs' || schoolNumber.agreement === 'tooClose';
+  return disagrees ? `${headline(schoolNumber)} · model ~${percent(schoolNumber.model)}` : headline(schoolNumber);
+}
+
+function describeSources(districtCount: number, modelCount: number, year: string): string {
+  if (!districtCount) return `Model estimate, ${year}`;
+  if (!modelCount) return `District figures, ${year}`;
+  return `District where published, model elsewhere, ${year} (${districtCount} district, ${modelCount} model)`;
+}
+
+/** The visible schools' headline numbers, fullest first, with what the scorecard and legend say about them. */
+export function headlineSummary(staticData: Static, numbers: Map<number, SchoolNumber>, visibleSchools: Set<number>) {
+  const schools = [...numbers.values()]
+    .filter(schoolNumber => visibleSchools.has(schoolNumber.school))
+    .sort((first, second) => second.value - first.value);
+  const districtCount = schools.filter(schoolNumber => schoolNumber.source === 'district').length;
+  const modelCount = schools.length - districtCount;
+  const year = staticData.meta.years[schools[0]?.year ?? staticData.meta.firstPlanYear];
+  return {
+    schools, districtCount,
+    fullest: schools[0] ?? null,
+    overTarget: schools.filter(schoolNumber => schoolNumber.value > staticData.meta.target + ROUNDING_TOLERANCE),
+    sourceLabel: describeSources(districtCount, modelCount, year),
+  };
+}

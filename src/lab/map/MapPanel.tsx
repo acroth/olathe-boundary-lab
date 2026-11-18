@@ -6,6 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { PALETTE, TIERS, UNASSIGNED , schoolColor as colorOf } from '../colors';
+import { mapLabel, type SchoolNumber } from '../numbers';
 import { baseStyle, registerPmtiles } from './style';
 import { DrawController, type DrawCallbacks } from './drawing';
 import type { Tool } from '../store';
@@ -16,7 +17,7 @@ registerPmtiles();
 export const OVERLAY = { ms: { color: '#1e3a8a', w: 2.2, dash: [3, 1.5] as number[] | null, name: 'Middle school' }, hs: { color: '#7c2d12', w: 3, dash: null as number[] | null, name: 'High school' } };
 
 interface Props {
-  S: Static; vis: Set<number>; showAreas?: boolean; result: Record<Level, LevelResult> | null; level: Level; year: number; colorBy: 'school' | 'util';
+  S: Static; vis: Set<number>; showAreas?: boolean; result: Record<Level, LevelResult> | null; numbers: Map<number, SchoolNumber>; level: Level; year: number; colorBy: 'school' | 'util';
   closures: Record<string, number>; showHomes: boolean; showStreets: boolean; tool: Tool; interactive: boolean;
   view: Partial<ViewState>; onView: (v: ViewState) => void; drawCb?: DrawCallbacks; diffHomes?: Uint8Array | null;
   selectedGeom?: GeoJSON.Geometry | null; title?: string; overlays?: Level[]; doneTick?: number; children?: React.ReactNode; onMapRef?: (m: MapRef | null) => void;
@@ -50,15 +51,14 @@ export default function MapPanel(p: Props) {
     m.push(UNASSIGNED); return m;
   }, [S]);
   const utilColor = useMemo(() => {
-    const res = p.result?.[p.level];
     const m: any[] = ['match', ['get', 'school']];
-    if (res) for (const k in res.schools) {
-      const u = res.schools[k].util[p.year];
-      m.push(Number(k), TIERS.find(t => u < t.max + 1e-9)!.color);
+    for (const schoolNumber of p.numbers.values()) {
+      const tier = TIERS.find(candidate => schoolNumber.value < candidate.max + 1e-9)!;
+      m.push(schoolNumber.school, tier.color);
     }
     m.push(UNASSIGNED);
     return m.length > 3 ? m : UNASSIGNED;
-  }, [p.result, p.level, p.year]);
+  }, [p.numbers]);
 
   const visExpr: any = useMemo(() => ['in', ['get', 'orig'], ['literal', [...p.vis, -1]]], [p.vis]);
   const zones = p.result?.[p.level]?.zones ?? { type: 'FeatureCollection', features: [] };
@@ -79,13 +79,13 @@ export default function MapPanel(p: Props) {
   const schoolsGeo = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: 'FeatureCollection',
     features: S.schools.filter(s => s.level === p.level && p.vis.has(s.i)).map(s => {
-      const r = p.result?.[p.level]?.schools[s.i];
+      const schoolNumber = p.numbers.get(s.i);
       const closed = p.closures[String(s.i)] !== undefined;
-      const u = r && !closed ? `${Math.round(r.util[p.year] * 100)}%` : '';
+      const u = schoolNumber && !closed ? mapLabel(schoolNumber) : '';
       return { type: 'Feature', properties: { school: s.i, name: s.name, label: closed ? `${s.name}\n(closing)` : `${s.name}\n${u}`, closed: closed ? 1 : 0 },
         geometry: { type: 'Point', coordinates: [s.lon, s.lat] } };
     }),
-  }), [S, p.level, p.result, p.closures, p.year, p.vis]);
+  }), [S, p.level, p.numbers, p.closures, p.vis]);
 
   const EMPTY: GeoJSON.FeatureCollection = useMemo(() => ({ type: 'FeatureCollection', features: [] }), []);
   const needStreets = p.showStreets && p.interactive && ['trace', 'polygon', 'freehand', 'edit'].includes(p.tool);

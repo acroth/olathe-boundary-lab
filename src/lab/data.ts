@@ -1,4 +1,5 @@
 import { fetchBin } from './bin';
+import { applyCalibration, type Calibration } from './calibration';
 // Loads the pipeline outputs from public/data.
 export type Level = 'es' | 'ms' | 'hs';
 export const LEVELS: Level[] = ['es', 'ms', 'hs'];
@@ -64,12 +65,14 @@ export async function loadStatic(base?: string): Promise<Static> {
     j('schools.json'), j('presets.json'), b('homes.bin'), b('streets.bin'),
     j('zones_es.geojson'), j('zones_ms.geojson'), j('zones_hs.geojson'), j('faces.geojson'), j('district.geojson'), j('planning_areas.geojson').catch(() => ({ type: 'FeatureCollection', features: [] }))]);
   const combos: Combos | null = await j('combos.json').catch(() => null);
+  const calibration: Calibration | null = await j('calibration.json').catch(() => null);
   const meta: Meta = sj.meta;
   const h = cols(hb, meta.homes.layout), s = cols(sb, meta.streets.layout);
   const homes: Homes = {
     n: meta.homes.count, lon: h.lon, lat: h.lat, units: h.units, node: h.node, offsetFt: h.offset_ft, isNew: h.isNew,
     w: { es: h.w_es, ms: h.w_ms, hs: h.w_hs }, orig: { es: h.orig_es, ms: h.orig_ms, hs: h.orig_hs },
   };
+  if (calibration) applyCalibration(sj.schools, homes, calibration);
   const streets: Streets = {
     nNodes: meta.streets.nodes, nEdges: meta.streets.edges, nodeLon: s.node_lon, nodeLat: s.node_lat,
     u: s.u, v: s.v, len: s.len_ft, cls: s.cls, name: s.name, coordOff: s.coord_off, coordLon: s.coord_lon, coordLat: s.coord_lat,

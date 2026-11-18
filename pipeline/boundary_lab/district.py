@@ -138,9 +138,8 @@ OPTION_STUDENTS_MOVING = {
         ('Black Bob', 'Brougham', 78), ('Black Bob', 'Green Springs', 151), ('Tomahawk', 'Briarwood', 322),
         ('Walnut Grove', 'Heatherstone', 227), ('Walnut Grove', 'Pleasant Ridge', 107), ('Walnut Grove', 'Countryside', 35)],
 }
-# Arbor Creek's 2027-28 enrollment in the district's tables, with half of immersion arriving (used as its starting point
-# in the Option Builder's district-number check)
-ARBOR_CREEK_WITH_IMMERSION_2027 = 466
+# Black Bob's moved counts (247, 225, 229) and Tomahawk's (308, 322) don't reconcile with their fall 2026 K-5 students across
+# options, so pipeline/tools/calibrate only matches the counts for Heritage, Scarborough and Walnut Grove.
 
 # Capacities the district published earlier (Facility Alignment Meeting 3, pp. 54-56), used where the Nov 2026 figures don't
 # cover a school. A few were back-solved from published utilization; see data/published_capacities.csv.
@@ -150,6 +149,8 @@ PLEASANT_RIDGE_PUBLISHED_CAPACITY = 522
 # ---------------------------------------------------------------------------------------------------------------------
 # Middle school figures (Nov 2026 middle school deck)
 # ---------------------------------------------------------------------------------------------------------------------
+# The app reports against these capacities (pipeline/tools/calibrate). schools.py keeps the earlier published capacities because
+# DAA's July utilization percentages were stated against them.
 MIDDLE_SCHOOL_CAPACITY = {'California Trail': 1007, 'Chisholm Trail': 999, 'Frontier Trail': 1071, 'Oregon Trail': 863,
                           'Pioneer Trail': 925, 'Santa Fe Trail': 907}
 # Five-year estimates by concept, 2026-27 through 2031-32

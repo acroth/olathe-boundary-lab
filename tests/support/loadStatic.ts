@@ -1,5 +1,6 @@
 // Loads public/data the way the app does, for tests (Node has no fetch of local files, so this reads them from disk).
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
+import { applyCalibration } from '../../src/lab/calibration';
 import type { Static } from '../../src/lab/data';
 
 const DATA_DIR = new URL('../../public/data/', import.meta.url).pathname;
@@ -13,15 +14,17 @@ function readColumns(file: string, layout: { name: string; type: string; offset:
   return Object.fromEntries(layout.map(column => [column.name, new TYPED_ARRAYS[column.type](buffer, column.offset, column.length)]));
 }
 
-export function loadStatic(): Static {
+export function loadStatic({ calibrated = true } = {}): Static {
   const schoolsFile = readJson('schools.json'), presetsFile = readJson('presets.json');
   const meta = schoolsFile.meta;
   const homes: any = readColumns('homes.bin', meta.homes.layout);
   const streets: any = readColumns('streets.bin', meta.streets.layout);
+  const homeColumns = { n: meta.homes.count, lon: homes.lon, lat: homes.lat, units: homes.units, node: homes.node, offsetFt: homes.offset_ft, isNew: homes.isNew,
+                        w: { es: homes.w_es, ms: homes.w_ms, hs: homes.w_hs }, orig: { es: homes.orig_es, ms: homes.orig_ms, hs: homes.orig_hs } };
+  if (calibrated && existsSync(DATA_DIR + 'calibration.json')) applyCalibration(schoolsFile.schools, homeColumns, readJson('calibration.json'));
   return {
     meta, schools: schoolsFile.schools,
-    homes: { n: meta.homes.count, lon: homes.lon, lat: homes.lat, units: homes.units, node: homes.node, offsetFt: homes.offset_ft, isNew: homes.isNew,
-             w: { es: homes.w_es, ms: homes.w_ms, hs: homes.w_hs }, orig: { es: homes.orig_es, ms: homes.orig_ms, hs: homes.orig_hs } },
+    homes: homeColumns,
     streets: { nNodes: meta.streets.nodes, nEdges: meta.streets.edges, nodeLon: streets.node_lon, nodeLat: streets.node_lat, u: streets.u, v: streets.v,
                len: streets.len_ft, cls: streets.cls, name: streets.name, coordOff: streets.coord_off, coordLon: streets.coord_lon, coordLat: streets.coord_lat },
     zones: { es: readJson('zones_es.geojson'), ms: readJson('zones_ms.geojson'), hs: readJson('zones_hs.geojson') },

@@ -1,7 +1,7 @@
-// The Option Builder (src/lab/ui/Builder.tsx) rebuilds the district's four options from per-school concepts.
+// The Option Builder (src/lab/planBuilder.ts) rebuilds the district's four options from per-school concepts.
 import { expect, it } from 'vitest';
 import { Engine } from '../src/lab/model/engine';
-import { buildPlan } from '../src/lab/ui/Builder';
+import { buildPlan } from '../src/lab/planBuilder';
 import { loadStatic } from './support/loadStatic';
 
 it("picking a district option's concepts gives the same assignment as that option's preset", () => {

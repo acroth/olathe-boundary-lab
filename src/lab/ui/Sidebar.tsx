@@ -2,18 +2,19 @@ import { useMemo, useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { areaGeom, type Level, type Static } from '../data';
 import { planFromPreset, usePlan, useSaved, useUI } from '../store';
-import { tierColor, schoolColor as colorOf } from '../colors';
 import type { Results } from '../App';
 import { decodePlan } from '../url';
 import { exportCSV, exportGeoJSON, exportPNG } from './exports';
 import { summarize } from '../visible';
+import { headline, headlineSummary, type SchoolNumber } from '../numbers';
 import Builder from './Builder';
+import { SchoolNumbersTable } from './SchoolNumbers';
 
 const pct = (u: number) => `${(u * 100).toFixed(1)}%`;
 const n0 = (x: number) => Math.round(x).toLocaleString();
 
 
-export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: { S: Static; resA: Results | null; resB: Results | null; busy: boolean; mapRef: MutableRefObject<MapRef | null>; faceGeom: (ids: number[]) => GeoJSON.MultiPolygon; vis: Set<number> }) {
+export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis, numbers }: { S: Static; resA: Results | null; resB: Results | null; busy: boolean; mapRef: MutableRefObject<MapRef | null>; faceGeom: (ids: number[]) => GeoJSON.MultiPolygon; vis: Set<number>; numbers: Map<number, SchoolNumber> }) {
   const plan = usePlan(s => s.plan);
   const { setPlan, toggleClosure, removeEdit } = usePlan.getState();
   const ui = useUI();
@@ -50,13 +51,20 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
 
   const sorted = useMemo(() => [...schools].sort((a, b) => a.name.localeCompare(b.name)), [schools]);
   const sm = res ? summarize(S, res, vis, lv) : null;
+  const headlineNumbers = headlineSummary(S, numbers, vis);
+  const { fullest, overTarget } = headlineNumbers;
+  const setMiddleSchoolLines = (on: boolean) => {
+    const otherOverlays = ui.overlays.filter(overlay => overlay !== 'ms');
+    ui.set({ overlays: on ? [...otherOverlays, 'ms'] : otherOverlays });
+  };
   const focusS = ui.focusSchool !== null && S.schools[ui.focusSchool]?.level === lv ? ui.focusSchool : null;
 
   return (
     <>
-      {ui.mode === 'build' && <Builder S={S} level={lv} res={resA?.levels.es ?? null} resMs={resA?.levels.ms ?? null} build={ui.build} set={b => ui.set({ build: b })}
-        overlayOn={ui.overlays.includes('ms')} setOverlay={on => ui.set({ overlays: [...ui.overlays.filter(l => l !== 'ms'), ...(on ? ['ms' as const] : [])] })}
-        toDraw={() => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' })} />}
+      {ui.mode === 'build' && <Builder staticData={S} plan={plan} level={lv} elementaryResult={resA?.levels.es ?? null} middleSchoolResult={resA?.levels.ms ?? null}
+        numbers={numbers} visibleSchools={vis} onSchoolSelect={focus} build={ui.build} onBuildChange={build => ui.set({ build })}
+        middleSchoolLinesOn={ui.overlays.includes('ms')} onMiddleSchoolLinesChange={setMiddleSchoolLines}
+        onEditByHand={() => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' })} />}
 
       {ui.mode === 'draw' && <>
       <section>
@@ -76,18 +84,19 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
 
       <section className="summary">
         {busy && <span className="muted busy-inline">updating…</span>}
+        <p className="note source-line">{headlineNumbers.sourceLabel}</p>
         {sm && <div className="stats">
-          <Stat v={sm.maxUtilSchool >= 0 ? pct(sm.maxUtil) : '—'} l={sm.maxUtilSchool >= 0 ? `Highest: ${S.schools[sm.maxUtilSchool].name}` : 'Highest'} warn={sm.maxUtil > S.meta.target} />
-          <Stat v={String(sm.overTarget.length)} l={`Schools over ${S.meta.target * 100}%`} warn={sm.overTarget.length > 0} />
+          <Stat v={fullest ? headline(fullest) : '—'} l={fullest ? `Highest: ${S.schools[fullest.school].name}` : 'Highest'} warn={(fullest?.value ?? 0) > S.meta.target} />
+          <Stat v={String(overTarget.length)} l={`Schools over ${S.meta.target * 100}%`} warn={overTarget.length > 0} />
           <Stat v={n0(sm.unassignedStudents)} l="Students unassigned" warn={sm.unassignedStudents > 0.5} />
-          <Stat v={pct(sm.shareBeyondBusMiles)} l={`Moved kids ${S.meta.busMiles}+ mi away`} />
+          <Stat v={'~' + pct(sm.shareBeyondBusMiles)} l={`Moved kids ${S.meta.busMiles}+ mi away (model)`} />
         </div>}
         {sm && <details className="more"><summary>More numbers</summary><div className="stats">
           <Stat v={n0(sm.studentsFromClosingSchools)} l="Students from closing schools placed" />
           <Stat v={sm.averageTripMiles ? sm.averageTripMiles.toFixed(2) + ' mi' : '—'} l="Average trip, moved students" />
           <Stat v={n0(sm.movedFromOpen)} l="Moved from open schools" />
           {lv === 'es' && <Stat v={n0(sm.inBuildingNotPlaced)} l="Pre-K at closing schools, not placed" />}
-        </div><p className="note">Model numbers, {Y[ui.year]} for the school table; peaks run 2027-28 to 2034-35. Year and Pre-K are in the top bar.</p></details>}
+        </div><p className="note">These are model estimates. Model peaks run 2027-28 to 2034-35. Year and Pre-K are in the top bar.</p></details>}
       </section>
 
       <section className="row between">
@@ -103,24 +112,8 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
       </>}
 
       {(ui.mode === 'draw' ? section === 'schools' : lv === 'hs') && res && <section>
-        <table className="tbl">
-          <thead><tr><th>School</th><th title="Functional capacity">Cap.</th><th>{Y[ui.year]}</th><th>Peak</th><th title="Separate pieces of the attendance area">Pcs</th>{resb && <th>Compare peak</th>}</tr></thead>
-          <tbody>
-            {sorted.map(s => {
-              const r = res.schools[s.i]; const rb = resb?.schools[s.i];
-              if (!r.open) return <tr key={s.i} className="closed"><td>{s.name}</td><td colSpan={resb ? 5 : 4}>closing</td></tr>;
-              return <tr key={s.i} onClick={() => focus(s.i)} className={focusS === s.i ? 'sel' : ''}>
-                <td><i className="sw" style={{ background: colorOf(s as any) }} />{s.name}{s.capSource.startsWith('estimated') && <sup title={s.capSource}>e</sup>}</td>
-                <td>{n0(s.capacity)}</td>
-                <td><span className="pill" style={{ background: tierColor(r.util[ui.year]) }}>{pct(r.util[ui.year])}</span></td>
-                <td title={Y[r.peakYear]} className={r.peak > S.meta.target ? 'bad' : ''}>{pct(r.peak)}</td>
-                <td className={r.pieces > 1 ? 'bad' : ''}>{r.pieces}</td>
-                {rb && <td>{rb.open ? pct(rb.peak) : 'closing'}</td>}
-              </tr>;
-            })}
-          </tbody>
-        </table>
-        <p className="note">Tap a row to zoom to the school. Model numbers{ui.mode === 'draw' && lv === 'es' ? "; the district's are under Show → District numbers" : ''}.</p>
+        <SchoolNumbersTable staticData={S} numbers={numbers} schools={sorted.map(school => school.i)} result={res} compareResult={resb} focusedSchool={focusS} onSchoolSelect={focus} />
+        <p className="note">Tap a row to zoom to the school.</p>
       </section>}
 
       {ui.mode === 'draw' && section === 'district' && res && lv === 'es' && <District S={S} res={res} plan={plan} year={ui.year} />}

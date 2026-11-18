@@ -126,6 +126,12 @@ td.warn { color: #b45309; font-weight: 600; }
 .menu-body .lbl { margin: 6px 0 0; }
 .seg.opts { display: flex; } .seg.opts button { flex: 1; font-weight: 600; padding: 7px 0; }
 .stats.score { margin-top: 10px; }
+.source-line { margin: 8px 0 0; font-weight: 600; }
+.src-tag { display: inline-block; margin-top: 4px; padding: 0 6px; border-radius: 8px; font-size: 10.5px; font-style: normal; font-weight: 600; line-height: 16px; }
+.src-tag.district { background: var(--sel); color: var(--accent); }
+.src-tag.model { background: color-mix(in srgb, #b26a00 18%, transparent); color: #b26a00; }
+.agree { font-weight: 600; font-size: 11.5px; } .agree.close { color: var(--muted); } .agree.differs { color: #b45309; } .agree.tooClose { color: var(--warn); }
+.tbl.numbers td, .tbl.numbers th { vertical-align: top; } .tbl.numbers .cap { display: block; color: var(--muted); font-size: 11px; }
 .stat.warn b { color: #b45309; } .stat.bad b { color: var(--warn); }
 .tag { font-size: 11.5px; background: var(--sel); color: var(--accent); padding: 2px 8px; border-radius: 10px; font-weight: 600; }
 .builder .bschool { padding: 7px 0; border-top: 1px solid var(--line); } .builder .bschool:first-child { border-top: 0; padding-top: 0; }

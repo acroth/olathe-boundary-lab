@@ -12,7 +12,8 @@ import Legend from './ui/Legend';
 import Rail from '@/components/Rail';
 import { Loader2 } from 'lucide-react';
 import { visibleSet } from './visible';
-import { buildPlan } from './ui/Builder';
+import { schoolNumbers, type SchoolNumber } from './numbers';
+import { buildPlan } from './planBuilder';
 import type { DrawCallbacks } from './map/drawing';
 
 export interface Results { levels: Record<Level, LevelResult>; feeder: { es: number; split: { ms: number; share: number }[] }[] }
@@ -160,6 +161,25 @@ export default function App() {
   }, [ui.diff, resA, resB, ui.level]);
 
   const vis = useMemo(() => (S ? visibleSet(S, resA, ui.areas, plan.closures) : new Set<number>()), [S, resA, ui.areas, plan.closures]);
+  const planNumbers = useMemo(() => {
+    if (!S) return new Map<number, SchoolNumber>();
+    return schoolNumbers(S, plan, resA?.levels[ui.level] ?? null, ui.level, ui.year);
+  }, [S, plan, resA, ui.level, ui.year]);
+  const compareNumbers = useMemo(() => {
+    if (!S || !ui.compare) return new Map<number, SchoolNumber>();
+    return schoolNumbers(S, ui.compare, resB?.levels[ui.level] ?? null, ui.level, ui.year);
+  }, [S, ui.compare, resB, ui.level, ui.year]);
+
+  // say so when an edit or a year change leaves the district's published figures
+  const previousFigures = useRef<{ level: Level; hasDistrictFigures: boolean } | null>(null);
+  useEffect(() => {
+    if (!planNumbers.size) return;
+    const hasDistrictFigures = [...planNumbers.values()].some(schoolNumber => schoolNumber.source === 'district');
+    const previous = previousFigures.current;
+    previousFigures.current = { level: ui.level, hasDistrictFigures };
+    const leftDistrictFigures = previous?.hasDistrictFigures && previous.level === ui.level && !hasDistrictFigures;
+    if (leftDistrictFigures) useUI.getState().set({ toast: 'The district published no figures for this plan and year, so these are model estimates (~).' });
+  }, [planNumbers, ui.level]);
   // zoom to the areas shown
   const areaKey = ui.areas.slice().sort().join(',');
   useEffect(() => {
@@ -185,9 +205,9 @@ export default function App() {
       <Rail active={ui.mode} onMode={setMode} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />
       <main className="lab-main">
         <div className={'maps' + (ui.compare ? ' split' : '')}>
-          <MapPanel {...common} result={resA?.levels ?? null} closures={plan.closures} tool={ui.mode === 'build' ? 'pan' : ui.tool} interactive drawCb={drawCb}
+          <MapPanel {...common} result={resA?.levels ?? null} numbers={planNumbers} closures={plan.closures} tool={ui.mode === 'build' ? 'pan' : ui.tool} interactive drawCb={drawCb}
             selectedGeom={selected} doneTick={ui.doneTick} title={ui.compare ? (plan.name || 'This plan') : undefined} onMapRef={m => { mapRef.current = m; (window as any).__lab = { map: m?.getMap(), S }; if (m) setMapReady(true); }} />
-          {ui.compare && <MapPanel {...common} result={resB?.levels ?? null} closures={ui.compare.closures} tool="pan" interactive={false}
+          {ui.compare && <MapPanel {...common} result={resB?.levels ?? null} numbers={compareNumbers} closures={ui.compare.closures} tool="pan" interactive={false}
             title={'Compare: ' + (ui.compare.name || S.presets.find(p => p.id === ui.compare!.preset)?.name || 'other plan')} />}
         </div>
         <TopBar S={S} mapRef={mapRef} resA={resA} pad={mapPad} />
@@ -201,11 +221,11 @@ export default function App() {
             {busy && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
           </header>
           <div className="panel-body lg">
-            <Sidebar S={S} resA={resA} resB={resB} busy={false} mapRef={mapRef} faceGeom={faceGeom} vis={vis} />
+            <Sidebar S={S} resA={resA} resB={resB} busy={false} mapRef={mapRef} faceGeom={faceGeom} vis={vis} numbers={planNumbers} />
           </div>
         </aside>
         {ui.mode === 'draw' && <MapToolbar S={S} vis={vis} />}
-        <Legend S={S} vis={vis} mapRef={mapRef} />
+        <Legend S={S} vis={vis} mapRef={mapRef} numbers={planNumbers} />
         {ui.toast && <div className="toast" role="status">{ui.toast}</div>}
       </main>
     </div>

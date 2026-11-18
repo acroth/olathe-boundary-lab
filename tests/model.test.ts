@@ -41,8 +41,9 @@ describe('published plans', () => {
 
   it("the model agrees with the solver: solver plans keep every school that takes students under the plan's cap", () => {
     const caps: Record<string, number> = { 'solver-receivers': 0.90, 'solver-85': 0.85 };
+    const solverEngine = new Engine(loadStatic({ calibrated: false }));   // the plans were solved before calibration
     for (const [id, cap] of Object.entries(caps)) {
-      const result = engine.run('es', { ...presetById(id), includePreK: true }, false);
+      const result = solverEngine.run('es', { ...presetById(id), includePreK: true }, false);
       const mergedSchools = new Set(['Fairview', 'Ridgeview']);   // the district's approved merges, outside the solver's problem
       for (const stat of Object.values(result.schools)) {
         const origins = Object.keys(stat.movedInByOrigin).map(origin => S.schools[Number(origin)].name);

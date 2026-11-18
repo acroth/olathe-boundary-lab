@@ -160,9 +160,7 @@ def run() -> None:
         print(f'  {school["name"]}: ' + '; '.join(
             f'{concept["id"]} ' + ', '.join(f'{piece["to"]} {piece["model26"]}' for piece in concept['pieces']) for concept in school['concepts']))
 
-    enrollment = dict(district.ENROLLMENT_FALL_2026)
-    enrollment[district.IMMERSION_HOST] = district.ARBOR_CREEK_WITH_IMMERSION_2027
     write_compact_json(dict(
         basePreset='district', schools=concepts, moves=open_school_moves(blocks, elementary_number), exclusive=MUTUALLY_EXCLUSIVE_MOVES,
-        district=dict(enroll2026=enrollment, cap=district.FUNCTIONAL_CAPACITY), options=DISTRICT_OPTIONS_AS_CONCEPTS,
+        district=dict(enroll2026=district.ENROLLMENT_FALL_2026, cap=district.FUNCTIONAL_CAPACITY), options=DISTRICT_OPTIONS_AS_CONCEPTS,
         ms=middle_school_concepts(middle_number)), app_file('combos.json'))

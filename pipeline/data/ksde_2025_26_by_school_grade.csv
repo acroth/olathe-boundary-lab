@@ -1,0 +1,523 @@
+bldg,name,grade,all,w,b,h,ai,a,m,n,est
+0845,Olathe Northwest High School,9th Grade,481.0,344.0,33.0,56.0,0.0,26.0,22.0,481.0,False
+0845,Olathe Northwest High School,10th Grade,,372.0,31.0,51.0,5.0,29.0,24.0,512.0,True
+0845,Olathe Northwest High School,11th Grade,477.0,333.0,30.0,64.0,0.0,23.0,27.0,477.0,False
+0845,Olathe Northwest High School,12th Grade,,345.0,31.0,44.0,5.0,26.0,19.0,470.0,True
+0845,Olathe Northwest High School,Nongraded,,5.0,5.0,0.0,0.0,0.0,0.0,10.0,True
+0845,Olathe Northwest High School,Total,,,,215.0,,104.0,92.0,411.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0846,Regency Place Elementary,Kindergarten,,36.0,5.0,5.0,5.0,5.0,5.0,61.0,True
+0846,Regency Place Elementary,1st Grade,,39.0,5.0,5.0,0.0,10.0,5.0,64.0,True
+0846,Regency Place Elementary,2nd Grade,,40.0,5.0,14.0,0.0,12.0,5.0,76.0,True
+0846,Regency Place Elementary,3rd Grade,,53.0,5.0,5.0,0.0,5.0,5.0,73.0,True
+0846,Regency Place Elementary,4th Grade,,50.0,5.0,11.0,5.0,13.0,5.0,89.0,True
+0846,Regency Place Elementary,5th Grade,,59.0,5.0,5.0,0.0,5.0,5.0,79.0,True
+0846,Regency Place Elementary,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,5.0,5.0,20.0,True
+0846,Regency Place Elementary,Total,,,,,,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0847,Frontier Trail Middle School,6th Grade,222.0,139.0,16.0,38.0,0.0,10.0,19.0,222.0,False
+0847,Frontier Trail Middle School,7th Grade,,186.0,15.0,38.0,5.0,10.0,13.0,267.0,True
+0847,Frontier Trail Middle School,8th Grade,,148.0,13.0,29.0,0.0,5.0,14.0,209.0,True
+0847,Frontier Trail Middle School,Total,,473.0,44.0,105.0,,,46.0,668.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0849,Brougham Elem,Kindergarten,,34.0,5.0,5.0,0.0,5.0,5.0,54.0,True
+0849,Brougham Elem,1st Grade,,28.0,5.0,5.0,0.0,0.0,5.0,43.0,True
+0849,Brougham Elem,2nd Grade,,43.0,5.0,5.0,0.0,5.0,5.0,63.0,True
+0849,Brougham Elem,3rd Grade,,24.0,5.0,5.0,5.0,5.0,5.0,49.0,True
+0849,Brougham Elem,4th Grade,,31.0,5.0,5.0,0.0,5.0,5.0,51.0,True
+0849,Brougham Elem,5th Grade,,25.0,5.0,5.0,0.0,5.0,5.0,45.0,True
+0849,Brougham Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,0.0,15.0,True
+0849,Brougham Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,0.0,0.0,5.0,0.0,10.0,True
+0849,Brougham Elem,Preschool-Aged At-Risk (4 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+0849,Brougham Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0849,Brougham Elem,Pre-Kindergarten,,5.0,5.0,0.0,0.0,0.0,5.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0850,Central Elem,Kindergarten,,5.0,5.0,26.0,0.0,0.0,5.0,41.0,True
+0850,Central Elem,1st Grade,,15.0,5.0,21.0,0.0,0.0,5.0,46.0,True
+0850,Central Elem,2nd Grade,,5.0,5.0,23.0,0.0,5.0,5.0,43.0,True
+0850,Central Elem,3rd Grade,,13.0,5.0,16.0,0.0,0.0,5.0,39.0,True
+0850,Central Elem,4th Grade,,5.0,5.0,23.0,0.0,0.0,5.0,38.0,True
+0850,Central Elem,5th Grade,,5.0,5.0,25.0,0.0,5.0,5.0,45.0,True
+0850,Central Elem,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0850,Central Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0850,Central Elem,Preschool-Aged At-Risk (4 years old),,0.0,5.0,5.0,0.0,0.0,0.0,10.0,True
+0850,Central Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0850,Central Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0851,Indian Creek Elem,Kindergarten,,22.0,5.0,15.0,0.0,5.0,5.0,52.0,True
+0851,Indian Creek Elem,1st Grade,,26.0,5.0,20.0,0.0,5.0,5.0,61.0,True
+0851,Indian Creek Elem,2nd Grade,,35.0,5.0,17.0,0.0,5.0,5.0,67.0,True
+0851,Indian Creek Elem,3rd Grade,,29.0,5.0,13.0,5.0,5.0,5.0,62.0,True
+0851,Indian Creek Elem,4th Grade,,29.0,5.0,16.0,0.0,5.0,5.0,60.0,True
+0851,Indian Creek Elem,5th Grade,,25.0,11.0,15.0,5.0,5.0,0.0,61.0,True
+0851,Indian Creek Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+0851,Indian Creek Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0851,Indian Creek Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,0.0,5.0,15.0,True
+0851,Indian Creek Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0851,Indian Creek Elem,Pre-Kindergarten,,5.0,5.0,0.0,0.0,0.0,0.0,10.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0852,Fairview Elem,Kindergarten,,5.0,5.0,23.0,0.0,5.0,5.0,43.0,True
+0852,Fairview Elem,1st Grade,,5.0,5.0,12.0,0.0,0.0,5.0,27.0,True
+0852,Fairview Elem,2nd Grade,,15.0,5.0,10.0,0.0,0.0,5.0,35.0,True
+0852,Fairview Elem,3rd Grade,,12.0,5.0,18.0,0.0,0.0,5.0,40.0,True
+0852,Fairview Elem,4th Grade,,15.0,5.0,15.0,0.0,5.0,5.0,45.0,True
+0852,Fairview Elem,5th Grade,,14.0,5.0,18.0,0.0,0.0,5.0,42.0,True
+0852,Fairview Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,0.0,15.0,True
+0852,Fairview Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0852,Fairview Elem,Preschool-Aged At-Risk (4 years old),,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+0852,Fairview Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0852,Fairview Elem,Pre-Kindergarten,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0853,Briarwood Elem,Kindergarten,,28.0,5.0,5.0,0.0,0.0,5.0,43.0,True
+0853,Briarwood Elem,1st Grade,,27.0,5.0,13.0,0.0,5.0,5.0,55.0,True
+0853,Briarwood Elem,2nd Grade,,22.0,5.0,5.0,0.0,5.0,5.0,42.0,True
+0853,Briarwood Elem,3rd Grade,,37.0,5.0,5.0,0.0,5.0,5.0,57.0,True
+0853,Briarwood Elem,4th Grade,,28.0,5.0,5.0,5.0,5.0,5.0,53.0,True
+0853,Briarwood Elem,5th Grade,,32.0,5.0,5.0,0.0,5.0,5.0,52.0,True
+0853,Briarwood Elem,Special Ed 3 & 4 yr.,,10.0,0.0,5.0,0.0,0.0,5.0,20.0,True
+0853,Briarwood Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0853,Briarwood Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0853,Briarwood Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0853,Briarwood Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,5.0,0.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0854,Ridgeview Elem,Kindergarten,,11.0,0.0,26.0,5.0,0.0,5.0,47.0,True
+0854,Ridgeview Elem,1st Grade,,5.0,5.0,23.0,5.0,0.0,5.0,43.0,True
+0854,Ridgeview Elem,2nd Grade,,5.0,5.0,17.0,0.0,0.0,0.0,27.0,True
+0854,Ridgeview Elem,3rd Grade,,11.0,5.0,27.0,0.0,0.0,5.0,48.0,True
+0854,Ridgeview Elem,4th Grade,,10.0,5.0,21.0,0.0,0.0,5.0,41.0,True
+0854,Ridgeview Elem,5th Grade,,12.0,5.0,20.0,0.0,0.0,5.0,42.0,True
+0854,Ridgeview Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+0854,Ridgeview Elem,Preschool-Aged At-Risk (3 years old),,0.0,5.0,5.0,0.0,0.0,0.0,10.0,True
+0854,Ridgeview Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,13.0,0.0,0.0,5.0,23.0,True
+0854,Ridgeview Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0854,Ridgeview Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,5.0,0.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0855,Walnut Grove Elem,Kindergarten,,44.0,5.0,12.0,0.0,5.0,5.0,71.0,True
+0855,Walnut Grove Elem,1st Grade,,30.0,5.0,5.0,0.0,5.0,5.0,50.0,True
+0855,Walnut Grove Elem,2nd Grade,,36.0,5.0,5.0,0.0,5.0,11.0,62.0,True
+0855,Walnut Grove Elem,3rd Grade,,35.0,5.0,12.0,5.0,5.0,5.0,67.0,True
+0855,Walnut Grove Elem,4th Grade,,38.0,5.0,11.0,0.0,5.0,10.0,69.0,True
+0855,Walnut Grove Elem,5th Grade,,46.0,5.0,5.0,0.0,5.0,5.0,66.0,True
+0855,Walnut Grove Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+0855,Walnut Grove Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0855,Walnut Grove Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0855,Walnut Grove Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0855,Walnut Grove Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,0.0,5.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0856,Prairie Center Elem,Kindergarten,,40.0,5.0,5.0,0.0,5.0,5.0,60.0,True
+0856,Prairie Center Elem,1st Grade,,41.0,5.0,5.0,0.0,5.0,5.0,61.0,True
+0856,Prairie Center Elem,2nd Grade,,43.0,5.0,5.0,0.0,5.0,5.0,63.0,True
+0856,Prairie Center Elem,3rd Grade,,33.0,5.0,5.0,0.0,5.0,5.0,53.0,True
+0856,Prairie Center Elem,4th Grade,,35.0,5.0,5.0,0.0,5.0,5.0,55.0,True
+0856,Prairie Center Elem,5th Grade,,61.0,5.0,5.0,0.0,5.0,5.0,81.0,True
+0856,Prairie Center Elem,Special Ed 3 & 4 yr.,,5.0,5.0,0.0,0.0,0.0,5.0,15.0,True
+0856,Prairie Center Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0856,Prairie Center Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0856,Prairie Center Elem,Pre-Kindergarten,,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0857,Pioneer Trail Middle School,6th Grade,,106.0,28.0,54.0,5.0,5.0,14.0,212.0,True
+0857,Pioneer Trail Middle School,7th Grade,,115.0,35.0,60.0,5.0,14.0,19.0,248.0,True
+0857,Pioneer Trail Middle School,8th Grade,,88.0,26.0,44.0,0.0,5.0,19.0,182.0,True
+0857,Pioneer Trail Middle School,Total,,309.0,89.0,158.0,,,52.0,608.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0858,Washington Elem,Kindergarten,,5.0,0.0,31.0,0.0,0.0,5.0,41.0,True
+0858,Washington Elem,1st Grade,,12.0,5.0,36.0,0.0,0.0,5.0,58.0,True
+0858,Washington Elem,2nd Grade,,11.0,5.0,32.0,0.0,0.0,5.0,53.0,True
+0858,Washington Elem,3rd Grade,,10.0,5.0,46.0,0.0,5.0,5.0,71.0,True
+0858,Washington Elem,4th Grade,,5.0,5.0,48.0,0.0,5.0,5.0,68.0,True
+0858,Washington Elem,5th Grade,,5.0,5.0,35.0,0.0,0.0,5.0,50.0,True
+0858,Washington Elem,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0858,Washington Elem,Preschool-Aged At-Risk (3 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+0858,Washington Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0858,Washington Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0858,Washington Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0859,Countryside Elementary,Kindergarten,,15.0,5.0,12.0,0.0,5.0,5.0,42.0,True
+0859,Countryside Elementary,1st Grade,,20.0,5.0,23.0,0.0,5.0,5.0,58.0,True
+0859,Countryside Elementary,2nd Grade,,26.0,5.0,23.0,5.0,5.0,5.0,69.0,True
+0859,Countryside Elementary,3rd Grade,,18.0,10.0,13.0,0.0,5.0,5.0,51.0,True
+0859,Countryside Elementary,4th Grade,,32.0,10.0,15.0,5.0,5.0,5.0,72.0,True
+0859,Countryside Elementary,5th Grade,,23.0,12.0,21.0,5.0,5.0,5.0,71.0,True
+0859,Countryside Elementary,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0859,Countryside Elementary,Preschool-Aged At-Risk (3 years old),,0.0,5.0,5.0,0.0,5.0,0.0,15.0,True
+0859,Countryside Elementary,Preschool-Aged At-Risk (4 years old),,5.0,5.0,5.0,0.0,0.0,0.0,15.0,True
+0859,Countryside Elementary,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0859,Countryside Elementary,Pre-Kindergarten,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0860,Westview Campus,Kindergarten,,5.0,0.0,17.0,0.0,0.0,5.0,27.0,True
+0860,Westview Campus,1st Grade,,5.0,5.0,16.0,0.0,0.0,5.0,31.0,True
+0860,Westview Campus,2nd Grade,,5.0,5.0,14.0,0.0,0.0,0.0,24.0,True
+0860,Westview Campus,3rd Grade,,5.0,5.0,22.0,0.0,0.0,0.0,32.0,True
+0860,Westview Campus,4th Grade,,5.0,0.0,17.0,0.0,0.0,0.0,22.0,True
+0860,Westview Campus,5th Grade,,5.0,0.0,23.0,0.0,0.0,0.0,28.0,True
+0860,Westview Campus,Special Ed 3 & 4 yr.,,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+0860,Westview Campus,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0860,Westview Campus,Total,,,,,0.0,0.0,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0860,Westview Campus,Pre-Kindergarten,,0.0,0.0,0.0,0.0,0.0,5.0,5.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0861,Santa Fe Trail Middle School,6th Grade,,84.0,21.0,85.0,5.0,5.0,16.0,216.0,True
+0861,Santa Fe Trail Middle School,7th Grade,,93.0,21.0,78.0,5.0,5.0,5.0,207.0,True
+0861,Santa Fe Trail Middle School,8th Grade,,89.0,18.0,86.0,0.0,5.0,15.0,213.0,True
+0861,Santa Fe Trail Middle School,Total,,266.0,60.0,249.0,,,,575.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0862,Oregon Trail Middle School,6th Grade,,107.0,11.0,75.0,0.0,5.0,5.0,203.0,True
+0862,Oregon Trail Middle School,7th Grade,,122.0,16.0,64.0,5.0,5.0,5.0,217.0,True
+0862,Oregon Trail Middle School,8th Grade,195.0,98.0,13.0,62.0,0.0,11.0,11.0,195.0,False
+0862,Oregon Trail Middle School,Total,,327.0,40.0,201.0,,,,568.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0863,Indian Trail Middle School,6th Grade,,94.0,13.0,69.0,0.0,5.0,14.0,195.0,True
+0863,Indian Trail Middle School,7th Grade,,106.0,16.0,63.0,5.0,5.0,11.0,206.0,True
+0863,Indian Trail Middle School,8th Grade,,86.0,5.0,63.0,5.0,10.0,11.0,180.0,True
+0863,Indian Trail Middle School,Total,,286.0,,195.0,,,36.0,517.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0864,Olathe North Sr High,9th Grade,436.0,185.0,47.0,148.0,0.0,28.0,28.0,436.0,False
+0864,Olathe North Sr High,10th Grade,,204.0,59.0,163.0,5.0,19.0,30.0,480.0,True
+0864,Olathe North Sr High,11th Grade,481.0,222.0,46.0,154.0,0.0,24.0,35.0,481.0,False
+0864,Olathe North Sr High,12th Grade,,255.0,53.0,163.0,5.0,28.0,32.0,536.0,True
+0864,Olathe North Sr High,Nongraded,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0864,Olathe North Sr High,Total,,,205.0,,,99.0,125.0,429.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0865,Olathe South Sr High,9th Grade,,295.0,25.0,69.0,5.0,11.0,23.0,428.0,True
+0865,Olathe South Sr High,10th Grade,,276.0,34.0,63.0,5.0,16.0,27.0,421.0,True
+0865,Olathe South Sr High,11th Grade,,315.0,41.0,82.0,5.0,25.0,12.0,480.0,True
+0865,Olathe South Sr High,12th Grade,,290.0,27.0,57.0,5.0,19.0,27.0,425.0,True
+0865,Olathe South Sr High,Nongraded,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0865,Olathe South Sr High,Total,,,127.0,271.0,,71.0,89.0,558.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0868,Meadow Lane Elem,Kindergarten,,48.0,5.0,5.0,0.0,5.0,0.0,63.0,True
+0868,Meadow Lane Elem,1st Grade,,38.0,5.0,5.0,5.0,5.0,5.0,63.0,True
+0868,Meadow Lane Elem,2nd Grade,,29.0,5.0,5.0,0.0,5.0,5.0,49.0,True
+0868,Meadow Lane Elem,3rd Grade,,55.0,5.0,5.0,0.0,5.0,5.0,75.0,True
+0868,Meadow Lane Elem,4th Grade,,44.0,5.0,5.0,0.0,5.0,0.0,59.0,True
+0868,Meadow Lane Elem,5th Grade,,56.0,5.0,5.0,0.0,10.0,0.0,76.0,True
+0868,Meadow Lane Elem,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0868,Meadow Lane Elem,Total,,,,,,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0870,Rolling Ridge Elem,Kindergarten,,21.0,5.0,18.0,0.0,5.0,5.0,54.0,True
+0870,Rolling Ridge Elem,1st Grade,,21.0,5.0,21.0,0.0,0.0,5.0,52.0,True
+0870,Rolling Ridge Elem,2nd Grade,,19.0,5.0,27.0,0.0,5.0,5.0,61.0,True
+0870,Rolling Ridge Elem,3rd Grade,,11.0,5.0,25.0,0.0,5.0,5.0,51.0,True
+0870,Rolling Ridge Elem,4th Grade,,20.0,5.0,37.0,0.0,5.0,5.0,72.0,True
+0870,Rolling Ridge Elem,5th Grade,,26.0,5.0,22.0,0.0,0.0,5.0,58.0,True
+0870,Rolling Ridge Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+0870,Rolling Ridge Elem,Preschool-Aged At-Risk (3 years old),,0.0,0.0,5.0,0.0,0.0,5.0,10.0,True
+0870,Rolling Ridge Elem,Preschool-Aged At-Risk (4 years old),,5.0,5.0,5.0,0.0,0.0,0.0,15.0,True
+0870,Rolling Ridge Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0870,Rolling Ridge Elem,Pre-Kindergarten,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0871,Northview Elem,Kindergarten,,19.0,5.0,5.0,0.0,0.0,5.0,34.0,True
+0871,Northview Elem,1st Grade,,18.0,5.0,5.0,0.0,0.0,5.0,33.0,True
+0871,Northview Elem,2nd Grade,,19.0,5.0,10.0,0.0,0.0,0.0,34.0,True
+0871,Northview Elem,3rd Grade,,17.0,5.0,15.0,0.0,5.0,0.0,42.0,True
+0871,Northview Elem,4th Grade,,17.0,5.0,11.0,0.0,5.0,5.0,43.0,True
+0871,Northview Elem,5th Grade,,25.0,5.0,12.0,0.0,5.0,5.0,52.0,True
+0871,Northview Elem,Preschool-Aged At-Risk (3 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+0871,Northview Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0871,Northview Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0871,Northview Elem,Pre-Kindergarten,,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0872,Havencroft Elem,Kindergarten,,17.0,5.0,14.0,5.0,0.0,5.0,46.0,True
+0872,Havencroft Elem,1st Grade,,17.0,5.0,15.0,0.0,0.0,5.0,42.0,True
+0872,Havencroft Elem,2nd Grade,,17.0,5.0,13.0,0.0,5.0,5.0,45.0,True
+0872,Havencroft Elem,3rd Grade,,19.0,5.0,17.0,0.0,0.0,5.0,46.0,True
+0872,Havencroft Elem,4th Grade,,21.0,5.0,20.0,0.0,5.0,5.0,56.0,True
+0872,Havencroft Elem,5th Grade,,18.0,5.0,23.0,0.0,0.0,0.0,46.0,True
+0872,Havencroft Elem,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0872,Havencroft Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0872,Havencroft Elem,Preschool-Aged At-Risk (4 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+0872,Havencroft Elem,Total,,,,,,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0874,Scarborough Elem,Kindergarten,,21.0,5.0,5.0,0.0,5.0,5.0,41.0,True
+0874,Scarborough Elem,1st Grade,,26.0,5.0,5.0,5.0,5.0,5.0,51.0,True
+0874,Scarborough Elem,2nd Grade,,29.0,5.0,5.0,0.0,5.0,5.0,49.0,True
+0874,Scarborough Elem,3rd Grade,,27.0,5.0,5.0,0.0,5.0,5.0,47.0,True
+0874,Scarborough Elem,4th Grade,,34.0,5.0,5.0,0.0,5.0,5.0,54.0,True
+0874,Scarborough Elem,5th Grade,,43.0,5.0,5.0,0.0,0.0,5.0,58.0,True
+0874,Scarborough Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,0.0,15.0,True
+0874,Scarborough Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0874,Scarborough Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0874,Scarborough Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0875,Heritage Elementary,Kindergarten,,27.0,5.0,14.0,0.0,5.0,5.0,56.0,True
+0875,Heritage Elementary,1st Grade,,26.0,5.0,5.0,0.0,5.0,5.0,46.0,True
+0875,Heritage Elementary,2nd Grade,,28.0,5.0,5.0,0.0,5.0,5.0,48.0,True
+0875,Heritage Elementary,3rd Grade,,27.0,5.0,5.0,0.0,5.0,5.0,47.0,True
+0875,Heritage Elementary,4th Grade,,20.0,5.0,13.0,0.0,5.0,5.0,48.0,True
+0875,Heritage Elementary,5th Grade,,29.0,5.0,14.0,0.0,5.0,5.0,58.0,True
+0875,Heritage Elementary,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+0875,Heritage Elementary,Preschool-Aged At-Risk (3 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0875,Heritage Elementary,Preschool-Aged At-Risk (4 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0875,Heritage Elementary,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0875,Heritage Elementary,Pre-Kindergarten,,5.0,0.0,5.0,0.0,0.0,5.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0876,Black Bob Elem,Kindergarten,,43.0,5.0,17.0,0.0,0.0,5.0,70.0,True
+0876,Black Bob Elem,1st Grade,,39.0,5.0,14.0,0.0,0.0,5.0,63.0,True
+0876,Black Bob Elem,2nd Grade,,46.0,5.0,10.0,0.0,5.0,5.0,71.0,True
+0876,Black Bob Elem,3rd Grade,,43.0,5.0,14.0,0.0,5.0,5.0,72.0,True
+0876,Black Bob Elem,4th Grade,,41.0,5.0,11.0,5.0,5.0,5.0,72.0,True
+0876,Black Bob Elem,5th Grade,,51.0,5.0,11.0,0.0,5.0,5.0,77.0,True
+0876,Black Bob Elem,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,0.0,5.0,15.0,True
+0876,Black Bob Elem,Preschool-Aged At-Risk (3 years old),,0.0,5.0,5.0,0.0,0.0,0.0,10.0,True
+0876,Black Bob Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+0876,Black Bob Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0876,Black Bob Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,5.0,0.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0877,Tomahawk Elem,Kindergarten,,30.0,5.0,14.0,5.0,0.0,5.0,59.0,True
+0877,Tomahawk Elem,1st Grade,,33.0,5.0,17.0,0.0,0.0,5.0,60.0,True
+0877,Tomahawk Elem,2nd Grade,,32.0,5.0,13.0,0.0,0.0,5.0,55.0,True
+0877,Tomahawk Elem,3rd Grade,,37.0,5.0,16.0,0.0,5.0,5.0,68.0,True
+0877,Tomahawk Elem,4th Grade,,28.0,5.0,24.0,0.0,0.0,5.0,62.0,True
+0877,Tomahawk Elem,5th Grade,,22.0,5.0,5.0,0.0,0.0,5.0,37.0,True
+0877,Tomahawk Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+0877,Tomahawk Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0877,Tomahawk Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,5.0,0.0,15.0,True
+0877,Tomahawk Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0877,Tomahawk Elem,Pre-Kindergarten,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0885,Olathe East Sr High,9th Grade,,256.0,35.0,94.0,5.0,24.0,28.0,442.0,True
+0885,Olathe East Sr High,10th Grade,,222.0,59.0,88.0,5.0,25.0,37.0,436.0,True
+0885,Olathe East Sr High,11th Grade,407.0,232.0,59.0,76.0,0.0,20.0,20.0,407.0,False
+0885,Olathe East Sr High,12th Grade,,332.0,58.0,95.0,5.0,22.0,16.0,528.0,True
+0885,Olathe East Sr High,Nongraded,,5.0,0.0,5.0,0.0,5.0,0.0,15.0,True
+0885,Olathe East Sr High,Total,,,211.0,,,,101.0,312.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0913,Mission Trail Middle School,6th Grade,,178.0,5.0,17.0,0.0,5.0,11.0,216.0,True
+0913,Mission Trail Middle School,7th Grade,,179.0,5.0,13.0,0.0,5.0,5.0,207.0,True
+0913,Mission Trail Middle School,8th Grade,,193.0,13.0,14.0,5.0,5.0,5.0,235.0,True
+0913,Mission Trail Middle School,Total,,550.0,,44.0,,,,594.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0934,Millbrooke Elementary,Kindergarten,,23.0,5.0,5.0,0.0,5.0,5.0,43.0,True
+0934,Millbrooke Elementary,1st Grade,,41.0,5.0,5.0,0.0,5.0,5.0,61.0,True
+0934,Millbrooke Elementary,2nd Grade,,39.0,5.0,5.0,0.0,5.0,5.0,59.0,True
+0934,Millbrooke Elementary,3rd Grade,,42.0,5.0,10.0,0.0,5.0,5.0,67.0,True
+0934,Millbrooke Elementary,4th Grade,,55.0,5.0,10.0,0.0,0.0,5.0,75.0,True
+0934,Millbrooke Elementary,5th Grade,,44.0,5.0,5.0,0.0,5.0,5.0,64.0,True
+0934,Millbrooke Elementary,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+0934,Millbrooke Elementary,Preschool-Aged At-Risk (3 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+0934,Millbrooke Elementary,Preschool-Aged At-Risk (4 years old),,0.0,0.0,5.0,0.0,0.0,5.0,10.0,True
+0934,Millbrooke Elementary,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0934,Millbrooke Elementary,Pre-Kindergarten,,5.0,0.0,0.0,0.0,5.0,0.0,10.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0939,Olathe West High School,9th Grade,,231.0,13.0,93.0,0.0,5.0,14.0,356.0,True
+0939,Olathe West High School,10th Grade,,255.0,18.0,71.0,0.0,5.0,15.0,364.0,True
+0939,Olathe West High School,11th Grade,,243.0,12.0,86.0,5.0,5.0,24.0,375.0,True
+0939,Olathe West High School,12th Grade,,285.0,25.0,87.0,5.0,13.0,21.0,436.0,True
+0939,Olathe West High School,Nongraded,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+0939,Olathe West High School,Total,,,68.0,337.0,,,74.0,479.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0950,Summit Trail Middle School,6th Grade,,115.0,13.0,31.0,0.0,12.0,5.0,176.0,True
+0950,Summit Trail Middle School,7th Grade,,117.0,20.0,43.0,5.0,5.0,13.0,203.0,True
+0950,Summit Trail Middle School,8th Grade,,112.0,32.0,33.0,0.0,5.0,13.0,195.0,True
+0950,Summit Trail Middle School,Total,,344.0,65.0,107.0,,,,516.0,True
+  ,  ,  ,,,,,,,,0.0,True
+0953,Canyon Creek Elementary,Kindergarten,,53.0,5.0,5.0,5.0,5.0,5.0,78.0,True
+0953,Canyon Creek Elementary,1st Grade,,57.0,5.0,5.0,0.0,5.0,5.0,77.0,True
+0953,Canyon Creek Elementary,2nd Grade,,42.0,5.0,5.0,0.0,5.0,5.0,62.0,True
+0953,Canyon Creek Elementary,3rd Grade,,60.0,5.0,5.0,0.0,5.0,5.0,80.0,True
+0953,Canyon Creek Elementary,4th Grade,,58.0,5.0,5.0,0.0,5.0,5.0,78.0,True
+0953,Canyon Creek Elementary,5th Grade,,57.0,5.0,5.0,0.0,5.0,5.0,77.0,True
+0953,Canyon Creek Elementary,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+0953,Canyon Creek Elementary,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+0953,Canyon Creek Elementary,Pre-Kindergarten,,5.0,5.0,0.0,0.0,5.0,0.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+1379,Step Up Virtual,12th Grade,,12.0,10.0,23.0,0.0,5.0,5.0,55.0,True
+1379,Step Up Virtual,Nongraded,,37.0,18.0,47.0,5.0,5.0,5.0,117.0,True
+1379,Step Up Virtual,Total,,49.0,28.0,70.0,,,,147.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2781,Green Springs Elem,Kindergarten,,18.0,0.0,5.0,0.0,5.0,5.0,33.0,True
+2781,Green Springs Elem,1st Grade,,23.0,5.0,5.0,5.0,5.0,5.0,48.0,True
+2781,Green Springs Elem,2nd Grade,,20.0,5.0,5.0,0.0,5.0,5.0,40.0,True
+2781,Green Springs Elem,3rd Grade,,28.0,5.0,5.0,0.0,5.0,5.0,48.0,True
+2781,Green Springs Elem,4th Grade,,26.0,5.0,5.0,5.0,0.0,5.0,46.0,True
+2781,Green Springs Elem,5th Grade,,35.0,5.0,5.0,0.0,5.0,5.0,55.0,True
+2781,Green Springs Elem,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+2781,Green Springs Elem,Total,,,,,,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2782,Mahaffie Elem,Kindergarten,,39.0,5.0,15.0,5.0,5.0,5.0,74.0,True
+2782,Mahaffie Elem,1st Grade,,44.0,5.0,16.0,0.0,5.0,5.0,75.0,True
+2782,Mahaffie Elem,2nd Grade,,38.0,10.0,22.0,0.0,5.0,5.0,80.0,True
+2782,Mahaffie Elem,3rd Grade,,38.0,5.0,20.0,0.0,5.0,5.0,73.0,True
+2782,Mahaffie Elem,4th Grade,,52.0,5.0,19.0,0.0,5.0,5.0,86.0,True
+2782,Mahaffie Elem,5th Grade,,22.0,5.0,10.0,5.0,5.0,5.0,52.0,True
+2782,Mahaffie Elem,Special Ed 3 & 4 yr.,,14.0,5.0,5.0,0.0,5.0,5.0,34.0,True
+2782,Mahaffie Elem,Preschool-Aged At-Risk (3 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+2782,Mahaffie Elem,Preschool-Aged At-Risk (4 years old),,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+2782,Mahaffie Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+2782,Mahaffie Elem,Pre-Kindergarten,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2783,Pleasant Ridge Elem,Kindergarten,,27.0,5.0,5.0,0.0,5.0,5.0,47.0,True
+2783,Pleasant Ridge Elem,1st Grade,,20.0,5.0,5.0,0.0,5.0,5.0,40.0,True
+2783,Pleasant Ridge Elem,2nd Grade,,23.0,5.0,5.0,0.0,5.0,0.0,38.0,True
+2783,Pleasant Ridge Elem,3rd Grade,,27.0,5.0,11.0,0.0,5.0,5.0,53.0,True
+2783,Pleasant Ridge Elem,4th Grade,,25.0,5.0,5.0,0.0,5.0,5.0,45.0,True
+2783,Pleasant Ridge Elem,5th Grade,,29.0,5.0,5.0,0.0,5.0,5.0,49.0,True
+2783,Pleasant Ridge Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+2783,Pleasant Ridge Elem,Preschool-Aged At-Risk (3 years old),,5.0,5.0,0.0,0.0,0.0,0.0,10.0,True
+2783,Pleasant Ridge Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+2783,Pleasant Ridge Elem,Pre-Kindergarten,,5.0,0.0,0.0,0.0,5.0,5.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2784,Heatherstone Elem,Kindergarten,,23.0,5.0,5.0,0.0,5.0,5.0,43.0,True
+2784,Heatherstone Elem,1st Grade,,28.0,5.0,5.0,0.0,5.0,5.0,48.0,True
+2784,Heatherstone Elem,2nd Grade,,24.0,5.0,5.0,0.0,5.0,5.0,44.0,True
+2784,Heatherstone Elem,3rd Grade,,34.0,5.0,5.0,0.0,5.0,5.0,54.0,True
+2784,Heatherstone Elem,4th Grade,,32.0,5.0,5.0,0.0,5.0,5.0,52.0,True
+2784,Heatherstone Elem,5th Grade,,49.0,5.0,5.0,5.0,5.0,5.0,74.0,True
+2784,Heatherstone Elem,Special Ed 3 & 4 yr.,,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+2784,Heatherstone Elem,Preschool-Aged At-Risk (3 years old),,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+2784,Heatherstone Elem,Preschool-Aged At-Risk (4 years old),,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+2784,Heatherstone Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+2784,Heatherstone Elem,Pre-Kindergarten,,5.0,5.0,5.0,0.0,5.0,5.0,25.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2785,Bentwood Elem,Kindergarten,,34.0,5.0,5.0,0.0,5.0,5.0,54.0,True
+2785,Bentwood Elem,1st Grade,,40.0,5.0,5.0,0.0,5.0,5.0,60.0,True
+2785,Bentwood Elem,2nd Grade,,40.0,5.0,5.0,0.0,5.0,5.0,60.0,True
+2785,Bentwood Elem,3rd Grade,,35.0,5.0,5.0,0.0,5.0,5.0,55.0,True
+2785,Bentwood Elem,4th Grade,,38.0,0.0,5.0,0.0,5.0,5.0,53.0,True
+2785,Bentwood Elem,5th Grade,,41.0,5.0,5.0,0.0,5.0,5.0,61.0,True
+2785,Bentwood Elem,Special Ed 3 & 4 yr.,,10.0,0.0,5.0,0.0,0.0,5.0,20.0,True
+2785,Bentwood Elem,Preschool-Aged At-Risk (3 years old),,5.0,5.0,0.0,0.0,0.0,0.0,10.0,True
+2785,Bentwood Elem,Preschool-Aged At-Risk (4 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+2785,Bentwood Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+2785,Bentwood Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,5.0,5.0,20.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2786,California Trail Middle School,6th Grade,,139.0,19.0,17.0,5.0,19.0,15.0,214.0,True
+2786,California Trail Middle School,7th Grade,189.0,125.0,15.0,19.0,0.0,18.0,12.0,189.0,False
+2786,California Trail Middle School,8th Grade,,130.0,5.0,28.0,0.0,15.0,13.0,191.0,True
+2786,California Trail Middle School,Total,,394.0,,64.0,,52.0,40.0,550.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2787,Cedar Creek Elem,Kindergarten,,37.0,5.0,5.0,0.0,5.0,5.0,57.0,True
+2787,Cedar Creek Elem,1st Grade,,43.0,0.0,0.0,0.0,5.0,5.0,53.0,True
+2787,Cedar Creek Elem,2nd Grade,,44.0,0.0,5.0,0.0,5.0,5.0,59.0,True
+2787,Cedar Creek Elem,3rd Grade,,55.0,5.0,0.0,0.0,5.0,5.0,70.0,True
+2787,Cedar Creek Elem,4th Grade,,58.0,0.0,5.0,0.0,5.0,5.0,73.0,True
+2787,Cedar Creek Elem,5th Grade,,54.0,5.0,5.0,0.0,5.0,5.0,74.0,True
+2787,Cedar Creek Elem,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,5.0,5.0,15.0,True
+2787,Cedar Creek Elem,Total,,,,,0.0,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2789,Madison Place Elementary,Kindergarten,,37.0,10.0,5.0,0.0,5.0,5.0,62.0,True
+2789,Madison Place Elementary,1st Grade,,34.0,5.0,5.0,5.0,5.0,5.0,59.0,True
+2789,Madison Place Elementary,2nd Grade,,43.0,5.0,5.0,5.0,5.0,5.0,68.0,True
+2789,Madison Place Elementary,3rd Grade,,34.0,5.0,5.0,5.0,5.0,5.0,59.0,True
+2789,Madison Place Elementary,4th Grade,,44.0,5.0,5.0,0.0,5.0,5.0,64.0,True
+2789,Madison Place Elementary,5th Grade,,43.0,10.0,5.0,5.0,5.0,5.0,73.0,True
+2789,Madison Place Elementary,Special Ed 3 & 4 yr.,,12.0,0.0,0.0,0.0,5.0,0.0,17.0,True
+2789,Madison Place Elementary,Preschool-Aged At-Risk (3 years old),,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+2789,Madison Place Elementary,Preschool-Aged At-Risk (4 years old),,0.0,5.0,0.0,0.0,0.0,0.0,5.0,True
+2789,Madison Place Elementary,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+2789,Madison Place Elementary,Pre-Kindergarten,,5.0,5.0,0.0,0.0,0.0,5.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+2790,Woodland Elem,Kindergarten,,32.0,5.0,5.0,0.0,5.0,5.0,52.0,True
+2790,Woodland Elem,1st Grade,,37.0,5.0,11.0,0.0,5.0,5.0,63.0,True
+2790,Woodland Elem,2nd Grade,,28.0,5.0,5.0,0.0,5.0,5.0,48.0,True
+2790,Woodland Elem,3rd Grade,,39.0,5.0,5.0,0.0,5.0,5.0,59.0,True
+2790,Woodland Elem,4th Grade,,40.0,5.0,5.0,0.0,5.0,5.0,60.0,True
+2790,Woodland Elem,5th Grade,,35.0,5.0,5.0,0.0,5.0,5.0,55.0,True
+2790,Woodland Elem,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+2790,Woodland Elem,Preschool-Aged At-Risk (3 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+2790,Woodland Elem,Preschool-Aged At-Risk (4 years old),,0.0,5.0,0.0,0.0,0.0,0.0,5.0,True
+2790,Woodland Elem,Total,,,,,0.0,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+2790,Woodland Elem,Pre-Kindergarten,,5.0,5.0,5.0,0.0,0.0,0.0,15.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9300,Sunnyside Elementary School,Kindergarten,,28.0,5.0,5.0,0.0,5.0,5.0,48.0,True
+9300,Sunnyside Elementary School,1st Grade,,35.0,5.0,5.0,0.0,5.0,5.0,55.0,True
+9300,Sunnyside Elementary School,2nd Grade,,29.0,5.0,5.0,0.0,5.0,5.0,49.0,True
+9300,Sunnyside Elementary School,3rd Grade,,42.0,5.0,5.0,0.0,5.0,5.0,62.0,True
+9300,Sunnyside Elementary School,4th Grade,,42.0,5.0,5.0,0.0,5.0,5.0,62.0,True
+9300,Sunnyside Elementary School,5th Grade,,33.0,5.0,5.0,0.0,5.0,0.0,48.0,True
+9300,Sunnyside Elementary School,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,0.0,5.0,10.0,True
+9300,Sunnyside Elementary School,Total,,,,,0.0,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9301,Chisholm Trail Middle School,6th Grade,,136.0,16.0,11.0,5.0,12.0,13.0,193.0,True
+9301,Chisholm Trail Middle School,7th Grade,,133.0,20.0,24.0,0.0,10.0,5.0,192.0,True
+9301,Chisholm Trail Middle School,8th Grade,,145.0,16.0,14.0,0.0,15.0,5.0,195.0,True
+9301,Chisholm Trail Middle School,Total,,414.0,52.0,49.0,,37.0,,552.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9302,Arbor Creek Elementary,Kindergarten,,35.0,5.0,5.0,0.0,5.0,5.0,55.0,True
+9302,Arbor Creek Elementary,1st Grade,,27.0,5.0,5.0,5.0,5.0,5.0,52.0,True
+9302,Arbor Creek Elementary,2nd Grade,,37.0,5.0,5.0,0.0,5.0,5.0,57.0,True
+9302,Arbor Creek Elementary,3rd Grade,,38.0,5.0,5.0,5.0,5.0,5.0,63.0,True
+9302,Arbor Creek Elementary,4th Grade,,49.0,5.0,5.0,5.0,5.0,5.0,74.0,True
+9302,Arbor Creek Elementary,5th Grade,,53.0,5.0,5.0,0.0,5.0,5.0,73.0,True
+9302,Arbor Creek Elementary,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,5.0,0.0,10.0,True
+9302,Arbor Creek Elementary,Preschool-Aged At-Risk (3 years old),,0.0,5.0,5.0,0.0,0.0,5.0,15.0,True
+9302,Arbor Creek Elementary,Preschool-Aged At-Risk (4 years old),,5.0,5.0,5.0,0.0,0.0,5.0,20.0,True
+9302,Arbor Creek Elementary,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+9302,Arbor Creek Elementary,Pre-Kindergarten,,19.0,5.0,5.0,0.0,5.0,5.0,39.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9304,Manchester Park Elementary,Kindergarten,,76.0,5.0,11.0,0.0,5.0,5.0,102.0,True
+9304,Manchester Park Elementary,1st Grade,,72.0,5.0,12.0,0.0,5.0,5.0,99.0,True
+9304,Manchester Park Elementary,2nd Grade,,85.0,5.0,5.0,0.0,5.0,5.0,105.0,True
+9304,Manchester Park Elementary,3rd Grade,,66.0,5.0,13.0,0.0,5.0,5.0,94.0,True
+9304,Manchester Park Elementary,4th Grade,,98.0,5.0,5.0,0.0,5.0,5.0,118.0,True
+9304,Manchester Park Elementary,5th Grade,,74.0,5.0,10.0,0.0,5.0,5.0,99.0,True
+9304,Manchester Park Elementary,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,5.0,0.0,15.0,True
+9304,Manchester Park Elementary,Total,,,,,0.0,,,0.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9305,Clearwater Creek Elementary,Kindergarten,,62.0,5.0,12.0,0.0,5.0,5.0,89.0,True
+9305,Clearwater Creek Elementary,1st Grade,,48.0,5.0,10.0,0.0,5.0,5.0,73.0,True
+9305,Clearwater Creek Elementary,2nd Grade,,57.0,5.0,10.0,0.0,5.0,5.0,82.0,True
+9305,Clearwater Creek Elementary,3rd Grade,,64.0,5.0,11.0,0.0,5.0,5.0,90.0,True
+9305,Clearwater Creek Elementary,4th Grade,,78.0,5.0,5.0,0.0,5.0,5.0,98.0,True
+9305,Clearwater Creek Elementary,5th Grade,,61.0,5.0,5.0,5.0,5.0,5.0,86.0,True
+9305,Clearwater Creek Elementary,Special Ed 3 & 4 yr.,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True
+9305,Clearwater Creek Elementary,Preschool-Aged At-Risk (4 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+9305,Clearwater Creek Elementary,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+9305,Clearwater Creek Elementary,Pre-Kindergarten,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9306,Prairie Trail Middle School,6th Grade,,209.0,20.0,13.0,5.0,14.0,12.0,273.0,True
+9306,Prairie Trail Middle School,7th Grade,,184.0,14.0,15.0,5.0,22.0,11.0,251.0,True
+9306,Prairie Trail Middle School,8th Grade,,171.0,14.0,11.0,5.0,14.0,5.0,220.0,True
+9306,Prairie Trail Middle School,Total,,564.0,48.0,39.0,,50.0,,701.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9307,Ravenwood Elementary,Kindergarten,,37.0,5.0,10.0,0.0,5.0,0.0,57.0,True
+9307,Ravenwood Elementary,1st Grade,,44.0,5.0,10.0,0.0,5.0,5.0,69.0,True
+9307,Ravenwood Elementary,2nd Grade,,51.0,13.0,5.0,5.0,5.0,5.0,84.0,True
+9307,Ravenwood Elementary,3rd Grade,,54.0,11.0,5.0,0.0,5.0,5.0,80.0,True
+9307,Ravenwood Elementary,4th Grade,,46.0,5.0,5.0,0.0,5.0,5.0,66.0,True
+9307,Ravenwood Elementary,5th Grade,,42.0,12.0,12.0,0.0,5.0,5.0,76.0,True
+9307,Ravenwood Elementary,Special Ed 3 & 4 yr.,,5.0,0.0,0.0,0.0,0.0,0.0,5.0,True
+9307,Ravenwood Elementary,Preschool-Aged At-Risk (3 years old),,0.0,5.0,5.0,0.0,0.0,0.0,10.0,True
+9307,Ravenwood Elementary,Preschool-Aged At-Risk (4 years old),,5.0,5.0,0.0,0.0,0.0,0.0,10.0,True
+9307,Ravenwood Elementary,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+9307,Ravenwood Elementary,Pre-Kindergarten,,5.0,5.0,0.0,0.0,0.0,0.0,10.0,True
+  ,  ,  ,,,,,,,,0.0,True
+9311,Forest View Elem,Kindergarten,,32.0,5.0,5.0,0.0,5.0,5.0,52.0,True
+9311,Forest View Elem,1st Grade,,50.0,5.0,5.0,0.0,0.0,5.0,65.0,True
+9311,Forest View Elem,2nd Grade,,41.0,5.0,5.0,5.0,5.0,5.0,66.0,True
+9311,Forest View Elem,3rd Grade,,70.0,0.0,5.0,0.0,5.0,5.0,85.0,True
+9311,Forest View Elem,4th Grade,,42.0,5.0,5.0,0.0,5.0,5.0,62.0,True
+9311,Forest View Elem,5th Grade,,58.0,5.0,5.0,0.0,5.0,5.0,78.0,True
+9311,Forest View Elem,Special Ed 3 & 4 yr.,,11.0,0.0,5.0,0.0,5.0,0.0,21.0,True
+9311,Forest View Elem,Preschool-Aged At-Risk (3 years old),,5.0,5.0,5.0,0.0,5.0,0.0,20.0,True
+9311,Forest View Elem,Preschool-Aged At-Risk (4 years old),,0.0,0.0,5.0,0.0,0.0,0.0,5.0,True
+9311,Forest View Elem,Total,,,,,,,,0.0,True
+  ,    ,    ,,,,,,,,0.0,True
+9311,Forest View Elem,Pre-Kindergarten,,5.0,0.0,5.0,0.0,0.0,0.0,10.0,True

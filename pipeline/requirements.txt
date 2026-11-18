@@ -1,0 +1,11 @@
+geopandas>=1.0
+shapely>=2.0
+pyogrio
+pyarrow
+numpy
+scipy
+pandas
+ortools
+pillow
+pymupdf
+psycopg[binary]>=3.1

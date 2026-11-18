@@ -137,3 +137,7 @@ details.more[open] > summary { color: var(--accent); }
 .show-select { width: auto; min-width: 180px; margin: 0; }
 section.row.between .lbl { margin: 0; }
 .busy-inline { float: right; font-size: 12px; }
+
+.menu-links { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+.menu-links a, .indep a { color: var(--accent); }
+.indep { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 14px 0 0; }

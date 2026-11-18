@@ -1,0 +1,61 @@
+/* Plain content pages. Colors come from the tokens in lab/styles.css (light and dark). */
+.site { min-height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+.site-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px max(16px, calc((100% - 760px) / 2)); border-bottom: 1px solid var(--line); background: var(--panel); }
+.site-brand { font-weight: 700; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; font-size: 15px; }
+.site-top nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.site-top nav a { color: var(--ink); text-decoration: none; padding: 5px 10px; border-radius: 6px; font-size: 14px; }
+.site-top nav a:hover { background: var(--sel); }
+.site-top nav a[aria-current="page"] { background: var(--sel); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+.site-main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 28px 16px 48px; font-size: 15.5px; line-height: 1.6; }
+.site-main h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.02em; }
+.site-main .lede { color: var(--muted); font-size: 17px; margin: 0 0 20px; }
+.site-main h2 { font-size: 19px; text-transform: none; letter-spacing: -0.01em; color: var(--ink); margin: 36px 0 8px; scroll-margin-top: 16px; }
+.site-main h3 { font-size: 15.5px; margin: 20px 0 4px; }
+.site-main p, .site-main li { margin: 8px 0; }
+.site-main ul, .site-main ol { padding-left: 22px; }
+.site-main a { color: var(--accent); }
+.site-main code { font-size: 13.5px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.site-main section { border: 0; padding: 0; }
+.site .notice { border: 1px solid var(--line); border-left: 4px solid var(--warn); background: var(--panel); border-radius: 8px; padding: 12px 14px; margin: 16px 0 8px; }
+.site .toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; margin: 16px 0 0; padding: 0; list-style: none; }
+.site .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.site .split > div { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
+.site .split h3 { margin-top: 0; }
+.site .split ul { margin: 0; padding-left: 18px; font-size: 14.5px; }
+.site .stag { display: inline-block; font-size: 11.5px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; border-radius: 10px; padding: 1px 8px; white-space: nowrap; }
+.site .stag.district { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.site .stag.public { background: color-mix(in srgb, #2e7d32 16%, transparent); color: #2e7d32; }
+.site .stag.model { background: color-mix(in srgb, #b26a00 18%, transparent); color: #b26a00; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .site .stag.public { color: #81c784; } :root:not([data-theme="light"]) .site .stag.model { color: #ffb74d; } }
+:root[data-theme="dark"] .site .stag.public { color: #81c784; } :root[data-theme="dark"] .site .stag.model { color: #ffb74d; }
+.site .src-wrap { overflow-x: auto; margin: 12px 0; }
+.site .src { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.45; }
+.site .src th { text-align: left; font-size: 12.5px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 6px 8px 6px 0; }
+.site .src td { vertical-align: top; border-bottom: 1px solid var(--line); padding: 8px 8px 8px 0; }
+.site .src td:first-child { min-width: 170px; }
+.site .src .muted { font-size: 13px; }
+.site-foot { border-top: 1px solid var(--line); background: var(--panel); padding: 16px max(16px, calc((100% - 760px) / 2)); font-size: 13px; color: var(--muted); line-height: 1.5; }
+.site-foot p { margin: 0; } .site-foot a { color: var(--accent); }
+/* feedback form */
+.site .form { display: grid; gap: 14px; margin-top: 16px; }
+.site .form label { display: grid; gap: 4px; font-size: 14px; font-weight: 600; }
+.site .form label span.opt { font-weight: 400; color: var(--muted); }
+.site .form input, .site .form select, .site .form textarea { font: inherit; font-weight: 400; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; margin: 0; }
+.site .form textarea { min-height: 150px; resize: vertical; }
+.site .form input:focus, .site .form select:focus, .site .form textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
+.site .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.site .form .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.site .form .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.site .form button[type=submit] { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); border-radius: 6px; padding: 8px 18px; font-weight: 600; font-size: 15px; }
+.site .form .hint { font-size: 13px; color: var(--muted); font-weight: 400; }
+.site .status { border-radius: 8px; padding: 10px 12px; font-size: 14.5px; }
+.site .status.ok { background: var(--sel); }
+.site .status.err { border: 1px solid var(--warn); color: var(--warn); }
+@media (max-width: 600px) { .site .split, .site .form .two { grid-template-columns: 1fr; } .site-main h1 { font-size: 24px; } }
+@media (max-width: 600px) {
+  .site .src thead { display: none; }
+  .site .src tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+  .site .src td { display: block; border: 0; padding: 2px 0; }
+  .site .src td:first-child { min-width: 0; font-weight: 600; }
+}

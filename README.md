@@ -28,7 +28,7 @@ The app works without Supabase; sharing then falls back to long links that carry
 
 ## Supabase
 
-1. Create a project; in the SQL editor (or `supabase db push`) run `supabase/migrations/*.sql`.
+1. Create a project; in the SQL editor (or `supabase db push`) run each file in `supabase/migrations` in order (`init`, then `feedback`).
 2. In Vercel, set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (see `.env.example`).
 3. Publish the data (from your machine; needs the session-pooler connection string):
 

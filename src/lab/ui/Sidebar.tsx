@@ -105,6 +105,7 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
                 <label className="chk"><input type="checkbox" checked={ui.includePreK} onChange={e => ui.set({ includePreK: e.target.checked })} /> Count Pre-K in model %</label>
                 <label className="lbl">Year: {Y[ui.year]}</label>
                 <input type="range" min={y0} max={Y.length - 1} value={ui.year} onChange={e => ui.set({ year: Number(e.target.value) })} aria-label="Year" />
+                <div className="menu-links"><a href="/about">About &amp; data sources</a><a href="/contact" onClick={e => { if (location.href.length <= 2000) e.currentTarget.href = '/contact?plan=' + encodeURIComponent(location.href); }}>Send feedback</a></div>
               </div>
             </details>
             <button className="small hide-panel" aria-label="Hide panel" onClick={() => ui.set({ panelOpen: false })}>«</button>
@@ -231,6 +232,7 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
         <ul className="list src">{Object.entries(S.meta.sources).map(([k, v]) => <li key={k}><b>{k}</b>: {v}</li>)}</ul>
         <p className="note">Students per home come from 2020 census ages, scaled so each school's current area matches its projected K–12 grade enrollment (the district's utilization × capacity; Spanish immersion is counted at Arbor Creek, not in neighborhoods). A home keeps its original school's projection wherever you assign it. Homes built after 2020 are estimated from building footprints. Boundaries are shown as of full implementation; Fairview and Ridgeview close in 2028-29 in the district's plan.</p>
       </section>}
+      <p className="indep">Independent project, not affiliated with Olathe Public Schools. Mixes district figures with modeled estimates. <a href="/about">About &amp; data</a> · <a href="/contact">Feedback</a></p>
       </div>
     </aside>
   );

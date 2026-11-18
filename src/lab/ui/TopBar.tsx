@@ -174,7 +174,7 @@ export default function TopBar({ S, mapRef, resA, pad }: { S: Static; mapRef: Mu
                 <Row key={l} id={'sw-ov-' + l} label={l === 'ms' ? 'Middle school' : 'High school'} swatch={l}
                   checked={ui.overlays.includes(l)} on={v => ui.set({ overlays: v ? [...ui.overlays, l] : ui.overlays.filter(x => x !== l) })} />
               ))}
-              {ui.level === 'es' && ui.overlays.includes('ms') && <p className="text-xs text-muted-foreground">Middle school lines are today&rsquo;s, with Indian Trail&rsquo;s area shown as not yet assigned. The district&rsquo;s middle school proposal isn&rsquo;t loaded.</p>}
+              {ui.level === 'es' && ui.overlays.includes('ms') && <p className="text-xs text-muted-foreground">{ui.mode === 'build' ? <>Shows the middle school concept picked in the Option Builder{ui.build.ms ? ` (concept ${ui.build.ms})` : ''}.</> : <>Shows this plan&rsquo;s middle school lines. The starting plans leave Indian Trail&rsquo;s area unassigned; build from the Option Builder to include a middle school concept.</>}</p>}
             </div>
             <Separator />
             <div className="space-y-3.5 p-4">

@@ -28,8 +28,8 @@ export default function About() {
       </ul>
 
       <h2 id="what">What it does</h2>
-      <p>The district closes five elementary schools (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove) and has shown several
-        ways to redraw their boundaries. The lab puts those options on one map so you can compare them side by side.</p>
+      <p>The district closes five elementary schools (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove) and one middle school
+        (Indian Trail), and has shown several ways to redraw their boundaries. The lab puts those options on one map so you can compare them side by side.</p>
       <ul>
         <li><b>Option Builder.</b> Pick one of the district&rsquo;s concepts for each closing school, or one of the district&rsquo;s
           full options, and see the result. Some concepts can be mixed and matched; the builder shows what a mix looks like.</li>
@@ -84,8 +84,8 @@ export default function About() {
         <table className="src">
           <thead><tr><th>Source</th><th>Type</th><th>Used for</th></tr></thead>
           <tbody>
-            <tr><td>Facility alignment boundary presentations, Nov 2026 (elementary deck and parent-meeting decks)</td><td>{D}</td>
-              <td>Capacities, fall 2026 enrollment, five-year estimates by option, students moving by piece, concept maps, student-dot maps</td></tr>
+            <tr><td>Facility alignment boundary presentations, Nov 2026 (elementary and middle school decks, and parent-meeting decks)</td><td>{D}</td>
+              <td>Capacities, fall 2026 enrollment, five-year estimates by option, students moving by piece, elementary and middle school concept maps, student-dot maps</td></tr>
             <tr><td>District 2026 planning-area map</td><td>{D}</td><td>Planning areas (the numbered areas such as 610 or 750)</td></tr>
             <tr><td>Demographic Analytics Advisors, <i>Enrollment Forecasting, Capacity and Utilization Analysis</i> (July 2026), prepared for the district</td><td>{D}</td>
               <td>Utilization projections by school, 2025&ndash;26 through 2034&ndash;35</td></tr>

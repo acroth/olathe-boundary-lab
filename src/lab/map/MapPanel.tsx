@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Map, { Layer, Source, NavigationControl, ScaleControl, type MapRef, type ViewState } from 'react-map-gl/maplibre';
+import Map, { Layer, Source, ScaleControl, type MapRef, type ViewState } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Level, Static } from '../data';
@@ -136,7 +136,6 @@ export default function MapPanel(p: Props) {
       <Map ref={ref} {...(p.view as any)} onMove={e => p.onView(e.viewState)} mapStyle={style}
         style={{ position: 'absolute', inset: 0 }} onLoad={(e) => { addHatch(e.target); setLoaded(true); }} canvasContextAttributes={{ preserveDrawingBuffer: true } as any}
         attributionControl={{ compact: true }} maxZoom={18} minZoom={9}>
-        <NavigationControl position="top-right" showCompass={false} />
         <ScaleControl position="bottom-left" unit="imperial" />
         <Source id="zones" type="geojson" data={zones as any}>
           <Layer id="zone-fill" type="fill" filter={['all', ['!=', ['get', 'school'], -1], visExpr]} paint={{ 'fill-color': (p.colorBy === 'util' ? utilColor : schoolColor) as any, 'fill-opacity': p.colorBy === 'util' ? 0.42 : 0.68 }} />

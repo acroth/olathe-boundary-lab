@@ -42,3 +42,11 @@ export function planFromPreset(p: Preset): Plan {
 }
 let n = 0;
 export const newId = () => `u${Date.now().toString(36)}${(n++).toString(36)}`;
+
+/** Plans saved in this browser (name + encoded plan). */
+export interface SavedPlan { name: string; enc: string }
+const readSaved = (): SavedPlan[] => { try { return JSON.parse(localStorage.getItem('saved-plans') || '[]'); } catch { return []; } };
+export const useSaved = create<{ saved: SavedPlan[]; save: (p: SavedPlan) => void }>()((set, get) => ({
+  saved: typeof window === 'undefined' ? [] : readSaved(),
+  save: (p) => { const next = [...get().saved.filter(s => s.name !== p.name), p]; set({ saved: next }); try { localStorage.setItem('saved-plans', JSON.stringify(next)); } catch { /* private mode */ } },
+}));

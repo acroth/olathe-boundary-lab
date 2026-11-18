@@ -59,3 +59,9 @@
   .site .src td { display: block; border: 0; padding: 2px 0; }
   .site .src td:first-child { min-width: 0; font-weight: 600; }
 }
+
+.site-main ul { list-style: disc; } .site-main ol { list-style: decimal; }
+.site .toc { list-style: none; }
+.site .split ul { list-style: disc; }
+.site-main h1 { font-weight: 700; } .site-main h2 { font-weight: 650; } .site-main h3 { font-weight: 600; }
+.site-main b, .site-main strong { font-weight: 650; }

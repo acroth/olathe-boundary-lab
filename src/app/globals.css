@@ -1,0 +1,85 @@
+/* Cascade order: Tailwind preflight < the lab's older styles < shadcn/Tailwind components and utilities. */
+@layer theme, base, legacy, components, utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "../lab/styles.css" layer(legacy);
+@import "./_site/site.css" layer(legacy);
+
+/* Interface tokens (prefixed so they don't collide with the lab's older --muted / --accent). */
+:root {
+  --ui-bg: #f3f6f6; --ui-fg: #1d2a2b; --ui-card: #ffffff; --ui-card-fg: #1d2a2b; --ui-popover: #ffffff; --ui-popover-fg: #1d2a2b;
+  --ui-primary: #3b968f; --ui-primary-fg: #ffffff; --ui-secondary: #edf3f3; --ui-secondary-fg: #1d2a2b;
+  --ui-muted: #eff4f4; --ui-muted-fg: #6a7b7c; --ui-accent: #e4f2f1; --ui-accent-fg: #1f5c57;
+  --ui-destructive: #d64545; --ui-border: #e2eaea; --ui-input: #dbe4e4; --ui-ring: #3b968f; --ui-lime: #c6e05a;
+  --ui-shadow: 0 1px 2px rgba(16, 40, 40, .06), 0 8px 24px rgba(16, 40, 40, .08);
+  --radius: 0.75rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ui-bg: #121718; --ui-fg: #e6eeee; --ui-card: #1a2122; --ui-card-fg: #e6eeee; --ui-popover: #1d2526; --ui-popover-fg: #e6eeee;
+    --ui-primary: #4fb3aa; --ui-primary-fg: #0c1414; --ui-secondary: #243031; --ui-secondary-fg: #e6eeee;
+    --ui-muted: #222b2c; --ui-muted-fg: #94a6a7; --ui-accent: #23393a; --ui-accent-fg: #bfe8e3;
+    --ui-destructive: #ff7b7b; --ui-border: #2c3738; --ui-input: #334042; --ui-ring: #4fb3aa;
+    --ui-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .35);
+  }
+}
+@theme inline {
+  --color-background: var(--ui-bg); --color-foreground: var(--ui-fg);
+  --color-card: var(--ui-card); --color-card-foreground: var(--ui-card-fg);
+  --color-popover: var(--ui-popover); --color-popover-foreground: var(--ui-popover-fg);
+  --color-primary: var(--ui-primary); --color-primary-foreground: var(--ui-primary-fg);
+  --color-secondary: var(--ui-secondary); --color-secondary-foreground: var(--ui-secondary-fg);
+  --color-muted: var(--ui-muted); --color-muted-foreground: var(--ui-muted-fg);
+  --color-accent: var(--ui-accent); --color-accent-foreground: var(--ui-accent-fg);
+  --color-destructive: var(--ui-destructive); --color-border: var(--ui-border); --color-input: var(--ui-input); --color-ring: var(--ui-ring);
+  --color-lime: var(--ui-lime);
+  --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px); --radius-2xl: calc(var(--radius) + 8px);
+  --shadow-float: var(--ui-shadow);
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+}
+
+/* ---------- Lab layout: rail, floating top bar, panel, legend ---------- */
+.lab { position: fixed; inset: 0; background: var(--ui-bg); overflow: hidden; }
+.lab-main { position: absolute; inset: 0 0 calc(60px + env(safe-area-inset-bottom)) 0; }
+.lab .maps { position: absolute; inset: 0; }
+.lab .map-wrap { border-left: 0; }
+.lab .maps.split .map-wrap + .map-wrap { border-left: 1px solid var(--ui-border); }
+.topbar { top: 12px; left: 12px; right: 12px; }
+.panel { position: absolute; z-index: 15; display: flex; flex-direction: column; background: var(--ui-card); color: var(--ui-fg);
+  border: 1px solid var(--ui-border); box-shadow: var(--ui-shadow); overflow: hidden; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px 12px; border-bottom: 1px solid var(--ui-border); flex: none; }
+.panel-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 18px 20px; -webkit-overflow-scrolling: touch; }
+.panel .grab { display: none; }
+.legend-dock { right: 12px; top: 72px; }
+.drawbar { left: 12px; right: 12px; }
+.lab .toast { position: absolute; z-index: 25; left: 50%; transform: translateX(-50%); top: 72px; bottom: auto; background: var(--ui-fg); color: var(--ui-bg);
+  border-radius: 12px; padding: 10px 16px; font-size: 14px; max-width: min(92%, 520px); box-shadow: var(--ui-shadow); }
+.lab .maplibregl-ctrl-scale { border-color: var(--ui-muted-fg); color: var(--ui-fg); background: color-mix(in srgb, var(--ui-card) 80%, transparent); }
+@media (max-width: 767px) {
+  .panel { left: 0; right: 0; bottom: 0; border-radius: 20px 20px 0 0; border-bottom: 0; transition: height .2s ease; }
+  .lab.sheet-peek .panel { height: 190px; } .lab.sheet-peek .panel-body { overflow: hidden; }
+  .lab.sheet-half .panel { height: 50%; } .lab.sheet-full .panel { height: calc(100% - 72px); }
+  .panel .grab { display: block; flex: none; width: 100%; border: 0; background: transparent; padding: 8px 0 0; cursor: pointer; }
+  .panel .grab span { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--ui-border); margin: 0 auto; }
+  .panel-head { padding: 6px 18px 10px; }
+  .drawbar { bottom: 202px; padding: 6px; }
+  .drawbar-hint { display: none; }
+  .lab.sheet-half .drawbar, .lab.sheet-full .drawbar { display: none; }
+  .lab .maps.split { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .lab .maplibregl-ctrl-bottom-left, .lab .maplibregl-ctrl-bottom-right { bottom: 190px; }
+}
+@media (min-width: 768px) {
+  .lab-main { inset: 0 0 0 72px; }
+  .topbar { top: 16px; left: 16px; right: auto; }
+  .panel { top: 80px; left: 16px; bottom: 16px; width: 380px; border-radius: 20px; }
+  .lab.panel-closed .panel { display: none; }
+  .legend-dock { top: auto; right: 16px; bottom: 36px; }
+  .drawbar { top: 80px; left: 412px; right: auto; width: min(520px, calc(100% - 428px - 16px)); }
+  .lab.panel-closed .drawbar { left: 16px; width: min(520px, calc(100% - 32px)); }
+  .lab .toast { top: auto; bottom: 28px; }
+  .lab.panel-open .maplibregl-ctrl-bottom-left { left: 412px; }
+}

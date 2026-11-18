@@ -112,8 +112,7 @@ export default function MapPanel(props: MapPanelProps) {
     const map = mapRef.current?.getMap(), levelResult = props.result?.[level];
     if (!map || !loaded || !levelResult || !props.showHomes) return;
 
-    const homesSource = map.getSource('homes') as any;
-    if (!homesSource || !homesSource._data?.features?.length) {
+    if (!map.getSource('homes') || !homesGeoJson.features.length) {
       const retry = setTimeout(() => setHomesRetry(count => count + 1), HOMES_RETRY_MS);
       return () => clearTimeout(retry);
     }
@@ -125,7 +124,7 @@ export default function MapPanel(props: MapPanelProps) {
     for (let home = 0; home < assignment.length; home++) {
       map.setFeatureState({ source: 'homes', id: home }, { c: homeColorIndex(assignment[home]), d: props.diffHomes ? props.diffHomes[home] : 0 });
     }
-  }, [props.result, level, loaded, props.showHomes, props.diffHomes, staticData, homesRetry, visibleSchools]);
+  }, [props.result, level, loaded, props.showHomes, homesGeoJson, props.diffHomes, staticData, homesRetry, visibleSchools]);
 
   // drawing controller on the interactive map
   useEffect(() => {

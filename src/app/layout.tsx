@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'Olathe Boundary Lab',
@@ -10,5 +11,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body><TooltipProvider>{children}</TooltipProvider></body></html>;
+  return <html lang="en"><body><TooltipProvider>{children}</TooltipProvider><Analytics /></body></html>;
 }

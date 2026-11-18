@@ -30,7 +30,7 @@ data/ (in git) ┼─> 1 schools ─> 2 homes ─> 3 students ─> 5 app_export 
 | `boundary_lab/geo.py` | Small geometry helpers used across steps. |
 | `boundary_lab/publish_supabase.py` | Copies the finished data into Supabase as a numbered data version. |
 | `analysis/backtest_2010.py` | The 2010-to-2020 check behind the model's age-blend weights. |
-| `tools/` | One-off readers that turned the district's slide maps into data (results are saved in `data/map_readings/`). |
+| `tools/map_reading/` | The readers that turned the district's slide maps into data. Their results are committed in `data/map_readings/`. |
 | `data/` | Small source tables kept in git: KSDE headcounts, DAA utilization, NCES Pre-K, published capacities, planning areas, map readings. |
 
 ## The student model in brief
@@ -69,13 +69,13 @@ moving together, with any split on a major road or creek. That goal shapes the t
 
 ## Map readings
 
-The district published its options as images. The readers in `tools/` georeferenced each map against known road
-intersections and classified every street block by its fill color. Their results are committed here, so the pipeline needs
-nothing from those tools:
+The district published its options as images. The readers in `tools/map_reading/` line each map up with known road
+crossings and classify every street block by its fill color (see `tools/map_reading/README.md`, which also lists the three
+hand corrections). Their results are committed here, so the pipeline needs nothing from those tools:
 
 - `data/map_readings/elementary_blocks.parquet`: for each street block of the 18 affected elementary schools, its school today,
-  where each district option 1–4 sends it, and its share of the district's student dots. Dots sitting on a block line are
-  split between blocks, so the counts are fractional.
+  where each district option 1–4 sends it, and its student dots. Each closing school's dots are scaled to sum to the district's
+  fall 2026 K-5 count, so the counts are fractional.
 - `data/map_readings/middle_school_blocks.parquet`: for each street block, its middle school today and in concepts 1–5.
 
 ## Downloads (`raw/`, not in git)

@@ -26,14 +26,14 @@ interface UIState {
   level: Level; brush: number; tool: Tool; year: number; colorBy: 'school' | 'util'; showHomes: boolean; showStreets: boolean; showAreas: boolean;
   sheet: 'peek' | 'half' | 'full'; panelOpen: boolean; pickBy: PickBy;
   mode: 'draw' | 'build'; build: { sel: number[]; moves: Record<string, boolean> | null };
-  includePreK: boolean; snap: boolean; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
+  includePreK: boolean; snap: boolean; overlays: Level[]; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
   set: (p: Partial<UIState>) => void;
 }
 export const useUI = create<UIState>()((set) => ({
   level: 'es', brush: -2, tool: 'pan', year: 2, colorBy: 'school', showHomes: false, showStreets: true, showAreas: true,
   sheet: 'half', panelOpen: true, pickBy: 'planning',
   mode: 'build', build: { sel: [1, 1, 1, 1, 1], moves: null },
-  includePreK: true, snap: false, areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
+  includePreK: true, snap: false, overlays: [], areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
   set: (p) => set(p),
 }));
 

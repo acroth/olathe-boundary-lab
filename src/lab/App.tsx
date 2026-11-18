@@ -172,7 +172,7 @@ export default function App() {
   if (err) return <div className="loading">Could not load data: {err}</div>;
   if (!S) return <div className="loading">Loading district data…</div>;
   const selected = plan.edits.find(e => e.id === ui.selectedEdit)?.geom ?? null;
-  const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, view, onView: (v: ViewState) => setView(v), diffHomes };
+  const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, overlays: ui.overlays, view, onView: (v: ViewState) => setView(v), diffHomes };
   const sheetNext = { peek: 'half', half: 'full', full: 'peek' } as const;
   const setMode = (m: 'build' | 'draw') => ui.set(m === 'build' ? { mode: 'build', level: 'es', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
 

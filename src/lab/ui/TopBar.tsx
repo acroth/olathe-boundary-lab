@@ -17,7 +17,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { LEVEL_NAME, type Static } from '../data';
+import { LEVEL_NAME, type Level, type Static } from '../data';
+import { OVERLAY } from '../map/MapPanel';
 import { usePlan, useSaved, useUI, type Plan } from '../store';
 import { encodePlan } from '../url';
 import { AREAS } from '../visible';
@@ -168,6 +169,15 @@ export default function TopBar({ S, mapRef, resA, pad }: { S: Static; mapRef: Mu
             </div>
             <Separator />
             <div className="space-y-3.5 p-4">
+              <p className="text-sm font-semibold">Overlay feeder boundaries</p>
+              {(['ms', 'hs'] as const).filter(l => l !== ui.level).map(l => (
+                <Row key={l} id={'sw-ov-' + l} label={l === 'ms' ? 'Middle school' : 'High school'} swatch={l}
+                  checked={ui.overlays.includes(l)} on={v => ui.set({ overlays: v ? [...ui.overlays, l] : ui.overlays.filter(x => x !== l) })} />
+              ))}
+              {ui.level === 'es' && ui.overlays.includes('ms') && <p className="text-xs text-muted-foreground">Middle school lines are today&rsquo;s, with Indian Trail&rsquo;s area shown as not yet assigned. The district&rsquo;s middle school proposal isn&rsquo;t loaded.</p>}
+            </div>
+            <Separator />
+            <div className="space-y-3.5 p-4">
               <Row id="sw-areas" label="Planning areas" checked={ui.showAreas} on={v => ui.set({ showAreas: v })} />
               <Row id="sw-homes" label="Homes" checked={ui.showHomes} on={v => ui.set({ showHomes: v })} />
               {ui.mode === 'draw' && <Row id="sw-streets" label="Street snapping lines" checked={ui.showStreets} on={v => ui.set({ showStreets: v })} />}
@@ -225,6 +235,12 @@ export default function TopBar({ S, mapRef, resA, pad }: { S: Static; mapRef: Mu
   );
 }
 
-function Row({ id, label, checked, on }: { id: string; label: string; checked: boolean; on: (v: boolean) => void }) {
-  return <div className="flex items-center justify-between gap-3"><Label htmlFor={id} className="font-normal">{label}</Label><Switch id={id} checked={checked} onCheckedChange={on} /></div>;
+function Row({ id, label, checked, on, swatch }: { id: string; label: string; checked: boolean; on: (v: boolean) => void; swatch?: 'ms' | 'hs' }) {
+  return <div className="flex items-center justify-between gap-3">
+    <Label htmlFor={id} className="font-normal">{swatch && <LineSwatch lv={swatch} />}{label}</Label><Switch id={id} checked={checked} onCheckedChange={on} />
+  </div>;
+}
+export function LineSwatch({ lv }: { lv: 'ms' | 'hs' }) {
+  const c = OVERLAY[lv];
+  return <svg width="22" height="10" viewBox="0 0 22 10" aria-hidden className="shrink-0"><line x1="1" y1="5" x2="21" y2="5" stroke={c.color} strokeWidth={lv === 'hs' ? 3 : 2.2} strokeDasharray={c.dash ? '5 2.5' : undefined} strokeLinecap="round" /></svg>;
 }

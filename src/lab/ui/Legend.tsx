@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { LEVEL_NAME, type Static } from '../data';
 import { TIERS, schoolColor } from '../colors';
 import { usePlan, useUI } from '../store';
+import { LineSwatch } from './TopBar';
 
 /** Bottom-right legend card and zoom buttons. */
 export default function Legend({ S, vis, mapRef }: { S: Static; vis: Set<number>; mapRef: MutableRefObject<MapRef | null> }) {
@@ -36,6 +37,9 @@ export default function Legend({ S, vis, mapRef }: { S: Static; vis: Set<number>
               {closing.length > 0 && <li className="pt-1.5 text-xs font-medium text-muted-foreground">Closing</li>}
               {closing.map(s => <Item key={s.i} c="" ring label={s.name} />)}
             </>}
+          {ui.overlays.filter(l => l !== ui.level).length > 0 && <li className="pt-1.5 text-xs font-medium text-muted-foreground">Feeder overlays</li>}
+          {(['ms', 'hs'] as const).filter(l => l !== ui.level && ui.overlays.includes(l)).map(l =>
+            <li key={l} className="flex items-center gap-2.5 text-[13px] leading-5"><LineSwatch lv={l} />{l === 'ms' ? 'Middle school' : 'High school'}</li>)}
         </ul>}
       </div>
       <div className="pointer-events-auto hidden flex-col overflow-hidden rounded-xl border bg-card shadow-float md:flex">

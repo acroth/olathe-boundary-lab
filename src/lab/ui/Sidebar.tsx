@@ -45,8 +45,8 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
     mapRef.current?.flyTo({ center: [school.lon, school.lat], zoom: 13.2, duration: 600 });
   };
   const setMiddleSchoolLines = (on: boolean) => {
-    const otherOverlays = ui.overlays.filter(overlay => overlay !== 'ms');
-    ui.set({ overlays: on ? [...otherOverlays, 'ms'] : otherOverlays });
+    if (on) ui.set({ overlay: 'ms' });
+    else if (ui.overlay === 'ms') ui.set({ overlay: null });
   };
   const editByHand = () => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' });
 
@@ -55,7 +55,7 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
       {!inFreeDraw && (
         <Builder staticData={staticData} plan={plan} level={level} elementaryResult={planResults?.levels.es ?? null} middleSchoolResult={planResults?.levels.ms ?? null}
           numbers={numbers} visibleSchools={visibleSchools} onSchoolSelect={zoomToSchool} build={ui.build} onBuildChange={build => ui.set({ build })}
-          middleSchoolLinesOn={ui.overlays.includes('ms')} onMiddleSchoolLinesChange={setMiddleSchoolLines} onEditByHand={editByHand} />
+          middleSchoolLinesOn={ui.overlay === 'ms'} onMiddleSchoolLinesChange={setMiddleSchoolLines} onEditByHand={editByHand} />
       )}
 
       {inFreeDraw && (

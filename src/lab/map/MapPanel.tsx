@@ -5,17 +5,17 @@ import type { GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
-import { PALETTE, TIERS, UNASSIGNED, schoolColor } from '../colors';
+import { TIERS, UNASSIGNED, schoolColor } from '../colors';
 import type { SchoolNumber } from '../numbers';
 import { baseStyle, registerPmtiles } from './style';
 import { DrawController, type DrawCallbacks } from './drawing';
-import { homeFeatures, overlayFeatures, planningFeatures, schoolFeatures, streetFeatures } from './mapFeatures';
+import { OVERLAY_LEVELS, homeFeatures, overlayFeatures, planningFeatures, schoolFeatures, streetFeatures } from './mapFeatures';
 import type { Tool } from '../store';
 
 registerPmtiles();
 
-/** Feeder overlay styles: middle school dashed navy, high school solid brown. */
-export const OVERLAY = { ms: { color: '#1e3a8a', w: 2.2, dash: [3, 1.5] as number[] | null, name: 'Middle school' }, hs: { color: '#7c2d12', w: 3, dash: null as number[] | null, name: 'High school' } };
+/** Feeder overlay line: the same solid brown for every school level. */
+export const OVERLAY_LINE = { color: '#7c2d12', width: 3 };
 
 const EMPTY_FEATURES: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const STREET_DRAWING_TOOLS = ['trace', 'polygon', 'freehand', 'edit'];
@@ -42,7 +42,7 @@ interface MapPanelProps {
   diffHomes?: Uint8Array | null;
   selectedGeometry?: GeoJSON.Geometry | null;
   title?: string;
-  overlays?: Level[];
+  overlay?: Level | null;
   doneTick?: number;
   children?: React.ReactNode;
   onMapRef?: (map: MapRef | null) => void;
@@ -101,7 +101,7 @@ export default function MapPanel(props: MapPanelProps) {
   const zones = props.result?.[level]?.zones ?? EMPTY_FEATURES;
   const streetsNeeded = props.showStreets && props.interactive && STREET_DRAWING_TOOLS.includes(props.tool);
 
-  const overlayGeoJson = useMemo(() => overlayFeatures(staticData, props.result, level, props.overlays), [props.result, level, props.overlays, staticData]);
+  const overlayGeoJson = useMemo(() => overlayFeatures(staticData, props.result, props.overlay), [props.result, props.overlay, staticData]);
   const schoolsGeoJson = useMemo(() => schoolFeatures(staticData, level, visibleSchools, numbers, props.closures), [staticData, level, numbers, props.closures, visibleSchools]);
   const planningGeoJson = useMemo(() => planningFeatures(staticData, visibleSchools, level, props.year), [staticData, visibleSchools, level, props.year]);
   const homesGeoJson = useMemo(() => props.showHomes ? homeFeatures(staticData) : EMPTY_FEATURES, [staticData, props.showHomes]);
@@ -116,13 +116,13 @@ export default function MapPanel(props: MapPanelProps) {
       const retry = setTimeout(() => setHomesRetry(count => count + 1), HOMES_RETRY_MS);
       return () => clearTimeout(retry);
     }
-    const homeColorIndex = (school: number) => {
+    const homeSchoolState = (school: number) => {
       if (school < 0) return HOME_UNASSIGNED;
-      return visibleSchools.has(school) ? (staticData.schools[school] as any).color : HOME_HIDDEN;
+      return visibleSchools.has(school) ? school : HOME_HIDDEN;
     };
     const assignment = levelResult.assign;
     for (let home = 0; home < assignment.length; home++) {
-      map.setFeatureState({ source: 'homes', id: home }, { c: homeColorIndex(assignment[home]), d: props.diffHomes ? props.diffHomes[home] : 0 });
+      map.setFeatureState({ source: 'homes', id: home }, { c: homeSchoolState(assignment[home]), d: props.diffHomes ? props.diffHomes[home] : 0 });
     }
   }, [props.result, level, loaded, props.showHomes, homesGeoJson, props.diffHomes, staticData, homesRetry, visibleSchools]);
 
@@ -141,9 +141,13 @@ export default function MapPanel(props: MapPanelProps) {
   useEffect(() => { props.onMapRef?.(mapRef.current); }, [loaded]);
   useEffect(() => { if (drawController.current && props.drawCallbacks) drawController.current.cb = props.drawCallbacks; }, [props.drawCallbacks]);
 
-  const homeColorExpression: any = ['match', ['coalesce', ['feature-state', 'c'], -1]];
-  PALETTE.forEach((color, index) => homeColorExpression.push(index, color));
-  homeColorExpression.push('#666');
+  // homes use their school's legend color
+  const homeColorExpression = useMemo(() => {
+    const expression: any[] = ['match', ['coalesce', ['feature-state', 'c'], HOME_UNASSIGNED]];
+    for (const school of staticData.schools) expression.push(school.i, schoolColor(school as any));
+    expression.push('#666');
+    return expression;
+  }, [staticData]);
 
   const zoneFillColor = props.colorBy === 'util' ? utilizationColorExpression : schoolColorExpression;
   const zoneFillOpacity = props.colorBy === 'util' ? 0.42 : 0.68;
@@ -176,18 +180,15 @@ export default function MapPanel(props: MapPanelProps) {
         <Source id="district" type="geojson" data={staticData.district as any}>
           <Layer id="district-line" type="line" paint={{ 'line-color': '#111', 'line-width': 2.5, 'line-opacity': 0.6 }} />
         </Source>
-        {(['ms', 'hs'] as const).map(overlayLevel => {
-          const overlay = OVERLAY[overlayLevel];
-          return (
-            <Source key={overlayLevel} id={'overlay-' + overlayLevel} type="geojson" data={overlayGeoJson[overlayLevel] as any}>
-              <Layer id={'overlay-' + overlayLevel + '-casing'} type="line" paint={{ 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, overlay.w + 2, 15, overlay.w + 4], 'line-opacity': 0.85 }} />
-              <Layer id={'overlay-' + overlayLevel + '-line'} type="line" paint={{ 'line-color': overlay.color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, overlay.w, 15, overlay.w + 1.5], ...(overlay.dash ? { 'line-dasharray': overlay.dash } : {}) } as any} />
-              <Layer id={'overlay-' + overlayLevel + '-label'} type="symbol" layout={{ 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 11, 14, 14],
-                'text-transform': 'uppercase', 'text-letter-spacing': 0.06, 'symbol-placement': 'point', 'text-allow-overlap': false, 'text-padding': 8 } as any}
-                paint={{ 'text-color': overlay.color, 'text-halo-color': '#ffffff', 'text-halo-width': 2 }} />
-            </Source>
-          );
-        })}
+        {OVERLAY_LEVELS.map(overlayLevel => (
+          <Source key={overlayLevel} id={'overlay-' + overlayLevel} type="geojson" data={overlayGeoJson[overlayLevel] as any}>
+            <Layer id={'overlay-' + overlayLevel + '-casing'} type="line" paint={{ 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, OVERLAY_LINE.width + 2, 15, OVERLAY_LINE.width + 4], 'line-opacity': 0.85 }} />
+            <Layer id={'overlay-' + overlayLevel + '-line'} type="line" paint={{ 'line-color': OVERLAY_LINE.color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, OVERLAY_LINE.width, 15, OVERLAY_LINE.width + 1.5] }} />
+            <Layer id={'overlay-' + overlayLevel + '-label'} type="symbol" layout={{ 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 11, 14, 14],
+              'text-transform': 'uppercase', 'text-letter-spacing': 0.06, 'symbol-placement': 'point', 'text-allow-overlap': false, 'text-padding': 8 } as any}
+              paint={{ 'text-color': OVERLAY_LINE.color, 'text-halo-color': '#ffffff', 'text-halo-width': 2 }} />
+          </Source>
+        ))}
         <Source id="streets" type="geojson" data={streetsGeoJson as any}>
           <Layer id="street-overlay" type="line" minzoom={13} layout={{ visibility: streetVisibility }}
             paint={{ 'line-color': '#0d47a1', 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.6, 17, 2], 'line-opacity': 0.45 }} />
@@ -210,7 +211,7 @@ export default function MapPanel(props: MapPanelProps) {
             paint={{ 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 1.2, 16, ['case', ['>', ['get', 'u'], 3], 6, 3]],
               'circle-opacity': ['case', ['==', ['feature-state', 'c'], -2], 0, 1], 'circle-stroke-opacity': ['case', ['==', ['feature-state', 'c'], -2], 0, 1],
               'circle-color': ['case', ['==', ['feature-state', 'd'], 1], '#ff1744', homeColorExpression] as any,
-              'circle-stroke-color': '#222', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 13, 0, 16, 0.6] }} />
+              'circle-stroke-color': '#222', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 16, 1] }} />
         </Source>
         <Source id="schools" type="geojson" data={schoolsGeoJson as any}>
           <Layer id="school-points" type="circle" paint={{ 'circle-radius': 6, 'circle-color': ['case', ['==', ['get', 'closed'], 1], '#fff', '#111'], 'circle-stroke-color': '#111', 'circle-stroke-width': 2 }} />

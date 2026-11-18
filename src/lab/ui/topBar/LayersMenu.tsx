@@ -7,18 +7,18 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import { useUI } from '../../store';
+import type { Level } from '../../data';
+import { OVERLAY_OPTIONS, shownOverlay, useUI } from '../../store';
 import { AREAS } from '../../visible';
 import LineSwatch from '../LineSwatch';
 import IconTip from './IconTip';
 
-const OVERLAY_LEVELS = ['ms', 'hs'] as const;
-const OVERLAY_NAME = { ms: 'Middle school', hs: 'High school' };
+const OVERLAY_NAME: Record<Level, string> = { es: 'Elementary school', ms: 'Middle school', hs: 'High school' };
 
-function SettingRow({ id, label, checked, onChange, swatch }: { id: string; label: string; checked: boolean; onChange: (on: boolean) => void; swatch?: 'ms' | 'hs' }) {
+function SettingRow({ id, label, checked, onChange, swatch }: { id: string; label: string; checked: boolean; onChange: (on: boolean) => void; swatch?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <Label htmlFor={id} className="font-normal">{swatch && <LineSwatch level={swatch} />}{label}</Label>
+      <Label htmlFor={id} className="font-normal">{swatch && <LineSwatch />}{label}</Label>
       <Switch id={id} checked={checked} onCheckedChange={onChange} />
     </div>
   );
@@ -31,11 +31,10 @@ export default function LayersMenu() {
     const nextAreas = ui.areas.includes(area) ? ui.areas.filter(shown => shown !== area) : [...ui.areas, area];
     if (nextAreas.length) ui.set({ areas: nextAreas });
   };
-  const setOverlay = (level: 'ms' | 'hs', on: boolean) => {
-    ui.set({ overlays: on ? [...ui.overlays, level] : ui.overlays.filter(overlay => overlay !== level) });
-  };
+  const overlay = shownOverlay(ui.level, ui.overlay);
+  const setOverlay = (level: Level, on: boolean) => ui.set({ overlay: on ? level : null });
 
-  const showMiddleSchoolNote = ui.level === 'es' && ui.overlays.includes('ms');
+  const showMiddleSchoolNote = overlay === 'ms';
   const conceptNote = ui.build.ms ? ` (concept ${ui.build.ms})` : '';
   const middleSchoolNote = ui.mode === 'build'
     ? `Shows the middle school concept picked in the Option Builder${conceptNote}.`
@@ -70,8 +69,8 @@ export default function LayersMenu() {
         <Separator />
         <div className="space-y-3.5 p-4">
           <p className="text-sm font-semibold">Overlay feeder boundaries</p>
-          {OVERLAY_LEVELS.filter(level => level !== ui.level).map(level => (
-            <SettingRow key={level} id={'sw-ov-' + level} label={OVERLAY_NAME[level]} swatch={level} checked={ui.overlays.includes(level)} onChange={on => setOverlay(level, on)} />
+          {OVERLAY_OPTIONS[ui.level].map(level => (
+            <SettingRow key={level} id={'sw-ov-' + level} label={OVERLAY_NAME[level]} swatch checked={overlay === level} onChange={on => setOverlay(level, on)} />
           ))}
           {showMiddleSchoolNote && <p className="text-xs text-muted-foreground">{middleSchoolNote}</p>}
         </div>

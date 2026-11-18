@@ -9,7 +9,7 @@ import { applyLinkedState, writeLinkedState } from './linkedState';
 import MapPanel from './map/MapPanel';
 import { schoolNumbers, type SchoolNumber } from './numbers';
 import { buildPlan } from './planBuilder';
-import { usePlan, useUI } from './store';
+import { shownOverlay, usePlan, useUI } from './store';
 import Legend from './ui/Legend';
 import MapToolbar from './ui/MapToolbar';
 import Sidebar from './ui/Sidebar';
@@ -163,7 +163,7 @@ export default function App() {
 
   const sharedMapProps = {
     staticData, visibleSchools, diffHomes, view,
-    showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, overlays: ui.overlays,
+    showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, overlay: shownOverlay(ui.level, ui.overlay),
     showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets,
     onView: (nextView: ViewState) => setView(nextView),
   };

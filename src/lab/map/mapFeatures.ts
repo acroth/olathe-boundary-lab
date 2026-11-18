@@ -5,17 +5,16 @@ import { mapLabel, type SchoolNumber } from '../numbers';
 
 type FeatureCollection = GeoJSON.FeatureCollection;
 
-const OVERLAY_LEVELS: Level[] = ['ms', 'hs'];
+export const OVERLAY_LEVELS: Level[] = ['es', 'ms', 'hs'];
 const GRADE_RANGE: Record<Level, string> = { es: 'K–5', ms: '6–8', hs: '9–12' };
 const LOCAL_STREET_CLASS_LIMIT = 8;   // street classes from here up aren't drawn as snapping lines
 
-/** Other levels' boundaries in this plan, outlined and labeled. */
-export function overlayFeatures(staticData: Static, results: Record<Level, LevelResult> | null, level: Level, overlays: Level[] | undefined) {
+/** The chosen overlay level's boundaries in this plan, outlined and labeled. */
+export function overlayFeatures(staticData: Static, results: Record<Level, LevelResult> | null, overlay: Level | null | undefined) {
   const collections: Record<string, FeatureCollection> = {};
   for (const overlayLevel of OVERLAY_LEVELS) {
-    const zones = results?.[overlayLevel]?.zones;
-    const isShown = zones && overlayLevel !== level && overlays?.includes(overlayLevel);
-    const features = !isShown ? [] : zones.features.map(feature => {
+    const zones = overlayLevel === overlay ? results?.[overlayLevel]?.zones : undefined;
+    const features = !zones ? [] : zones.features.map(feature => {
       const school = feature.properties!.school as number;
       return { ...feature, properties: { school, label: school >= 0 ? staticData.schools[school].name : 'Not yet assigned' } };
     });

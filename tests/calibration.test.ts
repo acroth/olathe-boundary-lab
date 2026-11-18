@@ -1,6 +1,7 @@
 // The district's facts the model is anchored to, and the rules for which number the app leads with.
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Engine } from '../src/lab/model/engine';
+import { toMPoly } from '../src/lab/model/geo';
 import type { Static } from '../src/lab/data';
 import { agreementOf, headline, mapLabel, publishedConcept, publishedOption, schoolNumbers } from '../src/lab/numbers';
 import { buildPlan } from '../src/lab/planBuilder';
@@ -33,6 +34,19 @@ describe('facts', () => {
       for (const piece of preset.district!.pieces.filter(p => ['Heritage', 'Scarborough', 'Walnut Grove'].includes(p.frm))) {
         const moved = result.schools[schoolNamed('es', piece.to).i].movedInByOriginFall2026[schoolNamed('es', piece.frm).i] ?? 0;
         expect(Math.abs(moved - piece.n), `option ${option}: ${piece.frm} to ${piece.to}`).toBeLessThan(Math.max(3, piece.n * 0.03));
+      }
+    }
+  });
+});
+
+describe('middle school concepts', () => {
+  it('leave every school with one connected area', () => {
+    for (const concept of S.combos!.ms!.concepts) {
+      const plan = buildPlan(S, [1, 1, 1, 1, 1], null, concept.id);
+      const result = engine.run('ms', { ...plan, includePreK: true });
+      for (const feature of result.zones.features.filter(zone => zone.properties!.school >= 0)) {
+        const name = S.schools[feature.properties!.school].name;
+        expect(toMPoly(feature.geometry as any).length, `concept ${concept.id}: ${name}`).toBe(1);
       }
     }
   });

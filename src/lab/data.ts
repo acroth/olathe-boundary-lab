@@ -72,7 +72,7 @@ export async function loadStatic(base?: string): Promise<Static> {
     n: meta.homes.count, lon: h.lon, lat: h.lat, units: h.units, node: h.node, offsetFt: h.offset_ft, isNew: h.isNew,
     w: { es: h.w_es, ms: h.w_ms, hs: h.w_hs }, orig: { es: h.orig_es, ms: h.orig_ms, hs: h.orig_hs },
   };
-  if (calibration) applyCalibration(sj.schools, homes, calibration);
+  if (calibration) applyCalibration(sj.schools, homes, combos, calibration);
   const streets: Streets = {
     nNodes: meta.streets.nodes, nEdges: meta.streets.edges, nodeLon: s.node_lon, nodeLat: s.node_lat,
     u: s.u, v: s.v, len: s.len_ft, cls: s.cls, name: s.name, coordOff: s.coord_off, coordLon: s.coord_lon, coordLat: s.coord_lat,

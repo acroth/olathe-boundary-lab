@@ -21,7 +21,8 @@ export function loadStatic({ calibrated = true } = {}): Static {
   const streets: any = readColumns('streets.bin', meta.streets.layout);
   const homeColumns = { n: meta.homes.count, lon: homes.lon, lat: homes.lat, units: homes.units, node: homes.node, offsetFt: homes.offset_ft, isNew: homes.isNew,
                         w: { es: homes.w_es, ms: homes.w_ms, hs: homes.w_hs }, orig: { es: homes.orig_es, ms: homes.orig_ms, hs: homes.orig_hs } };
-  if (calibrated && existsSync(DATA_DIR + 'calibration.json')) applyCalibration(schoolsFile.schools, homeColumns, readJson('calibration.json'));
+  const combos = readJson('combos.json');
+  if (calibrated && existsSync(DATA_DIR + 'calibration.json')) applyCalibration(schoolsFile.schools, homeColumns, combos, readJson('calibration.json'));
   return {
     meta, schools: schoolsFile.schools,
     homes: homeColumns,
@@ -30,6 +31,6 @@ export function loadStatic({ calibrated = true } = {}): Static {
     zones: { es: readJson('zones_es.geojson'), ms: readJson('zones_ms.geojson'), hs: readJson('zones_hs.geojson') },
     faces: readJson('faces.geojson'), district: readJson('district.geojson'),
     presets: presetsFile.presets.map((preset: any) => ({ ...preset, edits: preset.edits.map((edit: any, k: number) => ({ ...edit, id: preset.id + k, kind: 'preset' })) })),
-    receivers: presetsFile.receivers, combos: readJson('combos.json'),
+    receivers: presetsFile.receivers, combos,
   } as Static;
 }

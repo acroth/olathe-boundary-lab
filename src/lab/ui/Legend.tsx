@@ -5,11 +5,11 @@ import { ChevronDown, Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LEVEL_NAME, type Static } from '../data';
 import { TIERS, schoolColor } from '../colors';
-import { usePlan, useUI } from '../store';
+import { shownOverlay, usePlan, useUI } from '../store';
 import { headlineSummary, type SchoolNumber } from '../numbers';
 import LineSwatch from './LineSwatch';
 
-const OVERLAY_NAME = { ms: 'Middle school', hs: 'High school' };
+const OVERLAY_NAME = { es: 'Elementary school', ms: 'Middle school', hs: 'High school' };
 
 function LegendItem({ color, label, ring }: { color: string; label: string; ring?: boolean }) {
   const swatchClass = ring ? 'border-2 border-foreground bg-card' : 'border border-black/15';
@@ -40,8 +40,7 @@ export default function Legend({ staticData, visibleSchools, mapRef, numbers }: 
     .sort((first, second) => first.name.localeCompare(second.name));
   const openSchools = schools.filter(school => !isClosing(school.i));
   const closingSchools = schools.filter(school => isClosing(school.i));
-  const shownOverlays = (['ms', 'hs'] as const).filter(level => level !== ui.level && ui.overlays.includes(level));
-  const hasOverlaySetting = ui.overlays.filter(level => level !== ui.level).length > 0;
+  const overlay = shownOverlay(ui.level, ui.overlay);
 
   const title = ui.colorBy === 'util' ? `% full, ${staticData.meta.years[ui.year]}` : `${LEVEL_NAME[ui.level]} schools`;
   const { sourceLabel } = headlineSummary(staticData, numbers, visibleSchools);
@@ -64,10 +63,8 @@ export default function Legend({ staticData, visibleSchools, mapRef, numbers }: 
                   {closingSchools.map(school => <LegendItem key={school.i} color="" ring label={school.name} />)}
                 </>
               )}
-            {hasOverlaySetting && <li className="pt-1.5 text-xs font-medium text-muted-foreground">Feeder overlays</li>}
-            {shownOverlays.map(level => (
-              <li key={level} className="flex items-center gap-2.5 text-[13px] leading-5"><LineSwatch level={level} />{OVERLAY_NAME[level]}</li>
-            ))}
+            {overlay && <li className="pt-1.5 text-xs font-medium text-muted-foreground">Feeder overlay</li>}
+            {overlay && <li className="flex items-center gap-2.5 text-[13px] leading-5"><LineSwatch />{OVERLAY_NAME[overlay]}</li>}
           </ul>
         )}
       </div>

@@ -1,6 +1,6 @@
 // Option Builder: pick one district concept per closing school and see the combination.
 import type { Combos, Edit, Static } from '../data';
-import type { Plan } from '../store';
+import type { Build, Plan } from '../store';
 import type { LevelResult } from '../model/engine';
 
 export const SHORT: Record<string, string> = { Heritage: 'HT', Scarborough: 'SC', 'Black Bob': 'BB', Tomahawk: 'TH', 'Walnut Grove': 'WG' };
@@ -34,7 +34,7 @@ export function activeMoves(C: Combos, sel: number[], moves: Record<string, bool
   return moves ?? defaultMoves(C, sel);
 }
 
-export function buildPlan(S: Static, sel: number[], moves: Record<string, boolean> | null): Plan {
+export function buildPlan(S: Static, sel: number[], moves: Record<string, boolean> | null, ms = 0): Plan {
   const C = S.combos!; const base = S.presets.find(p => p.id === C.basePreset)!;
   const mv = activeMoves(C, sel, moves);
   const edits: Edit[] = base.edits.map(e => ({ ...e }));
@@ -43,7 +43,9 @@ export function buildPlan(S: Static, sel: number[], moves: Record<string, boolea
     c.pieces.forEach((p, j) => edits.push({ id: `b-${SHORT[s.name]}${c.id}-${j}`, level: 'es', school: p.school, geom: p.geom, kind: 'preset', label: `${s.name} ${c.id} → ${p.to}` }));
   });
   for (const m of C.moves) if (mv[m.id]) edits.push({ id: `b-${m.id}`, level: 'es', school: m.school, geom: m.geom, kind: 'preset', label: m.label });
-  return { preset: C.basePreset, closures: { ...base.closures }, edits, name: comboName(C, sel) };
+  const mc = C.ms?.concepts.find(c => c.id === ms);
+  if (mc) mc.edits.forEach((e, j) => edits.push({ id: `b-MS${mc.id}-${j}`, level: 'ms', school: e.school, geom: e.geom, kind: 'preset', label: `Middle school concept ${mc.id} → ${e.to}` }));
+  return { preset: C.basePreset, closures: { ...base.closures }, edits, name: comboName(C, sel) + (mc ? ` · MS${mc.id}` : '') };
 }
 export const comboName = (C: Combos, sel: number[]) => C.schools.map((s, k) => SHORT[s.name] + sel[k]).join(' · ');
 
@@ -56,18 +58,19 @@ export function districtCheck(C: Combos, sel: number[], mv: Record<string, boole
   return [...touched].map(n => ({ name: n, n: tot[n], cap: C.district.cap[n], u: tot[n] / C.district.cap[n] })).sort((a, b) => b.u - a.u);
 }
 
-export default function Builder({ S, res, sel, moves, set, toDraw }: { S: Static; res: LevelResult | null; sel: number[]; moves: Record<string, boolean> | null; set: (b: { sel: number[]; moves: Record<string, boolean> | null }) => void; toDraw: () => void }) {
+export default function Builder({ S, res, resMs, build, set, toDraw, overlayOn, toggleOverlay }: { S: Static; res: LevelResult | null; resMs: LevelResult | null; build: Build; set: (b: Build) => void; toDraw: () => void; overlayOn: boolean; toggleOverlay: () => void }) {
+  const { sel, moves } = build;
   const C = S.combos;
   if (!C) return <section><p className="note">Option data not loaded.</p></section>;
   const mv = activeMoves(C, sel, moves); const auto = defaultMoves(C, sel);
   const check = districtCheck(C, sel, mv);
   const byName: Record<string, number> = {}; for (const s of S.schools) if (s.level === 'es') byName[s.name] = s.i;
   const option = Object.entries(C.options).find(([, v]) => v.every((x, k) => x === sel[k]))?.[0];
-  const pick = (k: number, id: number) => { const s = [...sel]; s[k] = id; set({ sel: s, moves: null }); };
+  const pick = (k: number, id: number) => { const s = [...sel]; s[k] = id; set({ ...build, sel: s, moves: null }); };
   const toggle = (id: string) => {
     const next = { ...mv, [id]: !mv[id] };
     if (next[id]) for (const g of C.exclusive) if (g.includes(id)) for (const o of g) if (o !== id) next[o] = false;
-    set({ sel, moves: next });
+    set({ ...build, sel, moves: next });
   };
   // scorecard on the district's numbers
   const top = check[0]; const over = check.filter(r => r.u > 0.85);
@@ -79,7 +82,7 @@ export default function Builder({ S, res, sel, moves, set, toDraw }: { S: Static
     <section className="builder">
       <div className="row between"><span className="lbl">District options</span>{!option && <span className="tag">Custom mix</span>}</div>
       <div className="seg opts">
-        {Object.entries(C.options).map(([k, v]) => <button key={k} className={option === k ? 'on' : ''} onClick={() => set({ sel: [...v], moves: null })}>{k}</button>)}
+        {Object.entries(C.options).map(([k, v]) => <button key={k} className={option === k ? 'on' : ''} onClick={() => set({ ...build, sel: [...v], moves: null })}>{k}</button>)}
       </div>
       <div className="stats score">
         <div className={'stat ' + tone(top?.u ?? 0)}><b>{top ? pct(top.u) : '—'}</b><span>Fullest: {top?.name ?? '—'}</span></div>
@@ -98,6 +101,7 @@ export default function Builder({ S, res, sel, moves, set, toDraw }: { S: Static
         </div>;
       })}
     </section>
+    {C.ms && <MsSection S={S} build={build} set={set} resMs={resMs} overlayOn={overlayOn} toggleOverlay={toggleOverlay} />}
     <section className="builder">
       <details className="more"><summary>Fullest schools</summary>
         <table className="tbl">
@@ -117,11 +121,38 @@ export default function Builder({ S, res, sel, moves, set, toDraw }: { S: Static
         <p className="note">2026-27 K–5 students. District counts come from the parent-meeting decks.</p>
       </details>
       <details className="more"><summary>Moves between open schools ({C.moves.filter(m => mv[m.id]).length} on)</summary>
-        <p className="note">Set automatically by the concepts you pick. Tap to override.{moves && <> <button className="link" onClick={() => set({ sel, moves: null })}>Reset</button></>}</p>
+        <p className="note">Set automatically by the concepts you pick. Tap to override.{moves && <> <button className="link" onClick={() => set({ ...build, moves: null })}>Reset</button></>}</p>
         <ul className="moves">{C.moves.map(m => <li key={m.id}><label className="chk"><input type="checkbox" checked={!!mv[m.id]} onChange={() => toggle(m.id)} />
           <span>{m.label} <span className="muted">· {m.model26}{auto[m.id] !== mv[m.id] ? ' · changed' : ''}</span></span></label></li>)}</ul>
       </details>
       <button className="link-btn" onClick={toDraw}>Edit this combination by hand →</button>
     </section>
   </>;
+}
+
+/** Middle school concept picker (the district's five MS concepts, independent of the elementary options). */
+function MsSection({ S, build, set, resMs, overlayOn, toggleOverlay }: { S: Static; build: Build; set: (b: Build) => void; resMs: LevelResult | null; overlayOn: boolean; toggleOverlay: () => void }) {
+  const M = S.combos!.ms!; const c = M.concepts.find(x => x.id === build.ms);
+  const byName: Record<string, number> = {}; for (const s of S.schools) if (s.level === 'ms') byName[s.name] = s.i;
+  const tone = (u: number) => u > 0.9 ? 'bad' : u > 0.85 ? 'warn' : '';
+  return <section className="builder">
+    <div className="bschool">
+      <div className="row between"><b>Middle schools</b>
+        <div className="seg small">
+          {M.concepts.map(x => <button key={x.id} className={x.id === build.ms ? 'on' : ''} onClick={() => set({ ...build, ms: x.id })} title={x.summary}>{x.id}</button>)}
+          <button className={build.ms === 0 ? 'on' : ''} onClick={() => set({ ...build, ms: 0 })} title="Leave Indian Trail's area unassigned">–</button>
+        </div></div>
+      <p className="note">{c ? c.summary : 'No middle school concept: Indian Trail’s area is left unassigned.'} The district shows these separately from the elementary options, so any pairing works.</p>
+      {!overlayOn && <button className="link" onClick={toggleOverlay}>Show middle school lines on the map</button>}
+    </div>
+    {c && <details className="more"><summary>Middle school numbers</summary>
+      <table className="tbl">
+        <thead><tr><th>School</th><th>District 27-28</th><th>District 31-32</th><th className="muted">Model peak</th></tr></thead>
+        <tbody>{Object.keys(c.table).map(n => { const d = c.table[n]; const cap = M.cap[n]; const m = resMs?.schools[byName[n]];
+          return <tr key={n}><td>{n}</td><td className={tone(d[1] / cap)}>{(d[1] / cap * 100).toFixed(0)}% <span className="muted">· {d[1]}</span></td>
+            <td>{(d[5] / cap * 100).toFixed(0)}% <span className="muted">· {d[5]}</span></td><td className="muted">{m && m.open ? pct(m.peak) : '—'}</td></tr>; })}</tbody>
+      </table>
+      <p className="note">District: five-year estimates from the middle school deck, over functional capacity. Lines are read from the deck’s concept maps onto street blocks.</p>
+    </details>}
+  </section>;
 }

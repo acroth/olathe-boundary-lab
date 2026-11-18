@@ -2,7 +2,7 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW = f"{ROOT}/raw"
 DATA = f"{ROOT}/data"
-WORK = f"{ROOT}/work"
-OUT = os.path.join(os.path.dirname(ROOT), 'app', 'public', 'data')
+WORK = os.environ.get('PIPELINE_WORK', f"{ROOT}/work")
+OUT = os.path.join(os.path.dirname(ROOT), 'public', 'data')   # the Next.js app's data folder
 CRS = 3419  # Kansas North state plane, US feet
 os.makedirs(WORK, exist_ok=True); os.makedirs(OUT, exist_ok=True)

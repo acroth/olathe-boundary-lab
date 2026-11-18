@@ -54,7 +54,8 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
 
   return (
     <>
-      {ui.mode === 'build' && <Builder S={S} res={resA?.levels.es ?? null} sel={ui.build.sel} moves={ui.build.moves} set={b => ui.set({ build: b })}
+      {ui.mode === 'build' && <Builder S={S} res={resA?.levels.es ?? null} resMs={resA?.levels.ms ?? null} build={ui.build} set={b => ui.set({ build: b })}
+        overlayOn={ui.overlays.includes('ms')} toggleOverlay={() => ui.set({ overlays: [...ui.overlays.filter(l => l !== 'ms'), 'ms'] })}
         toDraw={() => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' })} />}
 
       {ui.mode === 'draw' && <>

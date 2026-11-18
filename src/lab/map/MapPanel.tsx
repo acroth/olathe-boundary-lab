@@ -12,11 +12,14 @@ import type { Tool } from '../store';
 
 registerPmtiles();
 
+/** Feeder overlay styles: middle school dashed navy, high school solid brown. */
+export const OVERLAY = { ms: { color: '#1e3a8a', w: 2.2, dash: [3, 1.5] as number[] | null, name: 'Middle school' }, hs: { color: '#7c2d12', w: 3, dash: null as number[] | null, name: 'High school' } };
+
 interface Props {
   S: Static; vis: Set<number>; showAreas?: boolean; result: Record<Level, LevelResult> | null; level: Level; year: number; colorBy: 'school' | 'util';
   closures: Record<string, number>; showHomes: boolean; showStreets: boolean; tool: Tool; interactive: boolean;
   view: Partial<ViewState>; onView: (v: ViewState) => void; drawCb?: DrawCallbacks; diffHomes?: Uint8Array | null;
-  selectedGeom?: GeoJSON.Geometry | null; title?: string; doneTick?: number; children?: React.ReactNode; onMapRef?: (m: MapRef | null) => void;
+  selectedGeom?: GeoJSON.Geometry | null; title?: string; overlays?: Level[]; doneTick?: number; children?: React.ReactNode; onMapRef?: (m: MapRef | null) => void;
 }
 
 function addHatch(m: any) {
@@ -59,6 +62,19 @@ export default function MapPanel(p: Props) {
 
   const visExpr: any = useMemo(() => ['in', ['get', 'orig'], ['literal', [...p.vis, -1]]], [p.vis]);
   const zones = p.result?.[p.level]?.zones ?? { type: 'FeatureCollection', features: [] };
+
+  // feeder overlays: other levels' boundaries in this plan, outlined and labeled
+  const overlayGeo = useMemo(() => {
+    const out: Record<string, GeoJSON.FeatureCollection> = {};
+    for (const lv of ['ms', 'hs'] as Level[]) {
+      const z = p.result?.[lv]?.zones;
+      out[lv] = { type: 'FeatureCollection', features: !z || lv === p.level || !p.overlays?.includes(lv) ? [] : z.features.map(f => {
+        const k = f.properties!.school as number;
+        return { ...f, properties: { school: k, label: k >= 0 ? S.schools[k].name : 'Not yet assigned' } };
+      }) };
+    }
+    return out;
+  }, [p.result, p.level, p.overlays, S]);
 
   const schoolsGeo = useMemo<GeoJSON.FeatureCollection>(() => ({
     type: 'FeatureCollection',
@@ -153,6 +169,14 @@ export default function MapPanel(p: Props) {
         <Source id="district" type="geojson" data={S.district as any}>
           <Layer id="district-line" type="line" paint={{ 'line-color': '#111', 'line-width': 2.5, 'line-opacity': 0.6 }} />
         </Source>
+        {(['ms', 'hs'] as const).map(lv => { const c = OVERLAY[lv]; return (
+          <Source key={lv} id={'overlay-' + lv} type="geojson" data={overlayGeo[lv] as any}>
+            <Layer id={'overlay-' + lv + '-casing'} type="line" paint={{ 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, c.w + 2, 15, c.w + 4], 'line-opacity': 0.85 }} />
+            <Layer id={'overlay-' + lv + '-line'} type="line" paint={{ 'line-color': c.color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, c.w, 15, c.w + 1.5], ...(c.dash ? { 'line-dasharray': c.dash } : {}) } as any} />
+            <Layer id={'overlay-' + lv + '-label'} type="symbol" layout={{ 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 11, 14, 14],
+              'text-transform': 'uppercase', 'text-letter-spacing': 0.06, 'symbol-placement': 'point', 'text-allow-overlap': false, 'text-padding': 8 } as any}
+              paint={{ 'text-color': c.color, 'text-halo-color': '#ffffff', 'text-halo-width': 2 }} />
+          </Source>); })}
         <Source id="streets" type="geojson" data={streetsGeo as any}>
           <Layer id="street-overlay" type="line" minzoom={13} layout={{ visibility: p.showStreets && ['trace', 'polygon', 'freehand', 'edit'].includes(p.tool) && p.interactive ? 'visible' : 'none' }}
             paint={{ 'line-color': '#0d47a1', 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.6, 17, 2], 'line-opacity': 0.45 }} />

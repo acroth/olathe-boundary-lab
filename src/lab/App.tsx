@@ -52,7 +52,8 @@ export default function App() {
       if (bq && st.combos) {   // build=1.1.1.1.1 or build=1.1.1.1.1~630,PR-BE (explicit moves)
         const [a, m] = bq.split('~'); const sel = a.split('.').map(Number);
         const moves = m !== undefined ? Object.fromEntries(st.combos.moves.map(x => [x.id, m.split(',').includes(x.id)])) : null;
-        if (sel.length === st.combos.schools.length && sel.every(x => x > 0)) useUI.getState().set({ mode: 'build', level: 'es', tool: 'pan', build: { sel, moves } });
+        const msq = hash.get('ms'); const ms = msq !== null && /^\d$/.test(msq) ? Number(msq) : 1;
+        if (sel.length === st.combos.schools.length && sel.every(x => x > 0)) useUI.getState().set({ mode: 'build', level: 'es', tool: 'pan', build: { sel, moves, ms } });
       }
       if ((p && !bq) || hash.get('mode') === 'draw') useUI.getState().set({ mode: 'draw' });   // shared free-draw links open in free draw
       usePlan.getState().setPlan(p ?? planFromPreset(st.presets.find(x => x.id === 'district')!));
@@ -78,7 +79,7 @@ export default function App() {
   // option builder: the plan follows the chosen concepts
   useEffect(() => {
     if (!S || ui.mode !== 'build' || !S.combos) return;
-    usePlan.getState().setPlan(buildPlan(S, ui.build.sel, ui.build.moves));
+    usePlan.getState().setPlan(buildPlan(S, ui.build.sel, ui.build.moves, ui.build.ms));
   }, [S, ui.mode, ui.build]);
 
   // recompute when the plan (or compare plan) changes
@@ -108,6 +109,7 @@ export default function App() {
       if (useUI.getState().mode === 'build') {
         const b = useUI.getState().build;
         h.set('build', b.sel.join('.') + (b.moves ? '~' + Object.keys(b.moves).filter(k => b.moves![k]).join(',') : ''));
+        if (b.ms !== 1) h.set('ms', String(b.ms));
       } else h.set('plan', encodePlan(plan, S.presets));
       if (ui.compare) h.set('compare', encodePlan(ui.compare, S.presets));
       try { history.replaceState(null, '', '#' + h.toString()); } catch { /* sandboxed */ }
@@ -172,7 +174,7 @@ export default function App() {
   if (err) return <div className="loading">Could not load data: {err}</div>;
   if (!S) return <div className="loading">Loading district data…</div>;
   const selected = plan.edits.find(e => e.id === ui.selectedEdit)?.geom ?? null;
-  const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, view, onView: (v: ViewState) => setView(v), diffHomes };
+  const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, overlays: ui.overlays, view, onView: (v: ViewState) => setView(v), diffHomes };
   const sheetNext = { peek: 'half', half: 'full', full: 'peek' } as const;
   const setMode = (m: 'build' | 'draw') => ui.set(m === 'build' ? { mode: 'build', level: 'es', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
 

@@ -37,7 +37,9 @@ export interface ComboPiece { to: string; school: number; geom: GeoJSON.Polygon 
 export interface ComboConcept { id: number; summary: string; pieces: ComboPiece[] }
 export interface ComboMove { id: string; frm: string; to: string; school: number; label: string; rule: string; geom: GeoJSON.Polygon | GeoJSON.MultiPolygon; model26: number }
 export interface Combos { basePreset: string; schools: { name: string; i: number; concepts: ComboConcept[] }[]; moves: ComboMove[]; exclusive: string[][];
-  district: { enroll2026: Record<string, number>; cap: Record<string, number> }; options: Record<string, number[]> }
+  district: { enroll2026: Record<string, number>; cap: Record<string, number> }; options: Record<string, number[]>;
+  ms?: { cap: Record<string, number>; firstYear: string; source: string; concepts: MsConcept[] } }
+export interface MsConcept { id: number; summary: string; table: Record<string, number[]>; edits: { school: number; to: string; faces: number[]; geom: GeoJSON.Polygon | GeoJSON.MultiPolygon }[] }
 export interface Static {
   meta: Meta; schools: School[]; homes: Homes; streets: Streets;
   zones: Record<Level, GeoJSON.FeatureCollection>; faces: GeoJSON.FeatureCollection; district: GeoJSON.FeatureCollection; planning: GeoJSON.FeatureCollection;

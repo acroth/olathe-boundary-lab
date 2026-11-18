@@ -5,6 +5,8 @@ import type { Edit, Level, Preset } from './data';
 export interface Plan { preset: string; closures: Record<string, number>; edits: Edit[]; name?: string }
 export type Tool = 'trace' | 'areas' | 'polygon' | 'freehand' | 'blocks' | 'edit' | 'erase' | 'pan';
 export type PickBy = 'planning' | 'zones';
+/** Option Builder choice: elementary concept per closing school, open-school moves (null = defaults), middle school concept (0 = none). */
+export interface Build { sel: number[]; moves: Record<string, boolean> | null; ms: number }
 
 interface PlanState { plan: Plan; setPlan: (p: Plan) => void; addEdit: (e: Edit) => void; updateEdit: (id: string, e: Partial<Edit>) => void;
   removeEdit: (id: string) => void; toggleClosure: (s: number, year: number) => void }
@@ -25,15 +27,15 @@ export const usePlan = create<PlanState>()(temporal((set) => ({
 interface UIState {
   level: Level; brush: number; tool: Tool; year: number; colorBy: 'school' | 'util'; showHomes: boolean; showStreets: boolean; showAreas: boolean;
   sheet: 'peek' | 'half' | 'full'; panelOpen: boolean; pickBy: PickBy;
-  mode: 'draw' | 'build'; build: { sel: number[]; moves: Record<string, boolean> | null };
-  includePreK: boolean; snap: boolean; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
+  mode: 'draw' | 'build'; build: Build;
+  includePreK: boolean; snap: boolean; overlays: Level[]; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
   set: (p: Partial<UIState>) => void;
 }
 export const useUI = create<UIState>()((set) => ({
   level: 'es', brush: -2, tool: 'pan', year: 2, colorBy: 'school', showHomes: false, showStreets: true, showAreas: true,
   sheet: 'half', panelOpen: true, pickBy: 'planning',
-  mode: 'build', build: { sel: [1, 1, 1, 1, 1], moves: null },
-  includePreK: true, snap: false, areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
+  mode: 'build', build: { sel: [1, 1, 1, 1, 1], moves: null, ms: 1 },
+  includePreK: true, snap: false, overlays: [], areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
   set: (p) => set(p),
 }));
 

@@ -36,7 +36,7 @@ export class DrawController {
     const st = S.streets;
     this.graph = buildGraph(st, true);
     const pub: number[] = [];
-    for (let i = 0; i < st.nNodes; i++) if (this.graph.off[i + 1] > this.graph.off[i]) pub.push(i);
+    for (let i = 0; i < st.nNodes; i++) if (this.graph.firstEntry[i + 1] > this.graph.firstEntry[i]) pub.push(i);
     this.pubNodes = Uint32Array.from(pub);
     this.nodeIdx = new Flatbush(pub.length);
     for (const i of pub) this.nodeIdx.add(st.nodeLon[i], st.nodeLat[i], st.nodeLon[i], st.nodeLat[i]);

@@ -81,13 +81,13 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
           <Stat v={sm.maxUtilSchool >= 0 ? pct(sm.maxUtil) : '—'} l={sm.maxUtilSchool >= 0 ? `Highest: ${S.schools[sm.maxUtilSchool].name}` : 'Highest'} warn={sm.maxUtil > S.meta.target} />
           <Stat v={String(sm.overTarget.length)} l={`Schools over ${S.meta.target * 100}%`} warn={sm.overTarget.length > 0} />
           <Stat v={n0(sm.unassignedStudents)} l="Students unassigned" warn={sm.unassignedStudents > 0.5} />
-          <Stat v={pct(sm.over25Share)} l={`Moved kids ${S.meta.busMiles}+ mi away`} />
+          <Stat v={pct(sm.shareBeyondBusMiles)} l={`Moved kids ${S.meta.busMiles}+ mi away`} />
         </div>}
         {sm && <details className="more"><summary>More numbers</summary><div className="stats">
-          <Stat v={n0(sm.displaced)} l="Students from closing schools placed" />
-          <Stat v={sm.avgTripMi ? sm.avgTripMi.toFixed(2) + ' mi' : '—'} l="Average trip, moved students" />
+          <Stat v={n0(sm.studentsFromClosingSchools)} l="Students from closing schools placed" />
+          <Stat v={sm.averageTripMiles ? sm.averageTripMiles.toFixed(2) + ' mi' : '—'} l="Average trip, moved students" />
           <Stat v={n0(sm.movedFromOpen)} l="Moved from open schools" />
-          {lv === 'es' && <Stat v={n0(sm.fixedNotPlaced)} l="Pre-K at closing schools, not placed" />}
+          {lv === 'es' && <Stat v={n0(sm.inBuildingNotPlaced)} l="Pre-K at closing schools, not placed" />}
         </div><p className="note">Model numbers, {Y[ui.year]} for the school table; peaks run 2027-28 to 2034-35. Year and Pre-K are in the top bar.</p></details>}
       </section>
 
@@ -189,7 +189,7 @@ function Grades({ S, res, focus, setFocus, schools, year }: any) {
         {grades.map((g: string) => <tr key={g}><td>{g === 'K' ? 'K' : 'Grade ' + g}{es && <span className="muted"> (max {S.meta.classSize[g]})</span>}</td>
           {yrs.map((y, k) => <td key={k}>{Math.round(r.grades[y][g] ?? 0)}{es && <> · {r.classrooms[y][g]}</>}</td>)}</tr>)}
         <tr className="tot"><td>Neighborhood total</td>{yrs.map((y, k) => <td key={k}>{Math.round(r.students[y])}{es && <> · {Object.values(r.classrooms[y] as Record<string, number>).reduce((a, b) => a + b, 0)}</>}</td>)}</tr>
-        {es && r.fixed > 0 && <tr><td>Pre-K / immersion (fixed)</td>{yrs.map((y, k) => <td key={k}>{Math.round(r.fixed)}</td>)}</tr>}
+        {es && r.inBuilding > 0 && <tr><td>Pre-K / immersion (fixed)</td>{yrs.map((y, k) => <td key={k}>{Math.round(r.inBuilding)}</td>)}</tr>}
         <tr className="tot"><td>Utilization</td>{yrs.map((y, k) => <td key={k}>{(r.util[y] * 100).toFixed(1)}%</td>)}</tr>
       </tbody>
     </table>
@@ -230,7 +230,7 @@ function District({ S, res, plan, year }: any) {
       <table className="tbl">
         <thead><tr><th>From</th><th>To</th><th>District</th><th>Model</th><th>Gap</th></tr></thead>
         <tbody>{D.pieces.map((p: any) => {
-          const f = byName[p.frm], t = byName[p.to]; const m = f && t ? (res.schools[t.i]?.fromOrigPrev?.[f.i] ?? 0) : NaN;
+          const f = byName[p.frm], t = byName[p.to]; const m = f && t ? (res.schools[t.i]?.movedInByOriginFall2026?.[f.i] ?? 0) : NaN;
           return <tr key={p.frm + p.to}><td>{p.frm}</td><td>{p.to}</td><td>{p.n}</td><td>{n0(m)}</td>
             <td className={Math.abs(m - p.n) > 25 ? 'bad' : ''}>{(m - p.n >= 0 ? '+' : '') + n0(m - p.n)}</td></tr>;
         })}</tbody>

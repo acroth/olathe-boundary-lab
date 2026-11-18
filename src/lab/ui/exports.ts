@@ -26,7 +26,7 @@ export function exportCSV(S: Static, r: Results, plan: Plan) {
     const t = r.levels[lv].schools[k], s = S.schools[Number(k)];
     if (!t.open) { rows.push([lv, s.name, String(s.capacity), s.capSource, '', '', '', 'closing', '', '', '', '']); continue; }
     for (let y = S.meta.firstPlanYear; y < Y.length; y++)
-      rows.push([lv, s.name, String(s.capacity), s.capSource, Y[y], t.students[y].toFixed(1), t.fixed.toFixed(0), t.util[y].toFixed(4), String(t.homes), String(t.pieces), t.fromClosed.toFixed(1), t.fromOpen.toFixed(1)]);
+      rows.push([lv, s.name, String(s.capacity), s.capSource, Y[y], t.students[y].toFixed(1), t.inBuilding.toFixed(0), t.util[y].toFixed(4), String(t.homes), String(t.pieces), t.fromClosingSchools.toFixed(1), t.fromOpenSchools.toFixed(1)]);
   }
   const csv = rows.map(r => r.map(c => /[",\n]/.test(c) ? `"${c.replace(/"/g, '""')}"` : c).join(',')).join('\n');
   download(`numbers-${slug(plan)}.csv`, csv, 'text/csv');

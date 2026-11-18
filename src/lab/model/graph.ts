@@ -1,104 +1,135 @@
+// The street network as a graph, with shortest road distances (for trips) and shortest paths (for tracing lines).
 import type { Streets } from '../data';
 
-// Compressed adjacency of the street graph. `publicOnly` drops service drives (used for tracing boundaries).
-export interface Graph { off: Uint32Array; to: Uint32Array; edge: Uint32Array; w: Float32Array; n: number }
+const SERVICE_ROAD_CLASS = 8;            // driveways and parking aisles (pipeline/boundary_lab/steps/streets.py ROAD_CLASSES)
+const FEET_PER_DEGREE_LONGITUDE = 287000; // near 38.9° N
+const FEET_PER_DEGREE_LATITUDE = 364000;
 
-export function buildGraph(s: Streets, publicOnly: boolean): Graph {
-  const SERVICE = 8;
-  const deg = new Uint32Array(s.nNodes + 1);
-  for (let e = 0; e < s.nEdges; e++) {
-    if (publicOnly && s.cls[e] >= SERVICE) continue;
-    deg[s.u[e]]++; deg[s.v[e]]++;
-  }
-  const off = new Uint32Array(s.nNodes + 1);
-  for (let i = 0; i < s.nNodes; i++) off[i + 1] = off[i] + deg[i];
-  const fill = off.slice(0, s.nNodes);
-  const m = off[s.nNodes];
-  const to = new Uint32Array(m), edge = new Uint32Array(m), w = new Float32Array(m);
-  for (let e = 0; e < s.nEdges; e++) {
-    if (publicOnly && s.cls[e] >= SERVICE) continue;
-    const a = s.u[e], b = s.v[e];
-    to[fill[a]] = b; edge[fill[a]] = e; w[fill[a]++] = s.len[e];
-    to[fill[b]] = a; edge[fill[b]] = e; w[fill[b]++] = s.len[e];
-  }
-  return { off, to, edge, w, n: s.nNodes };
+/** Adjacency in compressed form: node n's neighbours are entries firstEntry[n] .. firstEntry[n + 1] - 1 of the other arrays. */
+export interface Graph {
+  firstEntry: Uint32Array;  // per node (length nodeCount + 1)
+  neighbour: Uint32Array;   // per entry: the node at the other end
+  edge: Uint32Array;        // per entry: the street edge used
+  feet: Float32Array;       // per entry: its length
+  nodeCount: number;
 }
 
-class Heap {
-  k: number[] = []; v: number[] = [];
-  get size() { return this.k.length; }
-  push(key: number, val: number) {
-    const k = this.k, v = this.v; let i = k.length; k.push(key); v.push(val);
-    while (i > 0) { const p = (i - 1) >> 1; if (k[p] <= key) break; k[i] = k[p]; v[i] = v[p]; i = p; }
-    k[i] = key; v[i] = val;
+/** Build the graph from the street arrays. `publicOnly` leaves out service drives (used when tracing boundaries). */
+export function buildGraph(streets: Streets, publicOnly: boolean): Graph {
+  const included = (edge: number) => !publicOnly || streets.cls[edge] < SERVICE_ROAD_CLASS;
+  const degree = new Uint32Array(streets.nNodes + 1);
+  for (let edge = 0; edge < streets.nEdges; edge++) {
+    if (!included(edge)) continue;
+    degree[streets.u[edge]]++; degree[streets.v[edge]]++;
   }
+  const firstEntry = new Uint32Array(streets.nNodes + 1);
+  for (let node = 0; node < streets.nNodes; node++) firstEntry[node + 1] = firstEntry[node] + degree[node];
+  const nextFree = firstEntry.slice(0, streets.nNodes);
+  const entryCount = firstEntry[streets.nNodes];
+  const neighbour = new Uint32Array(entryCount), edgeOf = new Uint32Array(entryCount), feet = new Float32Array(entryCount);
+  for (let edge = 0; edge < streets.nEdges; edge++) {
+    if (!included(edge)) continue;
+    const a = streets.u[edge], b = streets.v[edge];
+    neighbour[nextFree[a]] = b; edgeOf[nextFree[a]] = edge; feet[nextFree[a]++] = streets.len[edge];
+    neighbour[nextFree[b]] = a; edgeOf[nextFree[b]] = edge; feet[nextFree[b]++] = streets.len[edge];
+  }
+  return { firstEntry, neighbour, edge: edgeOf, feet, nodeCount: streets.nNodes };
+}
+
+/** Binary min-heap of (priority, node) pairs. */
+class MinHeap {
+  private priorities: number[] = [];
+  private nodes: number[] = [];
+  get size() { return this.priorities.length; }
+
+  push(priority: number, node: number) {
+    const priorities = this.priorities, nodes = this.nodes;
+    let slot = priorities.length;
+    priorities.push(priority); nodes.push(node);
+    while (slot > 0) {
+      const parent = (slot - 1) >> 1;
+      if (priorities[parent] <= priority) break;
+      priorities[slot] = priorities[parent]; nodes[slot] = nodes[parent]; slot = parent;
+    }
+    priorities[slot] = priority; nodes[slot] = node;
+  }
+
   pop(): [number, number] {
-    const k = this.k, v = this.v; const rk = k[0], rv = v[0];
-    const lk = k.pop()!, lv = v.pop()!; const n = k.length;
-    if (n) {
-      let i = 0;
+    const priorities = this.priorities, nodes = this.nodes;
+    const top: [number, number] = [priorities[0], nodes[0]];
+    const lastPriority = priorities.pop()!, lastNode = nodes.pop()!;
+    const count = priorities.length;
+    if (count) {
+      let slot = 0;
       while (true) {
-        let c = 2 * i + 1; if (c >= n) break;
-        if (c + 1 < n && k[c + 1] < k[c]) c++;
-        if (k[c] >= lk) break;
-        k[i] = k[c]; v[i] = v[c]; i = c;
+        let child = 2 * slot + 1;
+        if (child >= count) break;
+        if (child + 1 < count && priorities[child + 1] < priorities[child]) child++;
+        if (priorities[child] >= lastPriority) break;
+        priorities[slot] = priorities[child]; nodes[slot] = nodes[child]; slot = child;
       }
-      k[i] = lk; v[i] = lv;
+      priorities[slot] = lastPriority; nodes[slot] = lastNode;
     }
-    return [rk, rv];
+    return top;
   }
 }
 
-/** Shortest road distance (ft) from `src` to every node. */
-export function dijkstraAll(g: Graph, src: number): Float32Array {
-  const d = new Float64Array(g.n).fill(Infinity);   // float64: a float32 store would round below the popped key and skip nodes
-  const h = new Heap(); d[src] = 0; h.push(0, src);
-  while (h.size) {
-    const [du, u] = h.pop();
-    if (du > d[u]) continue;
-    for (let p = g.off[u]; p < g.off[u + 1]; p++) {
-      const nd = du + g.w[p], v = g.to[p];
-      if (nd < d[v]) { d[v] = nd; h.push(nd, v); }
+/** Dijkstra: shortest road feet from `start` to every node. */
+export function shortestDistances(graph: Graph, start: number): Float32Array {
+  // float64 while searching: rounding to float32 could put a stored distance below the popped one and skip nodes
+  const distance = new Float64Array(graph.nodeCount).fill(Infinity);
+  const queue = new MinHeap();
+  distance[start] = 0;
+  queue.push(0, start);
+  while (queue.size) {
+    const [reached, node] = queue.pop();
+    if (reached > distance[node]) continue;   // a shorter way here was already found
+    for (let entry = graph.firstEntry[node]; entry < graph.firstEntry[node + 1]; entry++) {
+      const next = graph.neighbour[entry], through = reached + graph.feet[entry];
+      if (through < distance[next]) { distance[next] = through; queue.push(through, next); }
     }
   }
-  return Float32Array.from(d);
+  return Float32Array.from(distance);
 }
 
-/** Shortest path between two nodes; returns the list of edge ids in order, or null. */
-export function shortestPath(g: Graph, a: number, b: number, s: Streets): { edges: number[]; nodes: number[] } | null {
-  if (a === b) return { edges: [], nodes: [a] };
-  const d = new Map<number, number>(), prev = new Map<number, number>(), pe = new Map<number, number>();
-  const bx = s.nodeLon[b], by = s.nodeLat[b];
-  const FT_LON = 287000, FT_LAT = 364000; // ft per degree near 38.9N
-  const hfun = (n: number) => Math.hypot((s.nodeLon[n] - bx) * FT_LON, (s.nodeLat[n] - by) * FT_LAT) * 0.98;
-  const h = new Heap(); d.set(a, 0); h.push(hfun(a), a);
-  let found = false, it = 0;
-  while (h.size && it++ < 400000) {
-    const [, u] = h.pop();
-    if (u === b) { found = true; break; }
-    const du = d.get(u)!;
-    for (let p = g.off[u]; p < g.off[u + 1]; p++) {
-      const v = g.to[p], nd = du + g.w[p];
-      if (nd < (d.get(v) ?? Infinity)) { d.set(v, nd); prev.set(v, u); pe.set(v, g.edge[p]); h.push(nd + hfun(v), v); }
+/** A* search: the shortest road path between two nodes, as the edges and nodes along it (or null if there is none). */
+export function shortestPath(graph: Graph, from: number, to: number, streets: Streets): { edges: number[]; nodes: number[] } | null {
+  if (from === to) return { edges: [], nodes: [from] };
+  const targetLon = streets.nodeLon[to], targetLat = streets.nodeLat[to];
+  // Straight-line feet to the target, slightly shortened so it never overestimates the road distance
+  const straightLineGuess = (node: number) =>
+    Math.hypot((streets.nodeLon[node] - targetLon) * FEET_PER_DEGREE_LONGITUDE, (streets.nodeLat[node] - targetLat) * FEET_PER_DEGREE_LATITUDE) * 0.98;
+  const distance = new Map<number, number>(), cameFrom = new Map<number, number>(), viaEdge = new Map<number, number>();
+  const queue = new MinHeap();
+  distance.set(from, 0);
+  queue.push(straightLineGuess(from), from);
+  let found = false, steps = 0;
+  while (queue.size && steps++ < 400000) {
+    const [, node] = queue.pop();
+    if (node === to) { found = true; break; }
+    const reached = distance.get(node)!;
+    for (let entry = graph.firstEntry[node]; entry < graph.firstEntry[node + 1]; entry++) {
+      const next = graph.neighbour[entry], through = reached + graph.feet[entry];
+      if (through < (distance.get(next) ?? Infinity)) {
+        distance.set(next, through); cameFrom.set(next, node); viaEdge.set(next, graph.edge[entry]);
+        queue.push(through + straightLineGuess(next), next);
+      }
     }
   }
   if (!found) return null;
-  const edges: number[] = [], nodes: number[] = [b];
-  let c = b;
-  while (c !== a) { edges.push(pe.get(c)!); c = prev.get(c)!; nodes.push(c); }
+  const edges: number[] = [], nodes: number[] = [to];
+  for (let node = to; node !== from;) { edges.push(viaEdge.get(node)!); node = cameFrom.get(node)!; nodes.push(node); }
   return { edges: edges.reverse(), nodes: nodes.reverse() };
 }
 
-/** Coordinates of a path, oriented from nodes[0] to nodes[last]. */
-export function pathCoords(s: Streets, path: { edges: number[]; nodes: number[] }): [number, number][] {
-  const out: [number, number][] = [[s.nodeLon[path.nodes[0]], s.nodeLat[path.nodes[0]]]];
-  path.edges.forEach((e, k) => {
-    const from = path.nodes[k];
-    const a = s.coordOff[e], z = s.coordOff[e + 1];
-    const pts: [number, number][] = [];
-    for (let i = a; i < z; i++) pts.push([s.coordLon[i], s.coordLat[i]]);
-    if (s.u[e] !== from) pts.reverse();
-    for (let i = 1; i < pts.length; i++) out.push(pts[i]);
+/** The coordinates along a path, from its first node to its last. */
+export function pathCoords(streets: Streets, path: { edges: number[]; nodes: number[] }): [number, number][] {
+  const coordinates: [number, number][] = [[streets.nodeLon[path.nodes[0]], streets.nodeLat[path.nodes[0]]]];
+  path.edges.forEach((edge, step) => {
+    const points: [number, number][] = [];
+    for (let k = streets.coordOff[edge]; k < streets.coordOff[edge + 1]; k++) points.push([streets.coordLon[k], streets.coordLat[k]]);
+    if (streets.u[edge] !== path.nodes[step]) points.reverse();   // edges are stored u -> v; walk them the way the path goes
+    for (let k = 1; k < points.length; k++) coordinates.push(points[k]);
   });
-  return out;
+  return coordinates;
 }

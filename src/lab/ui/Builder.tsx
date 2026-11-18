@@ -88,7 +88,7 @@ export default function Builder({ S, res, resMs, build, set, toDraw, overlayOn, 
         <div className={'stat ' + tone(top?.u ?? 0)}><b>{top ? pct(top.u) : '—'}</b><span>Fullest: {top?.name ?? '—'}</span></div>
         <div className={'stat ' + (over.length ? 'warn' : '')}><b>{over.length}</b><span>{over.length ? 'Over 85%: ' + over.map(r => r.name).join(', ') : 'Schools over 85%'}</span></div>
         <div className="stat"><b>{Math.round(placed + openMoved).toLocaleString()}</b><span>Students moved{openMoved ? ` (${Math.round(openMoved)} at open schools)` : ''}</span></div>
-        <div className="stat"><b>{sm ? pct(sm.over25Share) : '—'}</b><span>Moved kids 2.5+ mi away (model)</span></div>
+        <div className="stat"><b>{sm ? pct(sm.shareBeyondBusMiles) : '—'}</b><span>Moved kids 2.5+ mi away (model)</span></div>
       </div>
     </section>
     <section className="builder">

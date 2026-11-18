@@ -6,6 +6,7 @@ numpy
 scipy
 pandas
 ortools
+networkx
 pillow
 pymupdf
 psycopg[binary]>=3.1

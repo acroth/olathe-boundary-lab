@@ -1,36 +1,45 @@
+// Runs in a web worker: loads the data once, evaluates plans with the model, and caches results per level so editing one level
+// (or toggling a setting) doesn't recompute the others.
 import { loadStatic, LEVELS, type Level } from './data';
 import { Engine, type LevelResult, type PlanInput } from './model/engine';
 
+const CACHE_SIZE = 60;
 let engine: Engine | null = null;
-let ready: Promise<void> | null = null;
-const cache = new Map<string, LevelResult>();
+let loading: Promise<void> | null = null;
+const resultCache = new Map<string, LevelResult>();
 
-function keyFor(level: Level, plan: PlanInput) {
-  const e = plan.edits.filter(x => x.level === level).map(x => x.id + ':' + x.school + ':' + (x.rev ?? 0));
-  return level + '|' + plan.includePreK + '|' + JSON.stringify(plan.closures) + '|' + e.join(',');
+/** A plan's result for one level depends only on these: the setting, the closures, and that level's edits. */
+function cacheKey(level: Level, plan: PlanInput) {
+  const edits = plan.edits.filter(edit => edit.level === level).map(edit => `${edit.id}:${edit.school}:${edit.rev ?? 0}`);
+  return `${level}|${plan.includePreK}|${JSON.stringify(plan.closures)}|${edits.join(',')}`;
 }
-function runPlan(plan: PlanInput) {
-  const out: Record<string, LevelResult> = {};
-  for (const lv of LEVELS) {
-    const k = keyFor(lv, plan);
-    let r = cache.get(k);
-    if (!r) { r = engine!.run(lv, plan); cache.set(k, r); if (cache.size > 60) cache.delete(cache.keys().next().value!); }
-    out[lv] = r;
+
+function evaluate(plan: PlanInput) {
+  const levels: Record<string, LevelResult> = {};
+  for (const level of LEVELS) {
+    const key = cacheKey(level, plan);
+    let result = resultCache.get(key);
+    if (!result) {
+      result = engine!.run(level, plan);
+      resultCache.set(key, result);
+      if (resultCache.size > CACHE_SIZE) resultCache.delete(resultCache.keys().next().value!);
+    }
+    levels[level] = result;
   }
-  const feeder = engine!.feeder(out.es.assign, out.ms.assign);
-  return { levels: out, feeder };
+  return { levels, feeder: engine!.feeder(levels.es.assign, levels.ms.assign) };
 }
 
-export async function handle(data: any): Promise<any> {
-  const { id, plans, base } = data as { id: number; plans: Record<string, PlanInput>; base: string };
-  if (!ready) ready = loadStatic(base).then(S => { engine = new Engine(S); });
-  await ready;
+/** Message handler: { id, plans: {name: plan}, base: data folder URL } -> { id, res: {name: result}, ms } or { id, error }. */
+export async function handle(message: any): Promise<any> {
+  const { id, plans, base } = message as { id: number; plans: Record<string, PlanInput>; base: string };
+  if (!loading) loading = loadStatic(base).then(data => { engine = new Engine(data); });
+  await loading;
   try {
-    const t0 = performance.now();
-    const res: Record<string, any> = {};
-    for (const k in plans) res[k] = runPlan(plans[k]);
-    return { id, res, ms: performance.now() - t0 };
-  } catch (err: any) {
-    return { id, error: String(err?.stack ?? err) };
+    const started = performance.now();
+    const results: Record<string, any> = {};
+    for (const name in plans) results[name] = evaluate(plans[name]);
+    return { id, res: results, ms: performance.now() - started };
+  } catch (error: any) {
+    return { id, error: String(error?.stack ?? error) };
   }
 }

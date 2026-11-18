@@ -17,7 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { LEVEL_NAME, type Level, type Static } from '../data';
+import { LEVELS, LEVEL_NAME, type Level, type Static } from '../data';
 import { OVERLAY } from '../map/MapPanel';
 import { usePlan, useSaved, useUI, type Plan } from '../store';
 import { encodePlan } from '../url';
@@ -87,7 +87,7 @@ function SearchBox({ S, mapRef, pad }: { S: Static; mapRef: MutableRefObject<Map
   const pick = (h: Hit) => { h.go(); setOpen(false); input.current?.blur(); };
   const Icon = { school: School, area: MapPin, street: Waypoints };
   return (
-    <div className="relative min-w-0 flex-1 md:w-[380px] md:flex-none">
+    <div className="relative min-w-0 flex-1 md:max-w-[380px]">
       <div className="flex h-12 items-center gap-2.5 rounded-2xl border bg-card px-4 shadow-float">
         <Search className="size-[18px] shrink-0 text-muted-foreground" />
         <input ref={input} value={q} placeholder="Search schools, areas, streets" aria-label="Search" role="combobox" aria-expanded={open && hits.length > 0} aria-controls="search-results"
@@ -112,6 +112,18 @@ function SearchBox({ S, mapRef, pad }: { S: Static; mapRef: MutableRefObject<Map
             </button>); })}
         </div>
       )}
+    </div>
+  );
+}
+
+/** School level for the whole lab; the map, panel and tools all follow it. */
+function LevelSwitch() {
+  const ui = useUI();
+  return (
+    <div className="pointer-events-auto order-last flex h-12 w-full items-center rounded-2xl border bg-card px-1.5 shadow-float md:order-first md:w-auto md:shrink-0">
+      <ToggleGroup type="single" value={ui.level} className="w-full" aria-label="School level" onValueChange={v => v && ui.set({ level: v as Level, brush: -2 })}>
+        {LEVELS.map(l => <ToggleGroupItem key={l} value={l} className="h-9 flex-auto px-3">{LEVEL_NAME[l]}</ToggleGroupItem>)}
+      </ToggleGroup>
     </div>
   );
 }
@@ -144,7 +156,8 @@ export default function TopBar({ S, mapRef, resA, pad }: { S: Static; mapRef: Mu
   const feedbackHref = () => (location.href.length <= 2000 ? '/contact?plan=' + encodeURIComponent(location.href) : '/contact');
 
   return (
-    <div className="topbar pointer-events-none absolute z-20 flex items-start gap-2 md:gap-3">
+    <div className="topbar pointer-events-none absolute z-20 flex flex-wrap items-start gap-2 md:flex-nowrap md:gap-3">
+      <LevelSwitch />
       <div className="pointer-events-auto contents"><SearchBox S={S} mapRef={mapRef} pad={pad} /></div>
       <div className="pointer-events-auto relative flex h-12 shrink-0 items-center gap-0.5 rounded-2xl border bg-card px-1.5 shadow-float">
         <Popover>
@@ -228,7 +241,7 @@ export default function TopBar({ S, mapRef, resA, pad }: { S: Static; mapRef: Mu
           </div>
         )}
       </div>
-      <Button onClick={share} className="pointer-events-auto hidden h-12 rounded-2xl px-5 shadow-float sm:inline-flex" aria-label="Share this view">
+      <Button onClick={share} className="pointer-events-auto hidden h-12 shrink-0 rounded-2xl px-5 shadow-float sm:inline-flex md:hidden lg:inline-flex" aria-label="Share this view">
         {copied ? <Check className="size-[18px]" /> : <Share2 className="size-[18px]" />}{copied ? 'Copied' : 'Share'}
       </Button>
     </div>

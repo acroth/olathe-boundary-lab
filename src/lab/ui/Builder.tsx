@@ -1,5 +1,5 @@
 // Option Builder: pick one district concept per closing school and see the combination.
-import type { Combos, Edit, Static } from '../data';
+import type { Combos, Edit, Level, Static } from '../data';
 import type { Build, Plan } from '../store';
 import type { LevelResult } from '../model/engine';
 
@@ -58,10 +58,12 @@ export function districtCheck(C: Combos, sel: number[], mv: Record<string, boole
   return [...touched].map(n => ({ name: n, n: tot[n], cap: C.district.cap[n], u: tot[n] / C.district.cap[n] })).sort((a, b) => b.u - a.u);
 }
 
-export default function Builder({ S, res, resMs, build, set, toDraw, overlayOn, toggleOverlay }: { S: Static; res: LevelResult | null; resMs: LevelResult | null; build: Build; set: (b: Build) => void; toDraw: () => void; overlayOn: boolean; toggleOverlay: () => void }) {
+export default function Builder({ S, level, res, resMs, build, set, toDraw, overlayOn, setOverlay }: { S: Static; level: Level; res: LevelResult | null; resMs: LevelResult | null; build: Build; set: (b: Build) => void; toDraw: () => void; overlayOn: boolean; setOverlay: (on: boolean) => void }) {
   const { sel, moves } = build;
   const C = S.combos;
   if (!C) return <section><p className="note">Option data not loaded.</p></section>;
+  if (level === 'hs') return <section className="builder"><p className="note">None of the district’s concepts change high school boundaries, so these are the current areas.</p></section>;
+  if (level === 'ms') return C.ms ? <MsSection S={S} build={build} set={set} resMs={resMs} /> : <section><p className="note">Middle school concepts not loaded.</p></section>;
   const mv = activeMoves(C, sel, moves); const auto = defaultMoves(C, sel);
   const check = districtCheck(C, sel, mv);
   const byName: Record<string, number> = {}; for (const s of S.schools) if (s.level === 'es') byName[s.name] = s.i;
@@ -101,7 +103,7 @@ export default function Builder({ S, res, resMs, build, set, toDraw, overlayOn, 
         </div>;
       })}
     </section>
-    {C.ms && <MsSection S={S} build={build} set={set} resMs={resMs} overlayOn={overlayOn} toggleOverlay={toggleOverlay} />}
+    {C.ms && <MsOverlayPicker S={S} build={build} set={set} overlayOn={overlayOn} setOverlay={setOverlay} />}
     <section className="builder">
       <details className="more"><summary>Fullest schools</summary>
         <table className="tbl">
@@ -130,8 +132,19 @@ export default function Builder({ S, res, resMs, build, set, toDraw, overlayOn, 
   </>;
 }
 
+/** Elementary view: which middle school concept's lines to overlay on the map. */
+function MsOverlayPicker({ S, build, set, overlayOn, setOverlay }: { S: Static; build: Build; set: (b: Build) => void; overlayOn: boolean; setOverlay: (on: boolean) => void }) {
+  return <section className="builder">
+    <div className="row between"><b>Middle school lines</b>
+      <div className="seg small">
+        <button className={overlayOn ? '' : 'on'} onClick={() => setOverlay(false)} title="Hide middle school lines">Off</button>
+        {S.combos!.ms!.concepts.map(x => <button key={x.id} className={overlayOn && x.id === build.ms ? 'on' : ''} onClick={() => { set({ ...build, ms: x.id }); setOverlay(true); }} title={`Show concept ${x.id} lines`}>{x.id}</button>)}
+      </div></div>
+  </section>;
+}
+
 /** Middle school concept picker (the district's five MS concepts, independent of the elementary options). */
-function MsSection({ S, build, set, resMs, overlayOn, toggleOverlay }: { S: Static; build: Build; set: (b: Build) => void; resMs: LevelResult | null; overlayOn: boolean; toggleOverlay: () => void }) {
+function MsSection({ S, build, set, resMs }: { S: Static; build: Build; set: (b: Build) => void; resMs: LevelResult | null }) {
   const M = S.combos!.ms!; const c = M.concepts.find(x => x.id === build.ms);
   const byName: Record<string, number> = {}; for (const s of S.schools) if (s.level === 'ms') byName[s.name] = s.i;
   const tone = (u: number) => u > 0.9 ? 'bad' : u > 0.85 ? 'warn' : '';
@@ -143,9 +156,8 @@ function MsSection({ S, build, set, resMs, overlayOn, toggleOverlay }: { S: Stat
           <button className={build.ms === 0 ? 'on' : ''} onClick={() => set({ ...build, ms: 0 })} title="Leave Indian Trail's area unassigned">–</button>
         </div></div>
       <p className="note">{c ? c.summary : 'No middle school concept: Indian Trail’s area is left unassigned.'} The district shows these separately from the elementary options, so any pairing works.</p>
-      {!overlayOn && <button className="link" onClick={toggleOverlay}>Show middle school lines on the map</button>}
     </div>
-    {c && <details className="more"><summary>Middle school numbers</summary>
+    {c && <details className="more" open><summary>Middle school numbers</summary>
       <table className="tbl">
         <thead><tr><th>School</th><th>District 27-28</th><th>District 31-32</th><th className="muted">Model peak</th></tr></thead>
         <tbody>{Object.keys(c.table).map(n => { const d = c.table[n]; const cap = M.cap[n]; const m = resMs?.schools[byName[n]];

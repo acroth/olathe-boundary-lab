@@ -53,8 +53,9 @@ export default function App() {
         const [a, m] = bq.split('~'); const sel = a.split('.').map(Number);
         const moves = m !== undefined ? Object.fromEntries(st.combos.moves.map(x => [x.id, m.split(',').includes(x.id)])) : null;
         const msq = hash.get('ms'); const ms = msq !== null && /^\d$/.test(msq) ? Number(msq) : 1;
-        if (sel.length === st.combos.schools.length && sel.every(x => x > 0)) useUI.getState().set({ mode: 'build', level: 'es', tool: 'pan', build: { sel, moves, ms } });
+        if (sel.length === st.combos.schools.length && sel.every(x => x > 0)) useUI.getState().set({ mode: 'build', tool: 'pan', build: { sel, moves, ms } });
       }
+      const lq = hash.get('level'); if (lq === 'ms' || lq === 'hs') useUI.getState().set({ level: lq });
       if ((p && !bq) || hash.get('mode') === 'draw') useUI.getState().set({ mode: 'draw' });   // shared free-draw links open in free draw
       usePlan.getState().setPlan(p ?? planFromPreset(st.presets.find(x => x.id === 'district')!));
       usePlan.temporal.getState().clear();
@@ -111,11 +112,12 @@ export default function App() {
         h.set('build', b.sel.join('.') + (b.moves ? '~' + Object.keys(b.moves).filter(k => b.moves![k]).join(',') : ''));
         if (b.ms !== 1) h.set('ms', String(b.ms));
       } else h.set('plan', encodePlan(plan, S.presets));
+      if (ui.level !== 'es') h.set('level', ui.level);
       if (ui.compare) h.set('compare', encodePlan(ui.compare, S.presets));
       try { history.replaceState(null, '', '#' + h.toString()); } catch { /* sandboxed */ }
     }, 300);
     return () => clearTimeout(t);
-  }, [plan, ui.compare, S, ui.mode, ui.build]);
+  }, [plan, ui.compare, S, ui.mode, ui.build, ui.level]);
 
   useEffect(() => { if (!ui.toast) return; const t = setTimeout(() => useUI.getState().set({ toast: null }), 3500); return () => clearTimeout(t); }, [ui.toast]);
 
@@ -176,7 +178,7 @@ export default function App() {
   const selected = plan.edits.find(e => e.id === ui.selectedEdit)?.geom ?? null;
   const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, overlays: ui.overlays, view, onView: (v: ViewState) => setView(v), diffHomes };
   const sheetNext = { peek: 'half', half: 'full', full: 'peek' } as const;
-  const setMode = (m: 'build' | 'draw') => ui.set(m === 'build' ? { mode: 'build', level: 'es', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
+  const setMode = (m: 'build' | 'draw') => ui.set(m === 'build' ? { mode: 'build', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
 
   return (
     <div className={'lab sheet-' + ui.sheet + (ui.panelOpen ? ' panel-open' : ' panel-closed') + ' mode-' + ui.mode}>
@@ -194,7 +196,7 @@ export default function App() {
           <header className="panel-head">
             <div className="min-w-0">
               <h2 className="text-[15px] font-semibold tracking-tight">{ui.mode === 'build' ? 'Option builder' : 'Free draw'}</h2>
-              <p className="truncate text-xs text-muted-foreground">{ui.mode === 'build' ? 'Pick a district concept for each closing school' : 'Start from a plan, then redraw on the map'}</p>
+              <p className="truncate text-xs text-muted-foreground">{ui.mode === 'build' ? { es: 'Pick a district concept for each closing school', ms: 'Pick a middle school concept', hs: 'No district concept changes high schools' }[ui.level] : 'Start from a plan, then redraw on the map'}</p>
             </div>
             {busy && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
           </header>
@@ -213,6 +215,6 @@ export default function App() {
 /** Map padding that keeps fitted areas clear of the floating panel, top bar and legend. */
 export function mapPad() {
   const phone = window.innerWidth < 768; const st = useUI.getState();
-  if (phone) return { top: 80, left: 16, right: 16, bottom: ({ peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[st.sheet]) + 16 };
+  if (phone) return { top: 132, left: 16, right: 16, bottom: ({ peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[st.sheet]) + 16 };
   return { top: 90, left: st.panelOpen ? 420 : 40, right: 260, bottom: 40 };
 }

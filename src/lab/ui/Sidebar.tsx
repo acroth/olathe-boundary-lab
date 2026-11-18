@@ -1,6 +1,6 @@
 import { useMemo, useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import { areaGeom, LEVELS, LEVEL_NAME, type Level, type Static } from '../data';
+import { areaGeom, type Level, type Static } from '../data';
 import { planFromPreset, usePlan, useSaved, useUI } from '../store';
 import { tierColor, schoolColor as colorOf } from '../colors';
 import type { Results } from '../App';
@@ -54,8 +54,8 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
 
   return (
     <>
-      {ui.mode === 'build' && <Builder S={S} res={resA?.levels.es ?? null} resMs={resA?.levels.ms ?? null} build={ui.build} set={b => ui.set({ build: b })}
-        overlayOn={ui.overlays.includes('ms')} toggleOverlay={() => ui.set({ overlays: [...ui.overlays.filter(l => l !== 'ms'), 'ms'] })}
+      {ui.mode === 'build' && <Builder S={S} level={lv} res={resA?.levels.es ?? null} resMs={resA?.levels.ms ?? null} build={ui.build} set={b => ui.set({ build: b })}
+        overlayOn={ui.overlays.includes('ms')} setOverlay={on => ui.set({ overlays: [...ui.overlays.filter(l => l !== 'ms'), ...(on ? ['ms' as const] : [])] })}
         toDraw={() => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' })} />}
 
       {ui.mode === 'draw' && <>
@@ -64,7 +64,6 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
           <select value={plan.preset} onChange={e => loadPreset(e.target.value)} aria-label="Starting plan">
             {S.presets.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <div className="seg small">{LEVELS.map(l => <button key={l} className={lv === l ? 'on' : ''} onClick={() => ui.set({ level: l, brush: -2 })} title={LEVEL_NAME[l]}>{{ es: 'Elem', ms: 'Mid', hs: 'High' }[l]}</button>)}</div>
         </div>
         <details className="more"><summary>About this plan</summary><p className="note">{S.presets.find(p => p.id === plan.preset)?.description}</p></details>
         {saved.length > 0 && (
@@ -103,7 +102,7 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
       </section>
       </>}
 
-      {ui.mode === 'draw' && section === 'schools' && res && <section>
+      {(ui.mode === 'draw' ? section === 'schools' : lv === 'hs') && res && <section>
         <table className="tbl">
           <thead><tr><th>School</th><th title="Functional capacity">Cap.</th><th>{Y[ui.year]}</th><th>Peak</th><th title="Separate pieces of the attendance area">Pcs</th>{resb && <th>Compare peak</th>}</tr></thead>
           <tbody>
@@ -121,7 +120,7 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
             })}
           </tbody>
         </table>
-        <p className="note">Tap a row to zoom to the school. Model numbers; the district's are under Show → District numbers.</p>
+        <p className="note">Tap a row to zoom to the school. Model numbers{ui.mode === 'draw' && lv === 'es' ? "; the district's are under Show → District numbers" : ''}.</p>
       </section>}
 
       {ui.mode === 'draw' && section === 'district' && res && lv === 'es' && <District S={S} res={res} plan={plan} year={ui.year} />}

@@ -1,13 +1,12 @@
 import { useMemo, useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import { useStore } from 'zustand';
 import { areaGeom, LEVELS, LEVEL_NAME, type Level, type Static } from '../data';
-import { planFromPreset, usePlan, useUI, type Plan } from '../store';
-import { PALETTE, TIERS, tierColor , schoolColor as colorOf } from '../colors';
+import { planFromPreset, usePlan, useSaved, useUI } from '../store';
+import { tierColor, schoolColor as colorOf } from '../colors';
 import type { Results } from '../App';
-import { encodePlan, decodePlan } from '../url';
+import { decodePlan } from '../url';
 import { exportCSV, exportGeoJSON, exportPNG } from './exports';
-import { AREAS, summarize } from '../visible';
+import { summarize } from '../visible';
 import Builder from './Builder';
 
 const pct = (u: number) => `${(u * 100).toFixed(1)}%`;
@@ -17,7 +16,6 @@ const n0 = (x: number) => Math.round(x).toLocaleString();
 export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: { S: Static; resA: Results | null; resB: Results | null; busy: boolean; mapRef: MutableRefObject<MapRef | null>; faceGeom: (ids: number[]) => GeoJSON.MultiPolygon; vis: Set<number> }) {
   const plan = usePlan(s => s.plan);
   const { setPlan, toggleClosure, removeEdit } = usePlan.getState();
-  const temporal = useStore(usePlan.temporal);
   const ui = useUI();
   const lv = ui.level;
   const Y = S.meta.years, y0 = S.meta.firstPlanYear;
@@ -27,33 +25,13 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
   const isClosed = (i: number) => plan.closures[String(i)] !== undefined;
   const [section, setSection] = useState<'schools' | 'district' | 'grades' | 'checks' | 'plan'>('schools');
   const [cmpLink, setCmpLink] = useState('');
-  const [saved, setSaved] = useState<{ name: string; enc: string }[]>(() => { try { return JSON.parse(localStorage.getItem('saved-plans') || '[]'); } catch { return []; } });
+  const saved = useSaved(st => st.saved);
 
   const loadPreset = (id: string) => {
     const p = S.presets.find(x => x.id === id)!;
     const hadDrawing = plan.edits.some(e => e.kind !== 'preset');
     setPlan(planFromPreset(p));
     if (hadDrawing) ui.set({ toast: 'Starting plan loaded. Undo brings back your drawing.' });
-  };
-  const share = async () => {
-    // Short link from the server when it is set up (Supabase); otherwise the full address, which carries the plan itself.
-    let url = location.href;
-    try {
-      const r = await fetch('/api/plans', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ hash: location.hash.slice(1), name: plan.name ?? null, dataVersion: S.meta.dataVersion ?? null }) });
-      if (r.ok) { const j = await r.json(); if (j.id) url = `${location.origin}/p/${j.id}`; }
-    } catch { /* offline or no API: keep the long link */ }
-    try { await navigator.clipboard.writeText(url); ui.set({ toast: 'Link copied. Anyone with it sees this exact plan.' }); }
-    catch { ui.set({ toast: 'Copy this link to share: ' + url }); }
-  };
-  const [naming, setNaming] = useState<string | null>(null);
-  const save = (name: string) => {
-    name = name.trim(); if (!name) return;
-    setNaming(null);
-    const p: Plan = { ...plan, name }; setPlan(p);
-    const enc = encodePlan(p, S.presets);
-    const next = [...saved.filter(s => s.name !== name), { name, enc }];
-    setSaved(next); try { localStorage.setItem('saved-plans', JSON.stringify(next)); } catch { /* */ }
-    ui.set({ toast: `Saved "${name}" in this browser.` });
   };
   const decode = (enc: string) => decodePlan(enc, S.presets, faceGeom, r => areaGeom(S, r));
   const startCompare = (v: string) => {
@@ -74,54 +52,8 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
   const sm = res ? summarize(S, res, vis, lv) : null;
   const focusS = ui.focusSchool !== null && S.schools[ui.focusSchool]?.level === lv ? ui.focusSchool : null;
 
-  const sheetNext = { peek: 'half', half: 'full', full: 'peek' } as const;
   return (
-    <aside className={'side sheet-' + ui.sheet + (ui.panelOpen ? '' : ' closed')}>
-      <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: sheetNext[ui.sheet] })}><span /></button>
-      <div className="side-body">
-      <header>
-        <div className="row between">
-          <h1>Olathe Boundary Lab</h1>
-          <div className="row gap">
-            <button className="primary small" onClick={share}>Share</button>
-            <details className="menu">
-              <summary aria-label="More">⋯</summary>
-              <div className="menu-body">
-                <button onClick={() => setNaming(naming === null ? (plan.name || '') : null)}>Save plan in this browser</button>
-                {ui.mode === 'draw' && <div className="row gap"><button onClick={() => temporal.undo()} disabled={!temporal.pastStates.length}>Undo</button><button onClick={() => temporal.redo()} disabled={!temporal.futureStates.length}>Redo</button></div>}
-                <label className="lbl">Areas shown</label>
-                <div className="chips">
-                  {AREAS.map(a => { const on = ui.areas.includes(a); return <button key={a} className={'chip' + (on ? ' on' : '')} aria-pressed={on}
-                    onClick={() => { const next = on ? ui.areas.filter(x => x !== a) : [...ui.areas, a]; if (next.length) ui.set({ areas: next }); }}>{a}</button>; })}
-                </div>
-                <label className="lbl">Map</label>
-                <div className="seg small">
-                  <button className={ui.colorBy === 'school' ? 'on' : ''} onClick={() => ui.set({ colorBy: 'school' })}>Color by school</button>
-                  <button className={ui.colorBy === 'util' ? 'on' : ''} onClick={() => ui.set({ colorBy: 'util' })}>by % full</button>
-                </div>
-                <label className="chk"><input type="checkbox" checked={ui.showAreas} onChange={e => ui.set({ showAreas: e.target.checked })} /> Planning areas</label>
-                <label className="chk"><input type="checkbox" checked={ui.showHomes} onChange={e => ui.set({ showHomes: e.target.checked })} /> Homes</label>
-                {ui.mode === 'draw' && <label className="chk"><input type="checkbox" checked={ui.showStreets} onChange={e => ui.set({ showStreets: e.target.checked })} /> Street snapping lines</label>}
-                <label className="chk"><input type="checkbox" checked={ui.includePreK} onChange={e => ui.set({ includePreK: e.target.checked })} /> Count Pre-K in model %</label>
-                <label className="lbl">Year: {Y[ui.year]}</label>
-                <input type="range" min={y0} max={Y.length - 1} value={ui.year} onChange={e => ui.set({ year: Number(e.target.value) })} aria-label="Year" />
-                <div className="menu-links"><a href="/about">About &amp; data sources</a><a href="/contact" onClick={e => { if (location.href.length <= 2000) e.currentTarget.href = '/contact?plan=' + encodeURIComponent(location.href); }}>Send feedback</a></div>
-              </div>
-            </details>
-            <button className="small hide-panel" aria-label="Hide panel" onClick={() => ui.set({ panelOpen: false })}>«</button>
-          </div>
-        </div>
-        <div className="seg modes" role="tablist">
-          <button role="tab" aria-selected={ui.mode === 'build'} className={ui.mode === 'build' ? 'on' : ''} onClick={() => ui.set({ mode: 'build', level: 'es', tool: 'pan' })}>Option builder</button>
-          <button role="tab" aria-selected={ui.mode === 'draw'} className={ui.mode === 'draw' ? 'on' : ''} onClick={() => ui.set({ mode: 'draw', sheet: 'peek' })}>Free draw</button>
-        </div>
-        {naming !== null && <form className="row gap" onSubmit={e => { e.preventDefault(); save(naming); }}>
-          <input id="plan-name" autoFocus placeholder="Name this plan" value={naming} onChange={e => setNaming(e.target.value)} />
-          <button className="primary" type="submit" disabled={!naming.trim()}>Save</button>
-        </form>}
-        {ui.colorBy === 'util' && <div className="legend">{TIERS.map(t => <span key={t.label}><i style={{ background: t.color }} />{t.label}</span>)}</div>}
-      </header>
-
+    <>
       {ui.mode === 'build' && <Builder S={S} res={resA?.levels.es ?? null} sel={ui.build.sel} moves={ui.build.moves} set={b => ui.set({ build: b })}
         toDraw={() => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' })} />}
 
@@ -155,7 +87,7 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
           <Stat v={sm.avgTripMi ? sm.avgTripMi.toFixed(2) + ' mi' : '—'} l="Average trip, moved students" />
           <Stat v={n0(sm.movedFromOpen)} l="Moved from open schools" />
           {lv === 'es' && <Stat v={n0(sm.fixedNotPlaced)} l="Pre-K at closing schools, not placed" />}
-        </div><p className="note">Model numbers, {Y[ui.year]} for the school table; peaks run 2027-28 to 2034-35. Year and Pre-K are in the ⋯ menu.</p></details>}
+        </div><p className="note">Model numbers, {Y[ui.year]} for the school table; peaks run 2027-28 to 2034-35. Year and Pre-K are in the top bar.</p></details>}
       </section>
 
       <section className="row between">
@@ -233,8 +165,7 @@ export default function Sidebar({ S, resA, resB, busy, mapRef, faceGeom, vis }: 
         <p className="note">Students per home come from 2020 census ages, scaled so each school's current area matches its projected K–12 grade enrollment (the district's utilization × capacity; Spanish immersion is counted at Arbor Creek, not in neighborhoods). A home keeps its original school's projection wherever you assign it. Homes built after 2020 are estimated from building footprints. Boundaries are shown as of full implementation; Fairview and Ridgeview close in 2028-29 in the district's plan.</p>
       </section>}
       <p className="indep">Independent project, not affiliated with Olathe Public Schools. Mixes district figures with modeled estimates. <a href="/about">About &amp; data</a> · <a href="/contact">Feedback</a></p>
-      </div>
-    </aside>
+    </>
   );
 }
 

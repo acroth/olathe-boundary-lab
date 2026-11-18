@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
-import '../lab/styles.css';
+import './globals.css';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const metadata: Metadata = {
   title: 'Olathe Boundary Lab',
@@ -9,5 +10,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en"><body><TooltipProvider>{children}</TooltipProvider></body></html>;
 }

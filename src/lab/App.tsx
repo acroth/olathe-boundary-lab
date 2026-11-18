@@ -7,6 +7,10 @@ import { decodePlan, encodePlan } from './url';
 import MapPanel from './map/MapPanel';
 import Sidebar from './ui/Sidebar';
 import MapToolbar from './ui/MapToolbar';
+import TopBar from './ui/TopBar';
+import Legend from './ui/Legend';
+import Rail from '@/components/Rail';
+import { Loader2 } from 'lucide-react';
 import { visibleSet } from './visible';
 import { buildPlan } from './ui/Builder';
 import type { DrawCallbacks } from './map/drawing';
@@ -50,6 +54,7 @@ export default function App() {
         const moves = m !== undefined ? Object.fromEntries(st.combos.moves.map(x => [x.id, m.split(',').includes(x.id)])) : null;
         if (sel.length === st.combos.schools.length && sel.every(x => x > 0)) useUI.getState().set({ mode: 'build', level: 'es', tool: 'pan', build: { sel, moves } });
       }
+      if ((p && !bq) || hash.get('mode') === 'draw') useUI.getState().set({ mode: 'draw' });   // shared free-draw links open in free draw
       usePlan.getState().setPlan(p ?? planFromPreset(st.presets.find(x => x.id === 'district')!));
       usePlan.temporal.getState().clear();
       const cmp = hash.get('compare');
@@ -161,30 +166,51 @@ export default function App() {
       const g: any = f.geometry; for (const p of (g.type === 'Polygon' ? [g.coordinates] : g.coordinates)) for (const [x, y] of p[0]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
     }
     if (!(x1 > x0)) return;
-    const phone = window.innerWidth <= 820;
-    const sheetPx = phone ? { peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[useUI.getState().sheet] : 0;
-    m.fitBounds([[x0, y0], [x1, y1]], { padding: phone ? { top: 20, left: 16, right: 16, bottom: sheetPx + 16 } : { top: 30, left: useUI.getState().panelOpen ? 400 : 40, right: 40, bottom: 120 }, duration: 500 });
+    m.fitBounds([[x0, y0], [x1, y1]], { padding: mapPad(), duration: 500 });
   }, [areaKey, S, mapReady]);
 
   if (err) return <div className="loading">Could not load data: {err}</div>;
   if (!S) return <div className="loading">Loading district data…</div>;
   const selected = plan.edits.find(e => e.id === ui.selectedEdit)?.geom ?? null;
   const common = { S, vis, showAreas: ui.showAreas, level: ui.level, year: ui.year, colorBy: ui.colorBy, showHomes: ui.showHomes || ui.diff, showStreets: ui.showStreets, view, onView: (v: ViewState) => setView(v), diffHomes };
+  const sheetNext = { peek: 'half', half: 'full', full: 'peek' } as const;
+  const setMode = (m: 'build' | 'draw') => ui.set(m === 'build' ? { mode: 'build', level: 'es', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
 
   return (
-    <div className={'app sheet-' + ui.sheet + (ui.panelOpen ? '' : ' panel-closed')}>
-      {!ui.panelOpen && <button className="show-panel" onClick={() => ui.set({ panelOpen: true })}>☰ Options</button>}
-      <Sidebar S={S} resA={resA} resB={resB} busy={busy} mapRef={mapRef} faceGeom={faceGeom} vis={vis} />
-      <div className={'maps' + (ui.compare ? ' split' : '')}>
-        <MapPanel {...common} result={resA?.levels ?? null} closures={plan.closures} tool={ui.mode === 'build' ? 'pan' : ui.tool} interactive drawCb={drawCb}
-          selectedGeom={selected} doneTick={ui.doneTick} title={ui.compare ? (plan.name || 'This plan') : undefined} onMapRef={m => { mapRef.current = m; (window as any).__lab = { map: m?.getMap(), S }; if (m) setMapReady(true); }}>
-          {ui.mode === 'draw' && <MapToolbar S={S} vis={vis} />}
-        </MapPanel>
-        {ui.compare && <MapPanel {...common} result={resB?.levels ?? null} closures={ui.compare.closures} tool="pan" interactive={false}
-          title={'Compare: ' + (ui.compare.name || S.presets.find(p => p.id === ui.compare!.preset)?.name || 'other plan')} />}
-        {busy && <div className="busy">Updating…</div>}
+    <div className={'lab sheet-' + ui.sheet + (ui.panelOpen ? ' panel-open' : ' panel-closed') + ' mode-' + ui.mode}>
+      <Rail active={ui.mode} onMode={setMode} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />
+      <main className="lab-main">
+        <div className={'maps' + (ui.compare ? ' split' : '')}>
+          <MapPanel {...common} result={resA?.levels ?? null} closures={plan.closures} tool={ui.mode === 'build' ? 'pan' : ui.tool} interactive drawCb={drawCb}
+            selectedGeom={selected} doneTick={ui.doneTick} title={ui.compare ? (plan.name || 'This plan') : undefined} onMapRef={m => { mapRef.current = m; (window as any).__lab = { map: m?.getMap(), S }; if (m) setMapReady(true); }} />
+          {ui.compare && <MapPanel {...common} result={resB?.levels ?? null} closures={ui.compare.closures} tool="pan" interactive={false}
+            title={'Compare: ' + (ui.compare.name || S.presets.find(p => p.id === ui.compare!.preset)?.name || 'other plan')} />}
+        </div>
+        <TopBar S={S} mapRef={mapRef} resA={resA} pad={mapPad} />
+        <aside className="panel" aria-label={ui.mode === 'build' ? 'Option builder' : 'Free draw'}>
+          <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: sheetNext[ui.sheet] })}><span /></button>
+          <header className="panel-head">
+            <div className="min-w-0">
+              <h2 className="text-[15px] font-semibold tracking-tight">{ui.mode === 'build' ? 'Option builder' : 'Free draw'}</h2>
+              <p className="truncate text-xs text-muted-foreground">{ui.mode === 'build' ? 'Pick a district concept for each closing school' : 'Start from a plan, then redraw on the map'}</p>
+            </div>
+            {busy && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
+          </header>
+          <div className="panel-body lg">
+            <Sidebar S={S} resA={resA} resB={resB} busy={false} mapRef={mapRef} faceGeom={faceGeom} vis={vis} />
+          </div>
+        </aside>
+        {ui.mode === 'draw' && <MapToolbar S={S} vis={vis} />}
+        <Legend S={S} vis={vis} mapRef={mapRef} />
         {ui.toast && <div className="toast" role="status">{ui.toast}</div>}
-      </div>
+      </main>
     </div>
   );
+}
+
+/** Map padding that keeps fitted areas clear of the floating panel, top bar and legend. */
+export function mapPad() {
+  const phone = window.innerWidth < 768; const st = useUI.getState();
+  if (phone) return { top: 80, left: 16, right: 16, bottom: ({ peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[st.sheet]) + 16 };
+  return { top: 90, left: st.panelOpen ? 420 : 40, right: 260, bottom: 40 };
 }

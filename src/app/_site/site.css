@@ -63,3 +63,11 @@
 .site .split ul { list-style: disc; }
 .site-main h1 { font-weight: 700; } .site-main h2 { font-weight: 650; } .site-main h3 { font-weight: 600; }
 .site-main b, .site-main strong { font-weight: 650; }
+.site .formulas { display: grid; gap: 10px; margin: 12px 0 16px; }
+.site .formula-row { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--panel); }
+.site .formula { margin: 0; font-family: "STIX Two Math", "Cambria Math", "Times New Roman", serif; font-size: 18px; overflow-x: auto; white-space: nowrap; }
+.site .formula var { font-style: italic; }
+.site .formula sub, .site .formula sup { font-size: 0.68em; }
+.site .formula-note { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.site .about-icon { display: inline-block; width: 15px; height: 15px; vertical-align: -2px; color: var(--muted); }
+.site .about-icon.warn { color: #b45309; }

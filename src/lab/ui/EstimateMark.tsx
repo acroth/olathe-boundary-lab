@@ -2,7 +2,7 @@
 import { Calculator } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export const ESTIMATE_EXPLANATION = "Our estimate. The district hasn't published a number for this, so the lab's model fills it in.";
+export const ESTIMATE_EXPLANATION = 'Model generated';
 
 /** focusable: false inside a button, where a second focus stop isn't allowed. */
 export default function EstimateMark({ focusable = true }: { focusable?: boolean }) {
@@ -13,7 +13,7 @@ export default function EstimateMark({ focusable = true }: { focusable?: boolean
           <Calculator aria-hidden />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-60">{ESTIMATE_EXPLANATION}</TooltipContent>
+      <TooltipContent side="top">{ESTIMATE_EXPLANATION}</TooltipContent>
     </Tooltip>
   );
 }

@@ -175,7 +175,7 @@ section.row.between .lbl { margin: 0; }
 .school-name { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 550; }
 .school-flag { flex: none; padding: 1px 7px; border-radius: 9px; background: #fff1dc; color: #92510a; font-size: 11.5px; font-weight: 600; }
 .school-value { flex: none; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.estimate-mark { display: inline-flex; flex: none; align-items: center; vertical-align: -2px; color: var(--muted); cursor: help; border-radius: 4px; }
+.estimate-mark { display: inline-flex; flex: none; align-items: center; vertical-align: -2px; color: var(--muted); border-radius: 4px; }
 .estimate-mark svg { width: 14px; height: 14px; }
 .estimate-mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .school-value.over { color: var(--warn); } .school-value.near { color: #92510a; }
@@ -188,6 +188,8 @@ section.row.between .lbl { margin: 0; }
 .school-details dl { margin: 0; } .school-details dl div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
 .school-details dt { color: var(--muted); } .school-details dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .school-note { margin: 6px 0 0; padding: 7px 9px; background: #fff7ea; border-radius: 8px; line-height: 1.35; }
+.school-warning { flex: none; width: 16px; height: 16px; color: #b45309; }
+.school-note .school-warning { display: inline-block; width: 14px; height: 14px; margin: 0 5px 0 0; vertical-align: -2px; }
 .lg .show-all, .lg .text-button { padding: 8px 0 0; background: none; border: 0; color: var(--accent); font-weight: 600; font-size: 14px; }
 .lg .text-button { padding: 0; }
 

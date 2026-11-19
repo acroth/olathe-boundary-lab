@@ -9,16 +9,19 @@ export const OVERLAY_LEVELS: Level[] = ['es', 'ms', 'hs'];
 const GRADE_RANGE: Record<Level, string> = { es: 'K–5', ms: '6–8', hs: '9–12' };
 const LOCAL_STREET_CLASS_LIMIT = 8;   // street classes from here up aren't drawn as snapping lines
 
-/** The chosen overlay level's boundaries in this plan, outlined and labeled. */
+/** The chosen overlay level's boundaries in this plan, plus a point at each of its open schools for the name tag. */
 export function overlayFeatures(staticData: Static, results: Record<Level, LevelResult> | null, overlay: Level | null | undefined) {
   const collections: Record<string, FeatureCollection> = {};
   for (const overlayLevel of OVERLAY_LEVELS) {
     const zones = overlayLevel === overlay ? results?.[overlayLevel]?.zones : undefined;
-    const features = !zones ? [] : zones.features.map(feature => {
-      const school = feature.properties!.school as number;
-      return { ...feature, properties: { school, label: school >= 0 ? staticData.schools[school].name : 'Not yet assigned' } };
-    });
-    collections[overlayLevel] = { type: 'FeatureCollection', features };
+    const areas = zones?.features.map(feature => ({ ...feature, properties: { school: feature.properties!.school as number } })) ?? [];
+    const openSchools = [...new Set(areas.map(area => area.properties.school).filter(school => school >= 0))];
+    const schoolPoints = openSchools.map(school => ({
+      type: 'Feature' as const,
+      properties: { school, name: staticData.schools[school].name },
+      geometry: { type: 'Point' as const, coordinates: [staticData.schools[school].lon, staticData.schools[school].lat] },
+    }));
+    collections[overlayLevel] = { type: 'FeatureCollection', features: [...areas, ...schoolPoints] };
   }
   return collections;
 }

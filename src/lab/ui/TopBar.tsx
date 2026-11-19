@@ -1,5 +1,5 @@
 'use client';
-// The floating bar above the map: search on the left, school level in the center, map tools and sharing on the right.
+// The floating bar above the map: search on the left, school level in the center with the map tools under it, sharing on the right.
 import { useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useStore } from 'zustand';
@@ -74,7 +74,7 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
     <div className="topbar pointer-events-none absolute z-20">
       <div className="topbar-search pointer-events-auto min-w-0"><SearchBox staticData={staticData} mapRef={mapRef} padding={padding} /></div>
       <LevelSwitch />
-      <div className="topbar-tools pointer-events-auto flex items-start justify-end gap-2">
+      <div className="topbar-tools pointer-events-auto flex justify-center">
         <div className="relative flex h-12 shrink-0 items-center gap-0.5 rounded-2xl border bg-card px-1.5 shadow-float">
           <LayersMenu />
           <YearMenu staticData={staticData} />
@@ -88,7 +88,9 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
           <Separator orientation="vertical" className="mx-1 !h-6" />
           <MoreMenu staticData={staticData} mapRef={mapRef} planResults={planResults} onShare={share} />
         </div>
-        <Button onClick={share} className="hidden h-12 shrink-0 rounded-2xl px-3.5 shadow-float min-[480px]:inline-flex xl:px-5" aria-label="Share this view">
+      </div>
+      <div className="topbar-share pointer-events-auto flex justify-end">
+        <Button onClick={share} className="h-12 shrink-0 rounded-2xl px-3.5 shadow-float xl:px-5" aria-label="Share this view">
           {copied ? <Check className="size-[18px]" /> : <Share2 className="size-[18px]" />}<span className="hidden xl:inline">{copied ? 'Copied' : 'Share'}</span>
         </Button>
       </div>

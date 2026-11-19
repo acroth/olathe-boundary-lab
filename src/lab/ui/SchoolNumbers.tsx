@@ -1,6 +1,6 @@
 // How full each school would be, written for someone seeing these numbers for the first time.
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, TriangleAlert } from 'lucide-react';
 import { schoolColor } from '../colors';
 import type { Static } from '../data';
 import type { LevelResult } from '../model/engine';
@@ -53,8 +53,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
         <span className="school-row-top">
           <i className="school-dot" style={{ background: schoolColor(school as any) }} />
           <span className="school-name">{school.name}</span>
-          {schoolNumber.questionable && <span className="school-flag">District number may be off</span>}
-          {!schoolNumber.questionable && slide && <span className="school-flag">Meeting slide: {percent(slide.percent)}</span>}
+          {(schoolNumber.questionable || slide) && <TriangleAlert className="school-warning" aria-label="Open for a note about the district's number" />}
           {schoolNumber.source === 'model' && <EstimateMark focusable={false} />}
           <b className={'school-value ' + tone}>{headline(schoolNumber)}</b>
           <ChevronDown className={'school-chevron' + (expanded ? ' open' : '')} aria-hidden />
@@ -74,9 +73,9 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
               : <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)} · ~{studentCount(schoolResult.total[schoolResult.peakYear])} students</dd></div>}
             {showEstimates && compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? `~${percent(compareSchool.peak)} · ~${studentCount(compareSchool.total[compareSchool.peakYear])} students` : 'Closing'}</dd></div>}
           </dl>
-          {schoolNumber.questionable && <p className="school-note">{schoolNumber.questionable}</p>}
+          {schoolNumber.questionable && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />{schoolNumber.questionable}</p>}
           {capacityNote && <p className="school-note">{capacityNote}</p>}
-          {slide && <p className="school-note">At a parent meeting, the district showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} That slide adds the moving students to this school year's (2026&ndash;27) classes.{columnsNote} The number above is the district's projection for {meta.years[schoolNumber.year]}.</p>}
+          {slide && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />At a parent meeting, the district showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} That slide adds the moving students to this school year's (2026&ndash;27) classes.{columnsNote} The number above is the district's projection for {meta.years[schoolNumber.year]}.</p>}
         </div>
       )}
     </li>
@@ -102,7 +101,6 @@ export function SchoolList({ staticData, numbers, schools, result, compareResult
   const closingSchools = schools.filter(school => !numbers.has(school));
   const canCollapse = openSchools.length > LONGEST_FULL_LIST;
   const shownSchools = showAll || !canCollapse ? openSchools : openSchools.slice(0, COLLAPSED_SCHOOL_COUNT);
-  const hasEstimates = openSchools.some(schoolNumber => schoolNumber.source === 'model');
 
   const toggleSchool = (school: number) => {
     setExpandedSchool(current => current === school ? null : school);
@@ -121,7 +119,6 @@ export function SchoolList({ staticData, numbers, schools, result, compareResult
         <button className="show-all" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer schools' : `Show all ${openSchools.length} schools`}</button>
       )}
       {closingSchools.length > 0 && <p className="list-note">Closing: {closingSchools.map(school => staticData.schools[school].name).join(', ')}</p>}
-      {hasEstimates && <p className="list-note"><EstimateMark /> and ~ mark our own estimates, where the district hasn't published a number.</p>}
     </>
   );
 }

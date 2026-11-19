@@ -14,8 +14,9 @@ import type { Tool } from '../store';
 
 registerPmtiles();
 
-/** Feeder overlay line: the same solid brown for every school level. */
-export const OVERLAY_LINE = { color: '#7c2d12', width: 3 };
+/** Feeder overlay line and school dots: the same dark brown for every school level. */
+export const OVERLAY_LINE = { color: '#431407', width: 3 };
+const LABEL_TAG = 'label-tag';   // the white rounded box behind overlay school names
 
 const EMPTY_FEATURES: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const STREET_DRAWING_TOOLS = ['trace', 'polygon', 'freehand', 'edit'];
@@ -66,6 +67,21 @@ function addHatchPattern(map: any) {
   map.addImage('hatch', context.getImageData(0, 0, 16, 16) as any);
 }
 
+/** A white rounded box that stretches to fit a label (icon-text-fit). */
+function addLabelTag(map: any) {
+  if (map.hasImage(LABEL_TAG)) return;
+  const size = 24, radius = 6, canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext('2d')!;
+  context.fillStyle = 'rgba(255,255,255,0.94)';
+  context.strokeStyle = 'rgba(67,20,7,0.35)';
+  context.beginPath();
+  context.roundRect(0.5, 0.5, size - 1, size - 1, radius);
+  context.fill(); context.stroke();
+  map.addImage(LABEL_TAG, context.getImageData(0, 0, size, size) as any,
+    { stretchX: [[radius, size - radius]], stretchY: [[radius, size - radius]], content: [radius, radius, size - radius, size - radius] });
+}
+
 export default function MapPanel(props: MapPanelProps) {
   const { staticData, level, numbers, visibleSchools } = props;
   const mapRef = useRef<MapRef>(null);
@@ -77,7 +93,10 @@ export default function MapPanel(props: MapPanelProps) {
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
-    const restoreHatch = (event: any) => { if (event.id === 'hatch') addHatchPattern(map); };
+    const restoreHatch = (event: any) => {
+      if (event.id === 'hatch') addHatchPattern(map);
+      if (event.id === LABEL_TAG) addLabelTag(map);
+    };
     map.on('styleimagemissing', restoreHatch);
     return () => { map.off('styleimagemissing', restoreHatch); };
   }, [mapRef.current]);
@@ -163,7 +182,7 @@ export default function MapPanel(props: MapPanelProps) {
       {props.title && <div className="map-title">{props.title}</div>}
       {props.children}
       <Map ref={mapRef} {...(props.view as any)} onMove={event => props.onView(event.viewState)} mapStyle={style}
-        style={{ position: 'absolute', inset: 0 }} onLoad={event => { addHatchPattern(event.target); setLoaded(true); }} canvasContextAttributes={{ preserveDrawingBuffer: true } as any}
+        style={{ position: 'absolute', inset: 0 }} onLoad={event => { addHatchPattern(event.target); addLabelTag(event.target); setLoaded(true); }} canvasContextAttributes={{ preserveDrawingBuffer: true } as any}
         attributionControl={{ compact: true }} maxZoom={18} minZoom={9}>
         <ScaleControl position="bottom-left" unit="imperial" />
         <Source id="zones" type="geojson" data={zones as any}>
@@ -184,11 +203,15 @@ export default function MapPanel(props: MapPanelProps) {
         </Source>
         {OVERLAY_LEVELS.map(overlayLevel => (
           <Source key={overlayLevel} id={'overlay-' + overlayLevel} type="geojson" data={overlayGeoJson[overlayLevel] as any}>
-            <Layer id={'overlay-' + overlayLevel + '-casing'} type="line" paint={{ 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, OVERLAY_LINE.width + 2, 15, OVERLAY_LINE.width + 4], 'line-opacity': 0.85 }} />
-            <Layer id={'overlay-' + overlayLevel + '-line'} type="line" paint={{ 'line-color': OVERLAY_LINE.color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, OVERLAY_LINE.width, 15, OVERLAY_LINE.width + 1.5] }} />
-            <Layer id={'overlay-' + overlayLevel + '-label'} type="symbol" layout={{ 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 11, 14, 14],
-              'text-transform': 'uppercase', 'text-letter-spacing': 0.06, 'symbol-placement': 'point', 'text-allow-overlap': false, 'text-padding': 8 } as any}
-              paint={{ 'text-color': OVERLAY_LINE.color, 'text-halo-color': '#ffffff', 'text-halo-width': 2 }} />
+            <Layer id={'overlay-' + overlayLevel + '-casing'} type="line" filter={['!=', ['geometry-type'], 'Point']} paint={{ 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 10, OVERLAY_LINE.width + 2, 15, OVERLAY_LINE.width + 4], 'line-opacity': 0.85 }} />
+            <Layer id={'overlay-' + overlayLevel + '-line'} type="line" filter={['!=', ['geometry-type'], 'Point']} paint={{ 'line-color': OVERLAY_LINE.color, 'line-width': ['interpolate', ['linear'], ['zoom'], 10, OVERLAY_LINE.width, 15, OVERLAY_LINE.width + 1.5] }} />
+            <Layer id={'overlay-' + overlayLevel + '-dot'} type="circle" filter={['==', ['geometry-type'], 'Point']}
+              paint={{ 'circle-color': OVERLAY_LINE.color, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 5.5, 15, 8], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 }} />
+            <Layer id={'overlay-' + overlayLevel + '-label'} type="symbol" filter={['==', ['geometry-type'], 'Point']}
+              layout={{ 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Medium'], 'text-size': ['interpolate', ['linear'], ['zoom'], 10, 11, 14, 13],
+                'text-anchor': 'left', 'text-offset': [1.1, 0], 'icon-image': LABEL_TAG, 'icon-text-fit': 'both', 'icon-text-fit-padding': [2, 5, 2, 5],
+                'text-allow-overlap': false, 'icon-allow-overlap': false, 'text-padding': 4 } as any}
+              paint={{ 'text-color': OVERLAY_LINE.color }} />
           </Source>
         ))}
         <Source id="streets" type="geojson" data={streetsGeoJson as any}>

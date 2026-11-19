@@ -1,4 +1,4 @@
-// The Option Builder's four headline figures, using the same numbers as the map.
+// The Concept Builder's four headline figures, using the same numbers as the map.
 import type { ReactNode } from 'react';
 import type { Static } from '../data';
 import type { LevelResult } from '../model/engine';

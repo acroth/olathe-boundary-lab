@@ -16,6 +16,11 @@ export const DISTRICT_COLORS: Record<string, string> = {
   Havencroft: '#b6fefb', Heatherstone: '#fee6b6', 'Indian Creek': '#a3ff74', 'Madison Place': '#cccccc', 'Pleasant Ridge': '#fdd9f2',
   'Regency Place': '#feffb3', Sunnyside: '#dbc3ff',
 };
+/** Colors from the legends on the district's Nov 2026 middle school concept maps. */
+export const MIDDLE_SCHOOL_COLORS: Record<string, string> = {
+  'California Trail': '#ffaa00', 'Chisholm Trail': '#ffff00', 'Frontier Trail': '#73b2ff', 'Indian Trail': '#b9febb', 'Mission Trail': '#b2b2b2',
+  'Oregon Trail': '#f5a27a', 'Pioneer Trail': '#a900e6', 'Prairie Trail': '#df73ff', 'Santa Fe Trail': '#ff0000', 'Summit Trail': '#4ce600',
+};
 /** A school's map color: the district's where it has one, otherwise the map-colored palette. */
 export const schoolColor = (s: { name: string; level: string; color?: number }) =>
-  (s.level === 'es' && DISTRICT_COLORS[s.name]) || PALETTE[(s.color ?? 0) % PALETTE.length];
+  (s.level === 'es' && DISTRICT_COLORS[s.name]) || (s.level === 'ms' && MIDDLE_SCHOOL_COLORS[s.name]) || PALETTE[(s.color ?? 0) % PALETTE.length];

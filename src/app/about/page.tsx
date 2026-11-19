@@ -15,7 +15,7 @@ export default function About() {
   return (
     <Shell active="about">
       <h1>About the Boundary Lab</h1>
-      <p className="lede">A map-based tool for looking at the elementary boundary options in Olathe USD 233&rsquo;s facility alignment:
+      <p className="lede">A map-based tool for looking at the elementary boundary concepts in Olathe USD 233&rsquo;s facility alignment:
         who moves where, how full each school gets, and how far families end up from their new school.</p>
       <Notice />
       <ul className="toc">
@@ -29,10 +29,10 @@ export default function About() {
 
       <h2 id="what">What it does</h2>
       <p>The district closes five elementary schools (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove) and one middle school
-        (Indian Trail), and has shown several ways to redraw their boundaries. The lab puts those options on one map so you can compare them side by side.</p>
+        (Indian Trail), and has shown several ways to redraw their boundaries. The lab puts those concepts on one map so you can compare them side by side.</p>
       <ul>
-        <li><b>Option Builder.</b> Pick one of the district&rsquo;s concepts for each closing school, or one of the district&rsquo;s
-          full options, and see the result. Some concepts can be mixed and matched; the builder shows what a mix looks like.</li>
+        <li><b>Concept Builder.</b> Pick one of the district&rsquo;s concepts for each closing school, or one of the district&rsquo;s
+          full concepts, and see the result. Some concepts can be mixed and matched; the builder shows what a mix looks like.</li>
         <li><b>Free draw.</b> Move areas by hand, by tracing a new line or by picking whole planning areas or current attendance areas,
           and see how capacity and distances change.</li>
         <li><b>Share.</b> Every view has a link, so you can send someone exactly what you are looking at.</li>
@@ -47,7 +47,7 @@ export default function About() {
           <h3>{D} From the district</h3>
           <ul>
             <li>Functional capacity of each school</li>
-            <li>Fall 2026 enrollment and the five-year estimates for each option</li>
+            <li>Fall 2026 enrollment and the five-year estimates for each concept</li>
             <li>Students moving from each closing school to each receiving school</li>
             <li>The boundary concept maps, student-dot maps and planning areas shown at the November 2026 meetings</li>
           </ul>
@@ -99,7 +99,7 @@ export default function About() {
           <thead><tr><th>Source</th><th>Type</th><th>Used for</th></tr></thead>
           <tbody>
             <tr><td>Facility alignment boundary presentations, Nov 2026 (elementary and middle school decks, and parent-meeting decks)</td><td>{D}</td>
-              <td>Capacities, fall 2026 enrollment, five-year estimates by option, students moving by piece, elementary and middle school concept maps, student-dot maps</td></tr>
+              <td>Capacities, fall 2026 enrollment, five-year estimates by concept, students moving by piece, elementary and middle school concept maps, student-dot maps</td></tr>
             <tr><td>District 2026 planning-area map</td><td>{D}</td><td>Planning areas (the numbered areas such as 610 or 750)</td></tr>
             <tr><td>Demographic Analytics Advisors, <i>Enrollment Forecasting, Capacity and Utilization Analysis</i> (July 2026), prepared for the district</td><td>{D}</td>
               <td>Utilization projections by school, 2025&ndash;26 through 2034&ndash;35</td></tr>

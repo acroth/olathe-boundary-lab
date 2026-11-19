@@ -12,16 +12,20 @@
 //    checked against the concept maps in the Nov 2026 middle school deck; none is a separate area there.
 //
 // The district's five-year forecasts are deliberately not used here: the model stays an independent check on them.
-import { writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
+import { boolOp } from '../../../src/lab/model/clip';
 import { Engine } from '../../../src/lab/model/engine';
 import { inMPoly, polyAcres, toMPoly, type MPoly } from '../../../src/lab/model/geo';
 import type { Calibration } from '../../../src/lab/calibration';
 import { buildPlan } from '../../../src/lab/planBuilder';
 import { loadStatic } from '../../../tests/support/loadStatic';
+import { INDIAN_CREEK } from './indianCreek';
 
 const RECONCILED_SCHOOLS = ['Heritage', 'Scarborough', 'Walnut Grove'];
 const RAKING_ROUNDS = 200;
 const MIN_SCALE = 0.4, MAX_SCALE = 2.5;
+const MAJOR_STREET_CLASS = 4;          // street classes up to this one (tertiary) are arterials and collectors
+const ROAD_SEARCH_DEGREES = 0.0015;    // how far from a road's expected position to look for it
 
 const S = loadStatic({ calibrated: false }), engine = new Engine(S), combos = S.combos!, middle = combos.ms!;
 const schoolNamed = (level: string, name: string) => S.schools.find(school => school.level === level && school.name === name)!;
@@ -93,25 +97,143 @@ function surroundingSchool(piece: MPoly[number], areas: { school: number; shape:
   throw new Error('A detached piece has no neighboring school');
 }
 
-function detachedPieceEdits(): Calibration['conceptEdits'] {
+type ConceptEdit = Calibration['conceptEdits'][string][number];
+
+/** A road's position (longitude for north-south roads, latitude for east-west ones) from the major street segments along it. */
+function roadPosition(direction: 'north-south' | 'east-west', estimate: number, along: [number, number]): number {
+  const streets = S.streets, positions: number[] = [];
+  const across = direction === 'north-south' ? streets.nodeLon : streets.nodeLat, length = direction === 'north-south' ? streets.nodeLat : streets.nodeLon;
+  for (let edge = 0; edge < streets.nEdges; edge++) {
+    if (streets.cls[edge] > MAJOR_STREET_CLASS) continue;
+    const start = streets.u[edge], end = streets.v[edge];
+    const nearRoad = Math.abs(across[start] - estimate) < ROAD_SEARCH_DEGREES && Math.abs(across[end] - estimate) < ROAD_SEARCH_DEGREES;
+    const inRange = length[start] > along[0] && length[start] < along[1];
+    if (nearRoad && inRange && Math.abs(length[end] - length[start]) > Math.abs(across[end] - across[start])) positions.push(across[start], across[end]);
+  }
+  return positions.sort((first, second) => first - second)[positions.length >> 1];
+}
+
+const BLACK_BOB = roadPosition('north-south', -94.76015, [38.885, 38.912]);
+const STREET_119TH = roadPosition('east-west', 38.9134, [-94.79, -94.71]);
+const STREET_127TH = roadPosition('east-west', 38.8989, [-94.79, -94.71]);
+const FAR = { west: -95, east: -94.5, south: 38.7, north: 39.1 };
+
+// Corrections from local review of the concept maps: whole planning areas, and boundaries that follow a road.
+interface RoadCut { from: string; to: string; west: number; east: number; south: number; north: number }
+interface AreaSplit { area: string; to: string; side: MPoly }
+const AREA_400_WEST = -94.7424;
+const SOUTH_OF_INDIAN_CREEK: MPoly = [[[...INDIAN_CREEK, [INDIAN_CREEK[INDIAN_CREEK.length - 1][0], FAR.south], [INDIAN_CREEK[0][0], FAR.south], INDIAN_CREEK[0]]]];
+const CONCEPT_CORRECTIONS: Record<number, { planningAreas: Record<string, string>; areaSplits?: AreaSplit[]; drawnAreas?: string; roadCuts: RoadCut[] }> = {
+  1: {
+    planningAreas: { 600: 'Santa Fe Trail', 610: 'Pioneer Trail', 620: 'Pioneer Trail', 660: 'Frontier Trail', 680: 'Frontier Trail' },
+    roadCuts: [{ from: 'Pioneer Trail', to: 'California Trail', ...FAR, west: BLACK_BOB, north: STREET_119TH }],   // Pioneer stays west of Black Bob south of 119th
+  },
+  2: {
+    planningAreas: { 610: 'California Trail', 620: 'California Trail', 625: 'California Trail', 630: 'California Trail', 650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail' },
+    drawnAreas: 'middle_school_concept2_850_drawn.geojson',   // the Frontier and Chisholm line around 850, drawn by hand in the lab
+    roadCuts: [
+      { from: 'Pioneer Trail', to: 'California Trail', ...FAR, north: STREET_127TH },   // Pioneer north of 127th, California south of it
+      { from: 'California Trail', to: 'Pioneer Trail', ...FAR, south: STREET_127TH },
+    ],
+  },
+  3: {
+    planningAreas: { 380: 'Pioneer Trail', 610: 'Pioneer Trail', 390: 'California Trail', 620: 'California Trail', 630: 'California Trail', 650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail', 685: 'Frontier Trail', 850: 'Frontier Trail' },
+    roadCuts: [],
+  },
+  4: {
+    planningAreas: {
+      610: 'California Trail', 620: 'California Trail', 625: 'California Trail', 630: 'California Trail', 650: 'California Trail', 410: 'California Trail',
+      210: 'Pioneer Trail', 380: 'Pioneer Trail', 400: 'Pioneer Trail',
+      660: 'Frontier Trail', 680: 'Frontier Trail', 850: 'Frontier Trail',
+    },
+    areaSplits: [{ area: '400', to: 'California Trail', side: SOUTH_OF_INDIAN_CREEK }],   // 400 divides along Indian Creek
+    roadCuts: [
+      { from: 'Pioneer Trail', to: 'California Trail', ...FAR, north: STREET_127TH },
+      { from: 'California Trail', to: 'Pioneer Trail', ...FAR, south: STREET_127TH, east: AREA_400_WEST },
+    ],
+  },
+  5: {
+    planningAreas: {},
+    drawnAreas: 'middle_school_concept5_drawn.geojson',   // the concept's lines, drawn by hand in the lab
+    roadCuts: [],
+  },
+};
+
+function conceptAreas(conceptId: number) {
+  const plan = buildPlan(S, [1, 1, 1, 1, 1], null, conceptId);
+  const zones = engine.run('ms', { ...plan, includePreK: true }).zones.features.filter(feature => feature.properties!.school >= 0);
+  return zones.map(feature => ({ school: feature.properties!.school as number, shape: toMPoly(feature.geometry as any) }));
+}
+
+function planningAreaEdits(assignments: Record<string, string>): ConceptEdit[] {
+  return Object.entries(assignments).map(([area, to]) => {
+    const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+    return { school: schoolNamed('ms', to).i, to, faces: [], geom: feature.geometry as ConceptEdit['geom'] };
+  });
+}
+
+function areaSplitEdits(splits: AreaSplit[]): ConceptEdit[] {
+  return splits.map(({ area, to, side }) => {
+    const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+    const part = boolOp('intersection', toMPoly(feature.geometry as any), side);
+    return { school: schoolNamed('ms', to).i, to, faces: [], geom: { type: 'MultiPolygon' as const, coordinates: part as any } };
+  });
+}
+
+function drawnAreaEdits(file: string): ConceptEdit[] {
+  const drawn = JSON.parse(readFileSync(new URL(`../../data/map_readings/${file}`, import.meta.url), 'utf8')) as GeoJSON.FeatureCollection;
+  return drawn.features.map(feature => {
+    const to = feature.properties!.school as string;
+    return { school: schoolNamed('ms', to).i, to, faces: [], geom: feature.geometry as ConceptEdit['geom'] };
+  });
+}
+
+function roadCutEdits(conceptId: number, cuts: RoadCut[]): ConceptEdit[] {
+  const areas = conceptAreas(conceptId);
+  return cuts.flatMap(({ from, to, west, east, south, north }) => {
+    const source = areas.find(area => area.school === schoolNamed('ms', from).i);
+    const box: MPoly = [[[[west, south], [east, south], [east, north], [west, north], [west, south]]]];
+    const moved = source ? boolOp('intersection', source.shape, box) : [];
+    return moved.length ? [{ school: schoolNamed('ms', to).i, to, faces: [], geom: { type: 'MultiPolygon' as const, coordinates: moved as any } }] : [];
+  });
+}
+
+function detachedPieces(conceptId: number): ConceptEdit[] {
+  const areas = conceptAreas(conceptId);
+  return areas.flatMap(area => {
+    const [, ...detached] = [...area.shape].sort((first, second) => polyAcres(second) - polyAcres(first));
+    return detached.map(piece => {
+      const school = surroundingSchool(piece, areas, area.school);
+      return { school, to: S.schools[school].name, faces: [], geom: { type: 'Polygon' as const, coordinates: piece as any } };
+    });
+  });
+}
+
+/** Applies each concept's corrections in order, so later steps see the boundaries the earlier ones produced. */
+function correctedConceptEdits(): Calibration['conceptEdits'] {
   const conceptEdits: Calibration['conceptEdits'] = {};
   for (const concept of middle.concepts) {
-    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, concept.id);
-    const zones = engine.run('ms', { ...plan, includePreK: true }).zones.features.filter(feature => feature.properties!.school >= 0);
-    const areas = zones.map(feature => ({ school: feature.properties!.school as number, shape: toMPoly(feature.geometry as any) }));
-    conceptEdits[concept.id] = areas.flatMap(area => {
-      const [, ...detached] = [...area.shape].sort((first, second) => polyAcres(second) - polyAcres(first));
-      return detached.map(piece => {
-        const school = surroundingSchool(piece, areas, area.school);
-        return { school, to: S.schools[school].name, faces: [], geom: { type: 'Polygon' as const, coordinates: piece as any } };
-      });
-    });
+    const corrections = CONCEPT_CORRECTIONS[concept.id];
+    const steps: (() => ConceptEdit[])[] = [
+      () => corrections ? planningAreaEdits(corrections.planningAreas) : [],
+      () => corrections?.areaSplits ? areaSplitEdits(corrections.areaSplits) : [],
+      () => corrections?.drawnAreas ? drawnAreaEdits(corrections.drawnAreas) : [],
+      () => corrections ? roadCutEdits(concept.id, corrections.roadCuts) : [],
+      () => detachedPieces(concept.id),
+    ];
+    conceptEdits[concept.id] = [];
+    for (const step of steps) {
+      const edits = step();
+      concept.edits.push(...edits);
+      conceptEdits[concept.id].push(...edits);
+    }
   }
   return conceptEdits;
 }
 
-const conceptEdits = detachedPieceEdits();
-for (const [concept, edits] of Object.entries(conceptEdits)) console.log(`concept ${concept}: ${edits.map(edit => edit.to).join(', ')}`);
+const conceptEdits = correctedConceptEdits();
+console.log(`roads: Black Bob ${BLACK_BOB.toFixed(5)}, 119th ${STREET_119TH.toFixed(5)}, 127th ${STREET_127TH.toFixed(5)}`);
+for (const [concept, edits] of Object.entries(conceptEdits)) console.log(`concept ${concept}: ${edits.length} corrections`);
 
 const calibration: Calibration = { capacity, capSource: 'district 2026 functional capacity (Nov 2026 boundary presentations)', prek, factorScale, homeWeights, conceptEdits };
 writeFileSync(new URL('../../../public/data/calibration.json', import.meta.url), JSON.stringify(calibration));

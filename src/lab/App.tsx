@@ -71,7 +71,7 @@ export default function App() {
     }).catch(error => setLoadError(String(error)));
   }, []);
 
-  // option builder: the plan follows the chosen concepts
+  // concept builder: the plan follows the chosen concepts
   useEffect(() => {
     if (!staticData || ui.mode !== 'build' || !staticData.combos) return;
     usePlan.getState().setPlan(buildPlan(staticData, ui.build.sel, ui.build.moves, ui.build.ms));
@@ -155,7 +155,7 @@ export default function App() {
   if (!staticData) return <div className="loading">Loading district data…</div>;
 
   const inBuilder = ui.mode === 'build';
-  const panelTitle = inBuilder ? 'Option builder' : 'Free draw';
+  const panelTitle = inBuilder ? 'Concept builder' : 'Free draw';
   const panelSubtitle = inBuilder ? BUILDER_SUBTITLE[ui.level] : 'Start from a plan, then redraw on the map';
   const labClassName = `lab sheet-${ui.sheet} ${ui.panelOpen ? 'panel-open' : 'panel-closed'} mode-${ui.mode}`;
   const selectedGeometry = plan.edits.find(edit => edit.id === ui.selectedEdit)?.geom ?? null;

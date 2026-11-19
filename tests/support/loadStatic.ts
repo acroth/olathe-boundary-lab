@@ -29,7 +29,7 @@ export function loadStatic({ calibrated = true } = {}): Static {
     streets: { nNodes: meta.streets.nodes, nEdges: meta.streets.edges, nodeLon: streets.node_lon, nodeLat: streets.node_lat, u: streets.u, v: streets.v,
                len: streets.len_ft, cls: streets.cls, name: streets.name, coordOff: streets.coord_off, coordLon: streets.coord_lon, coordLat: streets.coord_lat },
     zones: { es: readJson('zones_es.geojson'), ms: readJson('zones_ms.geojson'), hs: readJson('zones_hs.geojson') },
-    faces: readJson('faces.geojson'), district: readJson('district.geojson'),
+    faces: readJson('faces.geojson'), district: readJson('district.geojson'), planning: readJson('planning_areas.geojson'),
     presets: presetsFile.presets.map((preset: any) => ({ ...preset, edits: preset.edits.map((edit: any, k: number) => ({ ...edit, id: preset.id + k, kind: 'preset' })) })),
     receivers: presetsFile.receivers, combos,
   } as Static;

@@ -1,4 +1,4 @@
-// Turns Option Builder choices (one district concept per closing school, moves between open schools, a middle school concept)
+// Turns Concept Builder choices (one district concept per closing school, moves between open schools, a middle school concept)
 // into a plan the model can evaluate.
 import type { Combos, Edit, Static } from './data';
 import type { Plan } from './store';

@@ -64,7 +64,7 @@ export default function MoreMenu({ staticData, mapRef, planResults, onShare }: M
         <div className="pointer-events-auto absolute top-[calc(100%+8px)] right-0 z-40 w-72 rounded-xl border bg-popover p-4 text-popover-foreground shadow-float" onKeyDown={event => event.key === 'Escape' && setPlanName(null)}>
           <form onSubmit={saveNamedPlan} className="space-y-3">
             <Label htmlFor="plan-name">Name this plan</Label>
-            <Input id="plan-name" autoFocus value={planName} onChange={event => setPlanName(event.target.value)} placeholder="e.g. Option 2 with Heritage 1" />
+            <Input id="plan-name" autoFocus value={planName} onChange={event => setPlanName(event.target.value)} placeholder="e.g. Concept 2 with Heritage 1" />
             <p className="text-xs text-muted-foreground">Saved only in this browser. Use Share to send it to someone.</p>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="ghost" size="sm" onClick={() => setPlanName(null)}>Cancel</Button>

@@ -13,7 +13,7 @@ export default async function Contact({ searchParams }: { searchParams: Promise<
     <Shell active="contact">
       <h1>Feedback</h1>
       <p className="lede">Corrections, bugs and ideas are all welcome. Corrections to a boundary line or a number are the most useful: say
-        which option and which street or area.</p>
+        which concept and which street or area.</p>
       <p>This form reaches the person who runs the lab, not the school district. For questions about the boundary process itself, or to
         give the district your input, contact Olathe Public Schools directly.</p>
       <FeedbackForm plan={typeof plan === 'string' ? plan.slice(0, 2000) : ''} />

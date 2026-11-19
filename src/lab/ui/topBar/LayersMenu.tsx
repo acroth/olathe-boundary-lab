@@ -37,8 +37,8 @@ export default function LayersMenu() {
   const showMiddleSchoolNote = overlay === 'ms';
   const conceptNote = ui.build.ms ? ` (concept ${ui.build.ms})` : '';
   const middleSchoolNote = ui.mode === 'build'
-    ? `Shows the middle school concept picked in the Option Builder${conceptNote}.`
-    : 'Shows this plan’s middle school lines. The starting plans leave Indian Trail’s area unassigned; build from the Option Builder to include a middle school concept.';
+    ? `Shows the middle school concept picked in the Concept Builder${conceptNote}.`
+    : 'Shows this plan’s middle school lines. The starting plans leave Indian Trail’s area unassigned; build from the Concept Builder to include a middle school concept.';
 
   return (
     <Popover>

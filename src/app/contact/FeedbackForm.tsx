@@ -30,7 +30,7 @@ export default function FeedbackForm({ plan }: { plan: string }) {
         <select name="topic" defaultValue={TOPICS[0]}>{TOPICS.map(t => <option key={t}>{t}</option>)}</select>
       </label>
       <label>Message
-        <textarea name="message" required minLength={5} maxLength={5000} placeholder="Which option, school or street, and what looks wrong or what you’d like to see" />
+        <textarea name="message" required minLength={5} maxLength={5000} placeholder="Which concept, school or street, and what looks wrong or what you’d like to see" />
       </label>
       <label><span>Link to a plan <span className="opt">(optional)</span></span>
         <input name="plan" type="url" defaultValue={plan} placeholder="Use Share in the lab and paste the link here" maxLength={2000} />

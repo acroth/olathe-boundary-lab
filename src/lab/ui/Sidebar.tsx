@@ -1,4 +1,4 @@
-// The side panel: the Option Builder, or Free draw's plan summary and detail sections.
+// The side panel: the Concept Builder, or Free draw's plan summary and detail sections.
 import { useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Results } from '../App';

@@ -5,7 +5,7 @@ import type { Edit, Level, Preset } from './data';
 export interface Plan { preset: string; closures: Record<string, number>; edits: Edit[]; name?: string }
 export type Tool = 'trace' | 'areas' | 'polygon' | 'freehand' | 'blocks' | 'edit' | 'erase' | 'pan';
 export type PickBy = 'planning' | 'zones';
-/** Option Builder choice: elementary concept per closing school, open-school moves (null = defaults), middle school concept (0 = none). */
+/** Concept Builder choice: elementary concept per closing school, open-school moves (null = defaults), middle school concept (0 = none). */
 export interface Build { sel: number[]; moves: Record<string, boolean> | null; ms: number }
 
 interface PlanState { plan: Plan; setPlan: (p: Plan) => void; addEdit: (e: Edit) => void; updateEdit: (id: string, e: Partial<Edit>) => void;

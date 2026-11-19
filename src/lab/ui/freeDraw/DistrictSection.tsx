@@ -1,4 +1,4 @@
-// The district's own figures (Nov 2026 boundary presentations) beside the model's, for the district options.
+// The district's own figures (Nov 2026 boundary presentations) beside the model's, for the district concepts.
 import type { DistrictNumbers, School, Static } from '../../data';
 import type { LevelResult } from '../../model/engine';
 import type { Plan } from '../../store';
@@ -81,7 +81,7 @@ export default function DistrictSection({ staticData, result, plan, year }: { st
     <section>
       {preset?.district
         ? <OptionTables staticData={staticData} presetName={preset.name} district={district} result={result} schoolsByName={schoolsByName} tableYear={tableYear} notes={editNote + yearNote} />
-        : <p className="note">Pick a district option (1–4) under Starting plan to see its tables. Below: fall 2026 enrollment and functional capacity from the district.</p>}
+        : <p className="note">Pick a district concept (1–4) under Starting plan to see its tables. Below: fall 2026 enrollment and functional capacity from the district.</p>}
       <h3>Fall 2026 enrollment and capacity</h3>
       <table className="tbl">
         <thead><tr><th>School</th><th>District 2026</th><th>Model 26-27</th><th>District cap.</th><th>Model cap.</th></tr></thead>

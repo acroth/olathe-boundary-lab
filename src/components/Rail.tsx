@@ -8,14 +8,14 @@ export type RailPage = 'build' | 'draw' | 'about' | 'contact';
 
 interface Props {
   active: RailPage;
-  /** In the lab, Option builder / Free draw switch modes in place; elsewhere they link back to the lab. */
+  /** In the lab, Concept builder / Free draw switch modes in place; elsewhere they link back to the lab. */
   onMode?: (m: 'build' | 'draw') => void;
   panelOpen?: boolean;
   onTogglePanel?: () => void;
 }
 
 const LAB: { id: 'build' | 'draw'; label: string; icon: LucideIcon; href: string }[] = [
-  { id: 'build', label: 'Option builder', icon: Blocks, href: '/' },
+  { id: 'build', label: 'Concept builder', icon: Blocks, href: '/' },
   { id: 'draw', label: 'Free draw', icon: PenLine, href: '/#mode=draw' },
 ];
 const PAGES: { id: 'about' | 'contact'; label: string; icon: LucideIcon; href: string }[] = [

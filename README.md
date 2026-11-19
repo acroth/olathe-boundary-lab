@@ -1,6 +1,6 @@
 # Olathe Boundary Lab
 
-Try Olathe USD 233 elementary boundary options and see capacity, utilization and busing distances.
+Try Olathe USD 233 elementary boundary concepts and see capacity, utilization and busing distances.
 Independent analysis; not affiliated with Olathe Public Schools.
 
 ## Layout
@@ -8,13 +8,13 @@ Independent analysis; not affiliated with Olathe Public Schools.
 | Path | What it is |
 |---|---|
 | `src/app` | Next.js App Router: the page, `/p/[id]` short links, `/api/plans` |
-| `src/lab` | The lab itself (client-only): map, drawing, Option Builder, scoring engine (`model/engine.ts`, runs in a web worker) |
+| `src/lab` | The lab itself (client-only): map, drawing, Concept Builder, scoring engine (`model/engine.ts`, runs in a web worker) |
 | `src/server` | Server-only helpers (Supabase client) |
-| `public/data` | Data the app loads: schools, zones, planning areas, homes and streets (binary), presets, Option Builder concepts, basemap |
+| `public/data` | Data the app loads: schools, zones, planning areas, homes and streets (binary), presets, Concept Builder concepts, basemap |
 | `pipeline/src` | Python pipeline that builds `public/data` from census, county, Overture and district sources (`s01`..`s12`), plus `publish_supabase.py` |
 | `pipeline/tools` | Readers for the district's boundary-map photos/decks and student-dot maps |
 | `supabase/migrations` | Database schema (PostGIS) |
-| `tests` | Vitest: engine, polygon ops; `VERIFY=1` also checks every district option and Option Builder combination |
+| `tests` | Vitest: engine, polygon ops; `VERIFY=1` also checks every district concept and Concept Builder combination |
 
 ## Run locally
 

@@ -1,4 +1,4 @@
-// Option Builder: pick one district concept per closing school and see the combination.
+// Concept Builder: pick one district concept per closing school and see the combination.
 import type { Combos, ComboConcept, Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headlineSummary, type SchoolNumber } from '../numbers';
@@ -26,7 +26,7 @@ interface BuilderProps {
 export default function Builder(props: BuilderProps) {
   const { staticData, level } = props;
   const combos = staticData.combos;
-  if (!combos) return <section><p className="note">Option data not loaded.</p></section>;
+  if (!combos) return <section><p className="note">Concept data not loaded.</p></section>;
 
   if (level === 'hs') {
     return <section className="builder"><p className="note">None of the district’s concepts change high school boundaries, so these are the current areas.</p></section>;
@@ -76,7 +76,7 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
     <>
       <section className="builder">
         <div className="row between">
-          <span className="lbl">District options</span>
+          <span className="lbl">District concepts</span>
           {!matchingOption && <span className="tag">Custom mix</span>}
         </div>
         <div className="seg opts">
@@ -175,7 +175,7 @@ function MiddleSchoolLinesPicker({ concepts, build, onBuildChange, middleSchoolL
   );
 }
 
-/** Middle school concept picker (the district's five concepts, independent of the elementary options). */
+/** Middle school concept picker (the district's five concepts, independent of the elementary concepts). */
 function MiddleSchoolBuilder({ staticData, middleSchools, middleSchoolResult, numbers, visibleSchools, build, onBuildChange, onSchoolSelect }: BuilderProps & { middleSchools: MiddleSchools }) {
   const concept = middleSchools.concepts.find(candidate => candidate.id === build.ms);
   const summary = headlineSummary(staticData, numbers, visibleSchools);
@@ -193,7 +193,7 @@ function MiddleSchoolBuilder({ staticData, middleSchools, middleSchoolResult, nu
             <button className={build.ms === 0 ? 'on' : ''} onClick={() => onBuildChange({ ...build, ms: 0 })} title="Leave Indian Trail's area unassigned">–</button>
           </div>
         </div>
-        <p className="note">{conceptSummary} The district shows these separately from the elementary options, so any pairing works.</p>
+        <p className="note">{conceptSummary} The district shows these separately from the elementary concepts, so any pairing works.</p>
       </div>
       <details className="more" open>
         <summary>Middle school numbers</summary>

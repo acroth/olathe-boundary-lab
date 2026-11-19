@@ -8,7 +8,7 @@ edit giving an area to a school (later edits win). The plans:
   current            today's areas, nothing closed
   district           the district's closures and the approved Fairview -> Northview and Ridgeview -> Central merges, with the
                      other closing areas left unassigned for people to draw
-  dc1 .. dc4         the district's four elementary options, read off its maps, with the district's own tables attached
+  dc1 .. dc4         the district's four elementary concepts, read off its maps, with the district's own tables attached
   solver-...         the lab's solver plans (steps/solver_plans.py)
 """
 import json
@@ -33,7 +33,7 @@ DISTRICT_OPTION_DESCRIPTIONS = {
        "Brougham, Briarwood east of Black Bob Rd to Regency Place. Half of Spanish immersion (118) to Arbor Creek.",
     3: "Read off the district's Concept 3 map (Nov 2026 boundary presentation). Heritage: west of Indian Creek to Havencroft, east to "
        "Sunnyside. Scarborough: west of Indian Creek to Madison Place, east to Sunnyside. Black Bob: southwest part to Brougham, the rest to "
-       "Green Springs. Tomahawk: west of Mur-Len to Indian Creek, the rest to Briarwood. Walnut Grove: as option 2 (commercial land by I-35 "
+       "Green Springs. Tomahawk: west of Mur-Len to Indian Creek, the rest to Briarwood. Walnut Grove: as concept 2 (commercial land by I-35 "
        "to Countryside). Also Briarwood south of 143rd to Green Springs, Green Springs north of 143rd to Briarwood, Briarwood east of Black "
        "Bob Rd to Regency Place, Indian Creek west of Mur-Len near I-35 to Countryside, and Regency Place's east part to Bentwood. Half of "
        "Spanish immersion (118) to Arbor Creek.",
@@ -80,7 +80,7 @@ def area_edits(blocks: gpd.GeoDataFrame, current_column: str, target_column: str
 
 
 def district_option(option: int, base: dict, blocks: gpd.GeoDataFrame, number_of: dict) -> dict:
-    name = f'District option {option}'
+    name = f'District concept {option}'
     return dict(
         id=f'dc{option}', name=name, description=DISTRICT_OPTION_DESCRIPTIONS[option], closures=base['closures'],
         edits=base['edits'] + area_edits(blocks, 'current_school', f'option_{option}', name, number_of),

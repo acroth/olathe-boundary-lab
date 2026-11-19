@@ -20,6 +20,7 @@ export const OVERLAY_LINE = { color: '#7c2d12', width: 3 };
 const EMPTY_FEATURES: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const STREET_DRAWING_TOOLS = ['trace', 'polygon', 'freehand', 'edit'];
 const HOMES_RETRY_MS = 300;
+const SCHOOL_FILL_OPACITY = 0.68, MIDDLE_SCHOOL_FILL_OPACITY = 0.85;   // middle schools stay close to the district's solid map colors
 const HOME_UNASSIGNED = -1, HOME_HIDDEN = -2;
 
 interface MapPanelProps {
@@ -150,7 +151,8 @@ export default function MapPanel(props: MapPanelProps) {
   }, [staticData]);
 
   const zoneFillColor = props.colorBy === 'util' ? utilizationColorExpression : schoolColorExpression;
-  const zoneFillOpacity = props.colorBy === 'util' ? 0.42 : 0.68;
+  const schoolFillOpacity = level === 'ms' ? MIDDLE_SCHOOL_FILL_OPACITY : SCHOOL_FILL_OPACITY;
+  const zoneFillOpacity = props.colorBy === 'util' ? 0.42 : schoolFillOpacity;
   const planningVisibility = props.showAreas ? 'visible' : 'none';
   const streetVisibility = streetsNeeded ? 'visible' : 'none';
   const homesVisibility = props.showHomes ? 'visible' : 'none';

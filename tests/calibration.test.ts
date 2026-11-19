@@ -1,11 +1,13 @@
 // The district's facts the model is anchored to, and the rules for which number the app leads with.
+import { readFileSync } from 'fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Engine } from '../src/lab/model/engine';
-import { toMPoly } from '../src/lab/model/geo';
+import { inMPoly, toMPoly } from '../src/lab/model/geo';
 import type { Static } from '../src/lab/data';
 import { agreementOf, headline, mapLabel, publishedConcept, publishedOption, schoolNumbers } from '../src/lab/numbers';
 import { buildPlan } from '../src/lab/planBuilder';
 import { planFromPreset } from '../src/lab/store';
+import { INDIAN_CREEK } from '../pipeline/tools/calibrate/indianCreek';
 import { loadStatic } from './support/loadStatic';
 
 let S: Static, engine: Engine;
@@ -48,6 +50,132 @@ describe('middle school concepts', () => {
         const name = S.schools[feature.properties!.school].name;
         expect(toMPoly(feature.geometry as any).length, `concept ${concept.id}: ${name}`).toBe(1);
       }
+    }
+  });
+});
+
+describe('reviewed middle school boundaries', () => {
+  const BLACK_BOB = -94.76107, STREET_119TH = 38.91285, STREET_127TH = 38.89822, ROAD_MARGIN = 0.0008;
+
+  function assignment(conceptId: number) {
+    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, conceptId);
+    const assigned = engine.run('ms', { ...plan, includePreK: true }, false).assign;
+    return (home: number) => S.schools[assigned[home]]?.name;
+  }
+  function homesInPlanningArea(area: string) {
+    const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+    const shape = toMPoly(feature.geometry as any), homes: number[] = [];
+    for (let home = 0; home < S.homes.n; home++) if (inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) homes.push(home);
+    return homes;
+  }
+  const schoolsIn = (area: string, schoolOf: (home: number) => string) => [...new Set(homesInPlanningArea(area).map(schoolOf))];
+
+  it('concept 1: Pioneer Trail takes all of 610 and 620 and stays west of Black Bob south of 119th', () => {
+    const schoolOf = assignment(1);
+    expect(schoolsIn('600', schoolOf)).toEqual(['Santa Fe Trail']);
+    for (const area of ['610', '620']) expect(schoolsIn(area, schoolOf), area).toEqual(['Pioneer Trail']);
+    for (const area of ['660', '680']) expect(schoolsIn(area, schoolOf), area).toEqual(['Frontier Trail']);
+    for (let home = 0; home < S.homes.n; home++) {
+      const eastOfBlackBob = S.homes.lon[home] > BLACK_BOB + ROAD_MARGIN, southOf119th = S.homes.lat[home] < STREET_119TH - ROAD_MARGIN;
+      if (eastOfBlackBob && southOf119th) expect(schoolOf(home), `home ${home}`).not.toBe('Pioneer Trail');
+    }
+  });
+
+  it('concept 2: Pioneer Trail is north of 127th, California Trail south of it, and California takes 610-630', () => {
+    const schoolOf = assignment(2);
+    for (const area of ['610', '620', '630']) expect(schoolsIn(area, schoolOf), area).toEqual(['California Trail']);
+    for (const area of ['650', '660', '680']) expect(schoolsIn(area, schoolOf), area).toEqual(['Frontier Trail']);
+
+    const area625 = S.planning.features.find(feature => String(feature.properties!.pa) === '625' && feature.geometry.type !== 'Point')!.properties!;   // 625 has no homes
+    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, 2), california = schoolNamed('ms', 'California Trail').i;
+    const californiaZone = engine.run('ms', { ...plan, includePreK: true }).zones.features.find(feature => feature.properties!.school === california)!;
+    expect(inMPoly(area625.lon, area625.lat, toMPoly(californiaZone.geometry as any))).toBe(true);
+
+    for (let home = 0; home < S.homes.n; home++) {
+      const school = schoolOf(home), latitude = S.homes.lat[home];
+      if (school === 'Pioneer Trail') expect(latitude, `home ${home}`).toBeGreaterThan(STREET_127TH - ROAD_MARGIN);
+      if (school === 'California Trail') expect(latitude, `home ${home}`).toBeLessThan(STREET_127TH + ROAD_MARGIN);
+    }
+  });
+});
+
+describe('hand-drawn concept 2 boundary', () => {
+  it('puts every home around 850 at the school drawn for it', () => {
+    const drawn = JSON.parse(readFileSync(new URL('../pipeline/data/map_readings/middle_school_concept2_850_drawn.geojson', import.meta.url), 'utf8'));
+    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, 2);
+    const assigned = engine.run('ms', { ...plan, includePreK: true }, false).assign;
+    let checked = 0;
+    for (const feature of drawn.features) {
+      const shape = toMPoly(feature.geometry);
+      for (let home = 0; home < S.homes.n; home++) {
+        if (!inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) continue;
+        checked++;
+        expect(S.schools[assigned[home]].name, `home ${home}`).toBe(feature.properties.school);
+      }
+    }
+    expect(checked).toBeGreaterThan(1000);
+  });
+});
+
+describe('hand-drawn concept 5 boundary', () => {
+  it('puts every home in the drawn changes at the school drawn for it', () => {
+    const drawn = JSON.parse(readFileSync(new URL('../pipeline/data/map_readings/middle_school_concept5_drawn.geojson', import.meta.url), 'utf8'));
+    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, 5);
+    const assigned = engine.run('ms', { ...plan, includePreK: true }, false).assign;
+    let checked = 0;
+    for (const feature of drawn.features) {
+      const shape = toMPoly(feature.geometry);
+      for (let home = 0; home < S.homes.n; home++) {
+        if (!inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) continue;
+        checked++;
+        expect(S.schools[assigned[home]].name, `home ${home}`).toBe(feature.properties.school);
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+});
+
+describe('reviewed concept 3 boundaries', () => {
+  it('sends 380 and 610 to Pioneer Trail and 390 and 620 to California Trail', () => {
+    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, 3);
+    const assigned = engine.run('ms', { ...plan, includePreK: true }, false).assign;
+    const expected: Record<string, string> = { 380: 'Pioneer Trail', 610: 'Pioneer Trail', 390: 'California Trail', 620: 'California Trail', 630: 'California Trail', 650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail', 685: 'Frontier Trail', 850: 'Frontier Trail' };
+    const homesIn = (area: string) => {
+      const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+      const shape = toMPoly(feature.geometry as any), homes: number[] = [];
+      for (let home = 0; home < S.homes.n; home++) if (inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) homes.push(home);
+      return homes;
+    };
+    for (const [area, school] of Object.entries(expected)) {
+      expect([...new Set(homesIn(area).map(home => S.schools[assigned[home]].name))], area).toEqual([school]);
+    }
+
+    const LINDENWOOD = -94.7884;   // 750 splits here: Chisholm Trail to the east, Frontier Trail to the west
+    for (const home of homesIn('750')) {
+      expect(S.schools[assigned[home]].name, `home ${home}`).toBe(S.homes.lon[home] > LINDENWOOD ? 'Chisholm Trail' : 'Frontier Trail');
+    }
+  });
+});
+
+describe('reviewed concept 4 boundaries', () => {
+  it('sends 610-650 to California Trail, 850 to Frontier Trail, and divides 400 along Indian Creek', () => {
+    const plan = buildPlan(S, [1, 1, 1, 1, 1], null, 4);
+    const assigned = engine.run('ms', { ...plan, includePreK: true }, false).assign;
+    const homesIn = (area: string) => {
+      const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+      const shape = toMPoly(feature.geometry as any), homes: number[] = [];
+      for (let home = 0; home < S.homes.n; home++) if (inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) homes.push(home);
+      return homes;
+    };
+    const expected: Record<string, string> = { 610: 'California Trail', 620: 'California Trail', 630: 'California Trail', 650: 'California Trail', 850: 'Frontier Trail' };
+    for (const [area, school] of Object.entries(expected)) {
+      expect([...new Set(homesIn(area).map(home => S.schools[assigned[home]].name))], area).toEqual([school]);
+    }
+
+    const creekShape = [[[...INDIAN_CREEK, [INDIAN_CREEK[INDIAN_CREEK.length - 1][0], 38.7], [INDIAN_CREEK[0][0], 38.7], INDIAN_CREEK[0]]]] as any;
+    for (const home of homesIn('400')) {
+      const southOfCreek = inMPoly(S.homes.lon[home], S.homes.lat[home], creekShape);
+      expect(S.schools[assigned[home]].name, `home ${home}`).toBe(southOfCreek ? 'California Trail' : 'Pioneer Trail');
     }
   });
 });

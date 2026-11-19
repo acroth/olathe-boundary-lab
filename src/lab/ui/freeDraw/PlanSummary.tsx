@@ -2,7 +2,8 @@
 import type { Level, Static } from '../../data';
 import type { LevelResult } from '../../model/engine';
 import { headlineSummary, type SchoolNumber } from '../../numbers';
-import { planFromPreset, usePlan, useSaved, useUI, type Plan } from '../../store';
+import { currentStartingPlan, startingPlans, withStartingPlan } from '../../startingPlans';
+import { usePlan, useSaved, useUI, type Plan } from '../../store';
 import { summarize } from '../../visible';
 import { GlanceItem } from '../Scorecard';
 
@@ -19,7 +20,7 @@ interface PlanSummaryProps {
 }
 
 export default function PlanSummary({ staticData, plan, level, result, numbers, visibleSchools, decodeSavedPlan }: PlanSummaryProps) {
-  const { meta, presets } = staticData;
+  const { meta } = staticData;
   const ui = useUI();
   const savedPlans = useSaved(state => state.saved);
   const { setPlan } = usePlan.getState();
@@ -28,10 +29,10 @@ export default function PlanSummary({ staticData, plan, level, result, numbers, 
   const { overTarget } = headlineSummary(staticData, numbers, visibleSchools);
   const goalPercent = meta.target * 100;
 
-  const loadStartingPlan = (presetId: string) => {
-    const preset = presets.find(candidate => candidate.id === presetId)!;
-    const hadDrawing = plan.edits.some(edit => edit.kind !== 'preset');
-    setPlan(planFromPreset(preset));
+  const starts = startingPlans(staticData, level), currentStart = currentStartingPlan(staticData, plan, level);
+  const loadStartingPlan = (startId: string) => {
+    const hadDrawing = plan.edits.some(edit => edit.level === level && edit.kind !== 'preset');
+    setPlan(withStartingPlan(staticData, plan, level, startId));
     if (hadDrawing) ui.set({ toast: 'Starting plan loaded. Undo brings back your drawing.' });
   };
   const openSavedPlan = (name: string) => {
@@ -42,10 +43,17 @@ export default function PlanSummary({ staticData, plan, level, result, numbers, 
 
   return (
     <section className="panel-section">
-      <label className="field-label" htmlFor="starting-plan">Start from</label>
-      <select id="starting-plan" className="plan-select" value={plan.preset} onChange={event => loadStartingPlan(event.target.value)} aria-label="Starting plan">
-        {presets.map(preset => <option key={preset.id} value={preset.id}>{preset.name}</option>)}
-      </select>
+      {starts.length > 0 ? (
+        <>
+          <label className="field-label" htmlFor="starting-plan">Start from</label>
+          <select id="starting-plan" className="plan-select" value={currentStart} onChange={event => loadStartingPlan(event.target.value)} aria-label="Starting plan">
+            {currentStart === '' && <option value="" disabled>Your edited plan</option>}
+            {starts.map(start => <option key={start.id} value={start.id}>{start.name}</option>)}
+          </select>
+        </>
+      ) : (
+        <p className="section-note">No high schools close, so high school lines start from today's boundaries.</p>
+      )}
       {savedPlans.length > 0 && (
         <select className="plan-select" value="" onChange={event => openSavedPlan(event.target.value)}>
           <option value="">Open a saved plan…</option>

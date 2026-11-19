@@ -3,11 +3,13 @@ import type { MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Edit, Level, Static } from '../../data';
 import type { Results } from '../../App';
-import { planFromPreset, usePlan, useSaved, useUI, type Plan } from '../../store';
+import { startingPlans, withStartingPlan } from '../../startingPlans';
+import { usePlan, useSaved, useUI, type Plan } from '../../store';
 import { exportCSV, exportGeoJSON, exportPNG } from '../exports';
 
 const EDIT_KIND_LABEL: Record<Edit['kind'], string> = { draw: 'Drawn', trace: 'Traced', blocks: 'Painted', area: 'Area', preset: 'Plan' };
-const PRESET_PREFIX = 'preset:', SAVED_PREFIX = 'saved:';
+const START_PREFIX = 'start:', SAVED_PREFIX = 'saved:';
+const LEVEL_NAME: Record<Level, string> = { es: 'Elementary', ms: 'Middle school', hs: 'High school' };
 
 function editLabel(staticData: Static, edit: Edit): string {
   const target = edit.school < 0 ? 'Unassigned' : staticData.schools[edit.school].name;
@@ -27,7 +29,7 @@ interface CompareSectionProps {
 }
 
 export default function CompareSection({ staticData, plan, level, planResults, mapRef, compareLink, onCompareLinkChange, decodeSavedPlan }: CompareSectionProps) {
-  const { presets, meta } = staticData;
+  const { meta } = staticData;
   const ui = useUI();
   const savedPlans = useSaved(state => state.saved);
   const { removeEdit } = usePlan.getState();
@@ -35,9 +37,9 @@ export default function CompareSection({ staticData, plan, level, planResults, m
   const startCompare = (choice: string) => {
     if (!choice) {
       ui.set({ compare: null, diff: false });
-    } else if (choice.startsWith(PRESET_PREFIX)) {
-      const preset = presets.find(candidate => candidate.id === choice.slice(PRESET_PREFIX.length))!;
-      ui.set({ compare: planFromPreset(preset) });
+    } else if (choice.startsWith(START_PREFIX)) {
+      const start = startingPlans(staticData, level).find(candidate => candidate.id === choice.slice(START_PREFIX.length))!;
+      ui.set({ compare: { ...withStartingPlan(staticData, plan, level, start.id), name: `${LEVEL_NAME[level]}: ${start.name}` } });
     } else if (choice.startsWith(SAVED_PREFIX)) {
       const saved = savedPlans.find(candidate => candidate.name === choice.slice(SAVED_PREFIX.length));
       const decoded = saved && decodeSavedPlan(saved.enc);
@@ -63,7 +65,7 @@ export default function CompareSection({ staticData, plan, level, planResults, m
       <select value="" onChange={event => startCompare(event.target.value)}>
         <option value="">{ui.compare ? 'Change or stop comparing…' : 'Pick a plan…'}</option>
         {ui.compare && <option value="">Stop comparing</option>}
-        {presets.map(preset => <option key={preset.id} value={PRESET_PREFIX + preset.id}>{preset.name}</option>)}
+        {startingPlans(staticData, level).map(start => <option key={start.id} value={START_PREFIX + start.id}>{start.name}</option>)}
         {savedPlans.map(saved => <option key={saved.name} value={SAVED_PREFIX + saved.name}>Saved: {saved.name}</option>)}
       </select>
       <div className="row gap">

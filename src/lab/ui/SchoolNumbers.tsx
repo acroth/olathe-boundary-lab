@@ -17,25 +17,6 @@ function fullnessTone(utilization: number, goal: number): 'over' | 'near' | 'roo
   return utilization >= goal - NEAR_GOAL_POINTS / 100 ? 'near' : 'room';
 }
 
-/** How our estimate compares with the district's, in words. */
-function comparisonNote({ district, model, agreement }: SchoolNumber, goalPercent: number): string | null {
-  if (district === null) return null;
-  if (agreement === 'tooClose') {
-    return model > district
-      ? `The district has this school at or under ${goalPercent}% full, but our estimate puts it over.`
-      : `The district has this school over ${goalPercent}% full, but our estimate puts it at or under.`;
-  }
-  const points = Math.round(Math.abs(model - district) * 100);
-  if (agreement === 'close') return points === 0 ? "Our estimate matches the district's." : "Our estimate is about the same as the district's.";
-  return `Our estimate is ${points} percentage points ${model > district ? 'higher' : 'lower'} than the district's.`;
-}
-
-/** The short tag on a row where the two numbers land on opposite sides of the goal. */
-function disagreementFlag({ district, model, agreement }: SchoolNumber, goalPercent: number): string | null {
-  if (agreement !== 'tooClose' || district === null) return null;
-  return model > district ? `We estimate over ${goalPercent}%` : `We estimate under ${goalPercent}%`;
-}
-
 interface SchoolRowProps {
   staticData: Static;
   schoolNumber: SchoolNumber;
@@ -50,15 +31,17 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
   const { meta } = staticData;
   const school = staticData.schools[schoolNumber.school], schoolResult = result.schools[schoolNumber.school];
   const { district, model, agreement, value } = schoolNumber;
-  const goalPercent = meta.target * 100;
   const tone = fullnessTone(value, meta.target);
-  const note = comparisonNote(schoolNumber, goalPercent), flag = disagreementFlag(schoolNumber, goalPercent);
+  const showEstimates = district === null;   // our estimates appear only where no district number stands in for them
   const compareSchool = compareResult?.schools[schoolNumber.school];
   const slide = schoolNumber.parentSlide;
   const printedNote = slide?.printedPercent !== undefined ? ` (The slide itself said ${slide.printedPercent}%.)` : '';
   const columnsNote = slide?.columnsAddUpTo !== undefined
     ? ` The numbers on the slide itself add up to ${slide.columnsAddUpTo.toLocaleString()} students, not ${slide.students.toLocaleString()}, so it may include students moving from other schools that it doesn't list.`
     : '';
+  const capacityNote = school.capSource.startsWith('estimated')
+    ? `The district hasn't published this building's capacity, so it's estimated: ${Math.round(school.enroll2025).toLocaleString()} students in ${meta.years[0]} ÷ ${school.util[0]}% full (the district's July 2026 forecast) ≈ ${Math.round(school.capacity).toLocaleString()}.`
+    : null;
   const meterWidth = `${Math.min(value / METER_MAX, 1) * 100}%`, goalPosition = `${(meta.target / METER_MAX) * 100}%`;
 
   return (
@@ -68,8 +51,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
         <span className="school-row-top">
           <i className="school-dot" style={{ background: schoolColor(school as any) }} />
           <span className="school-name">{school.name}</span>
-          {flag && <span className="school-flag">{flag}</span>}
-          {!flag && slide && <span className="school-flag">Meeting slide: {percent(slide.percent)}</span>}
+          {slide && <span className="school-flag">Meeting slide: {percent(slide.percent)}</span>}
           <b className={'school-value ' + tone}>{headline(schoolNumber)}</b>
           <ChevronDown className={'school-chevron' + (expanded ? ' open' : '')} aria-hidden />
         </span>
@@ -82,12 +64,14 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
         <div className="school-details">
           <dl>
             {district !== null && <div><dt>District's number</dt><dd>{percent(district)}</dd></div>}
-            <div><dt>Our estimate</dt><dd>~{percent(model)}</dd></div>
-            <div><dt>Students the building is sized for</dt><dd>{Math.round(school.capacity).toLocaleString()}</dd></div>
-            <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)}</dd></div>
-            {compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? '~' + percent(compareSchool.peak) : 'Closing'}</dd></div>}
+            {showEstimates && <div><dt>Our estimate</dt><dd>~{percent(model)}</dd></div>}
+            <div><dt>Max Functional Capacity</dt><dd>{Math.round(school.capacity).toLocaleString()}</dd></div>
+            {schoolNumber.districtPeak
+              ? <div><dt>Fullest it gets ({meta.years[schoolNumber.districtPeak.year]})</dt><dd>{percent(schoolNumber.districtPeak.utilization)}</dd></div>
+              : <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)}</dd></div>}
+            {showEstimates && compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? '~' + percent(compareSchool.peak) : 'Closing'}</dd></div>}
           </dl>
-          {note && <p className="school-note">{note}</p>}
+          {capacityNote && <p className="school-note">{capacityNote}</p>}
           {slide && <p className="school-note">At a parent meeting, the district showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} That slide adds the moving students to this school year's (2026&ndash;27) classes.{columnsNote} The number above is the district's projection for {meta.years[schoolNumber.year]}.</p>}
         </div>
       )}

@@ -1,6 +1,7 @@
 // The district's own figures (Nov 2026 boundary presentations) beside the model's, for the district concepts.
 import type { DistrictNumbers, School, Static } from '../../data';
 import type { LevelResult } from '../../model/engine';
+import { publishedOption } from '../../numbers';
 import type { Plan } from '../../store';
 
 const DEFAULT_TABLE_YEAR = 2;                 // 2027-28, shown when the chosen year is outside the district's tables
@@ -64,7 +65,8 @@ function OptionTables({ staticData, presetName, district, result, schoolsByName,
 }
 
 export default function DistrictSection({ staticData, result, plan, year }: { staticData: Static; result: LevelResult; plan: Plan; year: number }) {
-  const preset = staticData.presets.find(candidate => candidate.id === plan.preset);
+  const option = publishedOption(staticData, plan);
+  const preset = option ? staticData.presets.find(candidate => candidate.id === 'dc' + option) : undefined;
   const district = preset?.district ?? staticData.presets.find(candidate => candidate.district)?.district;
   if (!district) return <section><p className="note">No district numbers loaded.</p></section>;
 
@@ -81,7 +83,7 @@ export default function DistrictSection({ staticData, result, plan, year }: { st
     <section>
       {preset?.district
         ? <OptionTables staticData={staticData} presetName={preset.name} district={district} result={result} schoolsByName={schoolsByName} tableYear={tableYear} notes={editNote + yearNote} />
-        : <p className="note">Pick a district concept (1–4) under Starting plan to see its tables. Below: fall 2026 enrollment and functional capacity from the district.</p>}
+        : <p className="note">Start from a district concept (1–4) to see its tables. Below: fall 2026 enrollment and functional capacity from the district.</p>}
       <h3>Fall 2026 enrollment and capacity</h3>
       <table className="tbl">
         <thead><tr><th>School</th><th>District 2026</th><th>Model 26-27</th><th>District cap.</th><th>Model cap.</th></tr></thead>

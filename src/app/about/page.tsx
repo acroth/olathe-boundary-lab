@@ -41,7 +41,7 @@ export default function About() {
       <h2 id="data">District numbers vs. modeled numbers</h2>
       <p>The lab shows two kinds of numbers because they answer different questions. <b>District numbers</b> are what the district officially
         projects for the plans it published. <b>Modeled numbers</b> estimate what would likely happen under any boundary, including ones the
-        district never drew. Seeing both shows how far to trust the model, which results are too close to call, and what to ask the district.</p>
+        district never drew. The model is checked against the district&rsquo;s plans, so you can judge how far to trust it for plans the district never drew.</p>
       <div className="split">
         <div>
           <h3>{D} From the district</h3>
@@ -62,12 +62,15 @@ export default function About() {
           </ul>
         </div>
       </div>
+      <p><b>Max Functional Capacity.</b> Each school&rsquo;s max functional capacity, the most students the district says the building can serve, comes from the district&rsquo;s
+        November 2026 presentations for every school in the closure concepts (and from the parent-meeting slides for the closing schools). The district
+        hasn&rsquo;t published one for other schools, so the lab estimates it: 2025&ndash;26 enrollment divided by how full the district&rsquo;s July 2026
+        forecast says the school was that year. For example, 452 students at 75% full is a capacity of about 603. Schools with an estimated capacity say so when you tap them.</p>
       <p>District numbers come first. When a plan exactly matches one the district published, the map and scorecard show the district&rsquo;s
         figure for each school and year it covers (2026&ndash;27 to 2031&ndash;32). Anything else, such as a custom mix, a hand edit, a later year
         or a school the district didn&rsquo;t list, shows a modeled estimate marked with a <b>~</b>.</p>
-      <p>Where both exist, tap a school to see how our estimate compares, such as &ldquo;about the same as the district&rsquo;s&rdquo; or
-        &ldquo;6 percentage points lower.&rdquo; If the district has a school under the 85% goal and our estimate puts it over (or the other way
-        around), the school is tagged &ldquo;We estimate over 85%&rdquo; or &ldquo;We estimate under 85%.&rdquo;</p>
+      <p>Where the lab shows a district number, it doesn&rsquo;t show our estimate beside it. Estimates appear only where they&rsquo;re the number
+        being used.</p>
       <p>The model starts from the district&rsquo;s verified facts: functional capacity, fall 2026 enrollment, and the students the district
         moves out of each closing school (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove, plus Indian Trail Middle School). It is not
         fitted to the district&rsquo;s five-year forecasts, so a gap between the two is real information rather than something adjusted away.

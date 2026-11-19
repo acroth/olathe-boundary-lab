@@ -28,6 +28,7 @@ const RAKING_ROUNDS = 200;
 const MIN_SCALE = 0.4, MAX_SCALE = 2.5;
 const FIRST_PLAN_YEAR = 2, FRONTIER_TREND_END_YEAR = 6;   // 2027-28 and 2031-32
 const INDIAN_TRAIL_FALL_2026 = 570;                       // Indian Trail parent meeting deck
+const INDIAN_TRAIL_CAPACITY = 849;                        // Indian Trail parent meeting deck; the middle school deck doesn't list it
 // Students the parent-meeting decks place from each closing school. Black Bob's count differs by concept (225 to 247), so this is the middle value.
 const CLOSING_SCHOOL_STUDENTS: Record<string, number> = { Heritage: 233, Scarborough: 237, 'Walnut Grove': 367, Tomahawk: 322, 'Black Bob': 229 };
 const MAJOR_STREET_CLASS = 4;          // street classes up to this one (tertiary) are arterials and collectors
@@ -41,6 +42,7 @@ const capacity: Calibration['capacity'] = {};
 for (const [level, table] of [['es', published.cap], ['ms', middle.cap]] as const) {
   for (const [name, value] of Object.entries(table)) if (schoolNamed(level, name).capacity !== value) capacity[schoolNamed(level, name).i] = value;
 }
+capacity[schoolNamed('ms', 'Indian Trail').i] = INDIAN_TRAIL_CAPACITY;
 
 const today = engine.run('es', { closures: {}, edits: [], includePreK: true }, false);
 const prek: Calibration['prek'] = {};

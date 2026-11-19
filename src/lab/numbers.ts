@@ -24,6 +24,7 @@ export interface SchoolNumber {
   model: number;
   agreement: Agreement | null;
   parentSlide: { students: number; percent: number; printedPercent?: number; columnsAddUpTo?: number } | null;   // a parent-meeting slide that showed this school fuller
+  districtPeak: { utilization: number; year: number } | null;   // the fullest year in the district's table (2026-27 to 2031-32)
 }
 
 interface PublishedTable {
@@ -90,6 +91,13 @@ function publishedTable(staticData: Static, plan: Plan, level: Level): Published
   return null;
 }
 
+function districtPeak(published: PublishedTable | null, schoolName: string): SchoolNumber['districtPeak'] {
+  const students = published?.table[schoolName], capacity = published?.cap[schoolName];
+  if (!students || !capacity) return null;
+  const fullest = students.indexOf(Math.max(...students));
+  return { utilization: students[fullest] / capacity, year: fullest + FIRST_DISTRICT_TABLE_YEAR };
+}
+
 function districtUtilization(published: PublishedTable | null, schoolName: string, year: number): number | null {
   const students = published?.table[schoolName]?.[year - FIRST_DISTRICT_TABLE_YEAR];
   const capacity = published?.cap[schoolName];
@@ -115,6 +123,7 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
       value: district ?? model,
       agreement: district === null ? null : agreementOf(district, model, staticData.meta.target),
       parentSlide: slide ? { ...slide, percent: slide.students / school.capacity } : null,
+      districtPeak: district === null ? null : districtPeak(published, school.name),
     });
   }
   return numbers;

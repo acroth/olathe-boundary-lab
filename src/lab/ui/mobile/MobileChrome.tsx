@@ -63,7 +63,7 @@ export function MapButtons({ staticData, visibleSchools, onRecenter }: { staticD
   useUI(state => state.colorBy + state.year);   // keep the key's title current
   return (
     <div className="map-buttons pointer-events-auto absolute z-10">
-      <LayersMenu triggerClassName="map-button" side="left" align="end" />
+      <LayersMenu staticData={staticData} triggerClassName="map-button" side="left" align="end" />
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="map-button" aria-label="Map key"><Info className="size-[18px]" /></Button>

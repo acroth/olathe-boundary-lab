@@ -36,7 +36,8 @@ export function schoolFeatures(staticData: Static, level: Level, visibleSchools:
       const numberLabel = schoolNumber && !closed ? headline(schoolNumber) : '';
       return {
         type: 'Feature',
-        properties: { school: school.i, name: school.name, label: closed ? `${school.name}\n(closing)` : `${school.name}\n${numberLabel}`, closed: closed ? 1 : 0 },
+        properties: { school: school.i, name: school.name, label: closed ? `${school.name}\n(closing)` : `${school.name}\n${numberLabel}`, closed: closed ? 1 : 0,
+          estimate: schoolNumber?.source === 'model' && !closed ? 1 : 0 },
         geometry: { type: 'Point', coordinates: [school.lon, school.lat] },
       };
     }),

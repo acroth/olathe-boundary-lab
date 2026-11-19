@@ -11,7 +11,6 @@ interface ScorecardInput {
   result: LevelResult | null;
   numbers: Map<number, SchoolNumber>;
   visibleSchools: Set<number>;
-  showStudentMoves?: boolean;
 }
 
 export function calculateScorecard({ staticData, result, numbers, visibleSchools }: ScorecardInput) {
@@ -21,21 +20,20 @@ export function calculateScorecard({ staticData, result, numbers, visibleSchools
   return {
     overTargetCount: overTarget.length,
     overTargetNames: overTarget.map(schoolNumber => staticData.schools[schoolNumber.school].name).join(', '),
-    movedFromOpenLabel: movedFromOpenSchools === null ? '—' : `~${Math.round(movedFromOpenSchools).toLocaleString()}`,
+    movedFromOpenLabel: movedFromOpenSchools === null ? '—' : Math.round(movedFromOpenSchools).toLocaleString(),
   };
 }
 
 export function GlanceItem({ value, label, detail, warn, estimate }: { value: string | number; label: string; detail?: string; warn?: boolean; estimate?: boolean }) {
   return (
     <li className={'glance-item' + (warn ? ' warn' : '')}>
-      <b>{value}</b>
-      <span>{label}{estimate && <> <EstimateMark /></>}{detail && <small>{detail}</small>}</span>
+      <b>{value}{estimate && <EstimateMark />}</b>
+      <span>{label}{detail && <small>{detail}</small>}</span>
     </li>
   );
 }
 
 export default function Scorecard(input: ScorecardInput) {
-  const { showStudentMoves = true } = input;
   const scorecard = calculateScorecard(input);
   const goalPercent = input.staticData.meta.target * 100;
   const overLabel = scorecard.overTargetCount === 1 ? `school over ${goalPercent}% full` : `schools over ${goalPercent}% full`;
@@ -43,7 +41,7 @@ export default function Scorecard(input: ScorecardInput) {
   return (
     <ul className="glance">
       <GlanceItem value={scorecard.overTargetCount} label={overLabel} detail={scorecard.overTargetNames} warn={scorecard.overTargetCount > 0} />
-      {showStudentMoves && <GlanceItem value={scorecard.movedFromOpenLabel} label="students move from schools staying open" estimate />}
+      <GlanceItem value={scorecard.movedFromOpenLabel} label="students move from schools staying open" estimate />
     </ul>
   );
 }

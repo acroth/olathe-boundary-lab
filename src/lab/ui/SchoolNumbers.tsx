@@ -48,14 +48,14 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
 
   return (
     <li className={'school-row' + (focused ? ' focused' : '')} data-school={school.name} data-headline={headline(schoolNumber)}
-      data-district={district === null ? '' : percent(district)} data-model={'~' + percent(model)} data-agreement={agreement ?? ''}>
+      data-district={district === null ? '' : percent(district)} data-model={percent(model)} data-agreement={agreement ?? ''}>
       <button className="school-row-main" onClick={onToggle} aria-expanded={expanded}>
         <span className="school-row-top">
           <i className="school-dot" style={{ background: schoolColor(school as any) }} />
           <span className="school-name">{school.name}</span>
           {(schoolNumber.questionable || slide) && <TriangleAlert className="school-warning" aria-label="Open for a note about the district's number" />}
-          {schoolNumber.source === 'model' && <EstimateMark focusable={false} />}
           <b className={'school-value ' + tone}>{headline(schoolNumber)}</b>
+          {schoolNumber.source === 'model' && <EstimateMark focusable={false} />}
           <ChevronDown className={'school-chevron' + (expanded ? ' open' : '')} aria-hidden />
         </span>
         <span className="meter" aria-hidden>
@@ -66,12 +66,12 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
       {expanded && (
         <div className="school-details">
           <dl>
-            <div><dt>Students ({meta.years[schoolNumber.year]})</dt><dd>{showEstimates ? '~' : ''}{studentCount(schoolNumber.students)}</dd></div>
+            <div><dt>Students ({meta.years[schoolNumber.year]})</dt><dd>{studentCount(schoolNumber.students)}{showEstimates && <EstimateMark />}</dd></div>
             <div><dt>Max Functional Capacity</dt><dd>{studentCount(school.capacity)}</dd></div>
             {schoolNumber.districtPeak
-              ? <div><dt>Fullest it gets ({meta.years[schoolNumber.districtPeak.year]})</dt><dd>{percent(schoolNumber.districtPeak.utilization)} · {studentCount(schoolNumber.districtPeak.students)} students</dd></div>
-              : <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)} · ~{studentCount(schoolResult.total[schoolResult.peakYear])} students</dd></div>}
-            {showEstimates && compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? `~${percent(compareSchool.peak)} · ~${studentCount(compareSchool.total[compareSchool.peakYear])} students` : 'Closing'}</dd></div>}
+              ? <div><dt>Peak year ({meta.years[schoolNumber.districtPeak.year]})</dt><dd>{percent(schoolNumber.districtPeak.utilization)} ({studentCount(schoolNumber.districtPeak.students)} students)</dd></div>
+              : <div><dt>Peak year ({meta.years[schoolResult.peakYear]})</dt><dd>{percent(schoolResult.peak)} ({studentCount(schoolResult.total[schoolResult.peakYear])} students)<EstimateMark /></dd></div>}
+            {showEstimates && compareResult && <div><dt>Peak year, compared plan ({meta.years[compareSchool?.peakYear ?? schoolResult.peakYear]})</dt><dd>{compareSchool?.open ? <>{percent(compareSchool.peak)} ({studentCount(compareSchool.total[compareSchool.peakYear])} students)<EstimateMark /></> : 'Closing'}</dd></div>}
           </dl>
           {schoolNumber.questionable && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />{schoolNumber.questionable}</p>}
           {capacityNote && <p className="school-note">{capacityNote}</p>}

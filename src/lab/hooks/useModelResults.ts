@@ -7,6 +7,8 @@ import { useUI, type Plan } from '../store';
 export interface Results {
   levels: Record<Level, LevelResult>;
   feeder: { es: number; split: { ms: number; share: number }[] }[];
+  /** Per level and district concept: schools whose homes differ from that concept (see compute.ts). */
+  differsFrom?: Partial<Record<Level, Record<string, number[]> | null>>;
 }
 
 const REQUEST_DELAY_MS = 30;

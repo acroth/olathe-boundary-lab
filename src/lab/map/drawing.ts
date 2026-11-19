@@ -15,7 +15,7 @@ export interface DrawCallbacks {
   addEdit: (e: Omit<Edit, 'id'>) => void; extendBlocks: (faces: number[], remove: boolean) => void;
   removeEdit: (id: string) => void; updateGeom: (id: string, g: GeoJSON.Polygon | GeoJSON.MultiPolygon) => void;
   toast: (s: string) => void; selectEdit: (id: string | null) => void; getSnap: () => boolean; getZones: () => GeoJSON.FeatureCollection;
-  getPickBy: () => 'planning' | 'zones';
+  getPickBy: () => 'planning' | 'zones'; getFollowStreets: () => boolean;
 }
 
 const SNAP_PX = 16;
@@ -88,6 +88,7 @@ export class DrawController {
     map.on('dblclick', this.onDbl);
     map.on('mousedown', this.onDown);
     map.on('mousemove', this.onMove);
+    map.on('mouseout', this.onLeave);
     map.on('mouseup', this.onUp);
     map.on('touchstart', this.onDown as any);
     map.on('touchmove', this.onMove as any);
@@ -98,7 +99,7 @@ export class DrawController {
 
   destroy() {
     this.map.off('click', this.onClick); this.map.off('dblclick', this.onDbl);
-    this.map.off('mousedown', this.onDown); this.map.off('mousemove', this.onMove); this.map.off('mouseup', this.onUp);
+    this.map.off('mousedown', this.onDown); this.map.off('mousemove', this.onMove); this.map.off('mouseout', this.onLeave); this.map.off('mouseup', this.onUp);
     this.map.off('touchstart', this.onDown as any); this.map.off('touchmove', this.onMove as any); this.map.off('touchend', this.onUp);
     window.removeEventListener('keydown', this.onKey);
     try { this.draw.stop(); } catch { /* */ }
@@ -113,6 +114,10 @@ export class DrawController {
       m.addLayer({ id: 'split-line', type: 'line', source: 'split', paint: { 'line-color': '#111', 'line-width': 2, 'line-dasharray': [2, 1] } });
       m.addLayer({ id: 'trace-line', type: 'line', source: 'trace', filter: ['==', '$type', 'LineString'], paint: { 'line-color': '#111', 'line-width': 4, 'line-opacity': 0.85 } });
       m.addLayer({ id: 'trace-pts', type: 'circle', source: 'trace', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 6, 'circle-color': ['case', ['==', ['get', 'edge'], 1], '#ff1744', '#fff'], 'circle-stroke-color': '#111', 'circle-stroke-width': 2 } });
+      // where the next tap will land when it snaps: a red ring on a boundary line, a blue one on a street intersection
+      m.addSource('trace-target', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      m.addLayer({ id: 'trace-target', type: 'circle', source: 'trace-target', paint: { 'circle-radius': 9, 'circle-color': 'rgba(255,255,255,0.35)',
+        'circle-stroke-color': ['case', ['==', ['get', 'edge'], 1], '#ff1744', '#1565c0'], 'circle-stroke-width': 3 } });
     }
   }
 
@@ -163,7 +168,17 @@ export class DrawController {
     const pts = this.trace.map((t, k) => ({ type: 'Feature', properties: { first: k === 0 ? 1 : 0, edge: t.edge ? 1 : 0 }, geometry: { type: 'Point', coordinates: [t.lon, t.lat] } }));
     (this.map.getSource('trace') as GeoJSONSource)?.setData({ type: 'FeatureCollection', features: [...lines, ...pts] as any });
   }
-  cancelTrace() { this.trace = []; this.traceCoords = []; this.renderTrace(); this.clearSplit(); }
+  cancelTrace() { this.trace = []; this.traceCoords = []; this.renderTrace(); this.showTarget(null); this.clearSplit(); }
+  /** The line runs from one boundary line to another: stop stretching a preview after it (tapping again extends it). */
+  traceConnected(): boolean {
+    return this.trace.length >= 2 && this.trace[0].edge && this.trace[this.trace.length - 1].edge;
+  }
+  showTarget(point: TracePt | null) {
+    const snapped = point && (point.edge || point.node !== null);
+    (this.map.getSource('trace-target') as GeoJSONSource)?.setData(snapped
+      ? { type: 'Feature', properties: { edge: point!.edge ? 1 : 0 }, geometry: { type: 'Point', coordinates: [point!.lon, point!.lat] } } as any
+      : { type: 'FeatureCollection', features: [] });
+  }
   route(a: number, b: number) {
     const p = shortestPath(this.graph, a, b, this.S.streets);
     return p ? pathCoords(this.S.streets, p) : null;
@@ -190,8 +205,9 @@ export class DrawController {
     }
     return best;
   }
+  /** Where a tap lands: on a nearby boundary line, on a street intersection when following streets, or exactly where tapped. */
   pickPoint(lon: number, lat: number): TracePt {
-    const n = this.snapNode(lon, lat);
+    const n = this.cb.getFollowStreets() ? this.snapNode(lon, lat) : null;
     const dn = n === null ? Infinity : this.pxDist([lon, lat], [this.S.streets.nodeLon[n], this.S.streets.nodeLat[n]]);
     const b = this.nearestBoundary(lon, lat);
     const db = b ? this.pxDist([lon, lat], b) : Infinity;
@@ -202,8 +218,9 @@ export class DrawController {
   addTracePoint(t: TracePt) {
     if (this.trace.length >= 2 && this.pxDist([t.lon, t.lat], [this.trace[0].lon, this.trace[0].lat]) < 14) return this.finishLoop();
     if (this.trace.length) this.traceCoords.push(this.segment(this.trace[this.trace.length - 1], t));
-    this.trace.push(t); this.renderTrace();
-    if (this.trace.length === 1) this.cb.toast(t.edge ? 'Started on a boundary line. Continue along streets, and end on another boundary line (or back here) then tap Done.' : 'Tap more points. End on a boundary line and tap Done to split that area, or tap the first point to close a loop.');
+    this.trace.push(t); this.renderTrace(); this.showTarget(null);
+    if (this.trace.length === 1) this.cb.toast(t.edge ? 'Started on a boundary line. Keep tapping, and end on a boundary line (red dot).' : 'Keep tapping. End on a boundary line (red dot) and tap Done, or tap the first point to close a loop.');
+    else if (this.traceConnected()) this.cb.toast('Line connected. Tap Done, or keep tapping to extend it.');
   }
   finishLoop() {
     if (this.trace.length < 2) { this.cb.toast('Tap at least two more points before closing the loop.'); return; }
@@ -236,25 +253,30 @@ export class DrawController {
     };
     const head = extend(line[0], line[1]).reverse(), tail = extend(line[line.length - 1], line[line.length - 2]);
     line = [...head, ...line, ...tail];
-    // the area the line runs through: the zone part containing the line's middle
-    let acc = 0; const segs: number[] = [];
-    for (let i = 1; i < line.length; i++) { const d = Math.hypot(line[i][0] - line[i - 1][0], line[i][1] - line[i - 1][1]); segs.push(d); acc += d; }
-    let half = acc / 2, mid = line[0];
-    for (let i = 1; i < line.length; i++) { if (half <= segs[i - 1]) { const t = half / segs[i - 1]; mid = [line[i - 1][0] + t * (line[i][0] - line[i - 1][0]), line[i - 1][1] + t * (line[i][1] - line[i - 1][1])]; break; } half -= segs[i - 1]; }
-    let part: MPoly | null = null;
-    for (const f of this.cb.getZones().features) for (const poly of toMPoly(f.geometry as any)) if (inMPoly(mid[0], mid[1], [poly])) part = [poly];
-    if (!part) { this.cb.toast('The line runs along a boundary rather than through an area. Draw it across the area you want to split.'); return; }
+    // every area the line cuts all the way through, each split into pieces
+    const lineBox = line.reduce((box, [x, y]) => [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x), Math.max(box[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+    const strip = lineStrip(line, 3e-6);
     let pieces: MPoly = [];
-    try { pieces = boolOp('difference', part, lineStrip(line, 3e-6)).filter(p => polyAcres(p) > 0.05); } catch { /* */ }
-    if (pieces.length < 2) { this.cb.toast('The line has to run from one boundary line to another (both ends touching a line). Add points or end closer to a line.'); return; }
+    for (const f of this.cb.getZones().features) for (const poly of toMPoly(f.geometry as any)) {
+      const box = poly[0].reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+      if (box[0] > lineBox[2] || box[2] < lineBox[0] || box[1] > lineBox[3] || box[3] < lineBox[1]) continue;
+      let cut: MPoly = [];
+      try { cut = boolOp('difference', [poly], strip).filter(p => polyAcres(p) > 0.05); } catch { /* */ }
+      if (cut.length >= 2) pieces = pieces.concat(cut);
+    }
+    if (!pieces.length) { this.cb.toast('The line has to run from one boundary line to another (both ends on a red dot). Add points or end closer to a line.'); return; }
     this.splitPieces = pieces;
-    (this.map.getSource('split') as GeoJSONSource)?.setData({ type: 'FeatureCollection', features: pieces.map((p, k) => ({ type: 'Feature', properties: { k: k % 2 }, geometry: { type: 'Polygon', coordinates: p } })) as any });
-    this.trace = []; this.traceCoords = []; this.renderTrace();
-    this.cb.toast('Tap the side to give to the selected school.');
+    this.renderSplit();
+    this.trace = []; this.traceCoords = []; this.renderTrace(); this.showTarget(null);
+    this.cb.toast('Tap each piece to give to the selected school, then tap Done.');
   }
   clearSplit() {
     this.splitPieces = null;
-    (this.map.getSource('split') as GeoJSONSource)?.setData({ type: 'FeatureCollection', features: [] });
+    this.renderSplit();
+  }
+  renderSplit() {
+    const pieces = this.splitPieces ?? [];
+    (this.map.getSource('split') as GeoJSONSource)?.setData({ type: 'FeatureCollection', features: pieces.map((p, k) => ({ type: 'Feature', properties: { k: k % 2 }, geometry: { type: 'Polygon', coordinates: p } })) as any });
   }
 
   // ---------- blocks
@@ -322,7 +344,8 @@ export class DrawController {
 
   /** the toolbar's Done button */
   done() {
-    if (this.tool === 'trace' && this.trace.length) this.finishTrace();
+    if (this.tool === 'trace' && this.splitPieces) this.clearSplit();
+    else if (this.tool === 'trace' && this.trace.length) this.finishTrace();
     else if (this.tool === 'edit' && this.editing) { this.stopEditing(); this.cb.toast('Saved.'); }
   }
 
@@ -332,9 +355,12 @@ export class DrawController {
       if (!this.needBrush()) return;
       if (this.splitPieces) {
         const k = this.splitPieces.findIndex(p => inMPoly(lng, lat, [p]));
-        if (k < 0) { this.cb.toast('Tap inside one of the highlighted sides, or Esc / switch tools to cancel.'); return; }
-        const piece = this.splitPieces[k]; this.clearSplit();
+        if (k < 0) { this.cb.toast('Tap inside a highlighted piece, or tap Done when finished.'); return; }
+        const piece = this.splitPieces[k];
+        this.splitPieces = this.splitPieces.filter((_, index) => index !== k);
+        this.renderSplit();
         this.cb.addEdit({ level: this.cb.getLevel(), school: this.cb.getBrush(), geom: { type: 'MultiPolygon', coordinates: [piece] as any }, kind: 'trace' });
+        if (this.splitPieces.length < 2) this.clearSplit();
         return;
       }
       this.addTracePoint(this.pickPoint(lng, lat));
@@ -373,11 +399,25 @@ export class DrawController {
       const f = this.faceAt(lng, lat);
       (this.map.getSource('face-hover') as GeoJSONSource)?.setData(f === null ? { type: 'FeatureCollection', features: [] } : this.S.faces.features[f] as any);
       if (this.painting && f !== null) this.paintFace(f);
-    } else if (this.tool === 'trace' && this.trace.length && !this.splitPieces) {
-      const n = this.snapNode(lng, lat);
-      const t: TracePt = n !== null ? { lon: this.S.streets.nodeLon[n], lat: this.S.streets.nodeLat[n], node: n, edge: false } : { lon: lng, lat, node: null, edge: false };
-      this.renderTrace(this.segment(this.trace[this.trace.length - 1], t));
+    } else if (this.tool === 'trace' && !this.splitPieces) {
+      if (this.moveFrame) return;   // the boundary search is heavier than a mouse move; once per frame is plenty
+      this.moveFrame = requestAnimationFrame(() => {
+        this.moveFrame = 0;
+        const point = this.pickPoint(lng, lat);
+        this.showTarget(point);
+        if (!this.trace.length) return;
+        if (this.traceConnected()) this.renderTrace();
+        else this.renderTrace(this.segment(this.trace[this.trace.length - 1], point));
+      });
     }
+  };
+  moveFrame = 0;
+  /** The pointer left the map (toward the toolbar, say): drop the preview so the line doesn't stretch after it. */
+  onLeave = () => {
+    if (this.tool !== 'trace') return;
+    if (this.moveFrame) { cancelAnimationFrame(this.moveFrame); this.moveFrame = 0; }
+    this.showTarget(null);
+    this.renderTrace();
   };
   onUp = () => {
     if (!this.painting) return;

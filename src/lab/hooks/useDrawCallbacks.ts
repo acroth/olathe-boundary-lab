@@ -30,6 +30,7 @@ export function useDrawCallbacks(faceGeometry: (faceIds: number[]) => GeoJSON.Mu
     toast: message => useUI.getState().set({ toast: message }),
     selectEdit: id => useUI.getState().set({ selectedEdit: id }),
     getSnap: () => useUI.getState().snap,
+    getFollowStreets: () => useUI.getState().followStreets,
     getZones: () => latestResults.current?.levels[useUI.getState().level]?.zones ?? NO_ZONES,
     getPickBy: () => useUI.getState().pickBy,
   }), [faceGeometry]);

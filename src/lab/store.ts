@@ -31,14 +31,14 @@ interface UIState {
   sheet: 'peek' | 'half' | 'full'; panelOpen: boolean; pickBy: PickBy;
   drawer: MobileDrawer | null;   // phones: which bottom-tab drawer is open
   mode: 'draw' | 'build'; build: Build;
-  includePreK: boolean; snap: boolean; overlay: Level | null; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
+  includePreK: boolean; snap: boolean; followStreets: boolean; overlay: Level | null; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
   set: (p: Partial<UIState>) => void;
 }
 export const useUI = create<UIState>()((set) => ({
   level: 'es', brush: -2, tool: 'pan', year: 2, colorBy: 'school', showHomes: false, showStreets: true, showAreas: true,
   sheet: 'half', panelOpen: true, pickBy: 'planning', drawer: null,
   mode: 'build', build: { sel: [1, 1, 1, 1, 1], moves: null, ms: 1 },
-  includePreK: true, snap: false, overlay: null, areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
+  includePreK: true, snap: false, followStreets: false, overlay: null, areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
   set: (p) => set(p),
 }));
 

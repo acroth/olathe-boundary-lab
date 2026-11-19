@@ -45,20 +45,43 @@ async function shareableLink(staticData: Static, planName: string | undefined): 
   return location.href;
 }
 
+/** Copies a link that's still being made. Safari only allows copying during the tap itself, so the clipboard is handed the pending
+ *  link right away (ClipboardItem); other browsers copy once it's ready, with a hidden text box as the last resort. */
+async function copyLink(link: Promise<string>): Promise<boolean> {
+  try {
+    if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+      const blob = link.then(text => new Blob([text], { type: 'text/plain' }));
+      await navigator.clipboard.write([new ClipboardItem({ 'text/plain': blob })]);
+      return true;
+    }
+  } catch { /* fall through to writeText */ }
+  const text = await link;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const box = document.createElement('textarea');
+    box.value = text; box.setAttribute('readonly', ''); box.style.position = 'fixed'; box.style.opacity = '0';
+    document.body.appendChild(box); box.select();
+    const copied = document.execCommand('copy');
+    box.remove();
+    return copied;
+  }
+}
+
 /** Copies a link to this view; `copied` stays true for a moment afterwards. */
 export function useShare(staticData: Static) {
   const ui = useUI();
   const plan = usePlan(state => state.plan);
   const [copied, setCopied] = useState(false);
   const share = async () => {
-    const link = await shareableLink(staticData, plan.name);
-    try {
-      await navigator.clipboard.writeText(link);
+    const link = shareableLink(staticData, plan.name);
+    if (await copyLink(link)) {
       setCopied(true);
       setTimeout(() => setCopied(false), COPIED_MESSAGE_MS);
-      ui.set({ toast: 'Link copied. Anyone with it sees this exact plan.' });
-    } catch {
-      ui.set({ toast: 'Copy this link to share: ' + link });
+      ui.set({ toast: 'Link copied' });
+    } else {
+      ui.set({ toast: 'Couldn’t copy the link. Copy it from the address bar instead.' });
     }
   };
   return { share, copied };
@@ -91,7 +114,7 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
       <LevelSwitch />
       <div className="topbar-tools pointer-events-auto flex justify-center">
         <div className="relative flex h-12 shrink-0 items-center gap-0.5 rounded-2xl border bg-card px-1.5 shadow-float">
-          <LayersMenu />
+          <LayersMenu staticData={staticData} />
           <YearMenu staticData={staticData} />
           {ui.mode === 'draw' && (
             <>

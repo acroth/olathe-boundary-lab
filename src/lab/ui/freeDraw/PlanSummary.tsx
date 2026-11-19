@@ -64,7 +64,7 @@ export default function PlanSummary({ staticData, plan, level, result, numbers, 
         <ul className="glance">
           <GlanceItem value={overTarget.length} label={overTarget.length === 1 ? `school over ${goalPercent}% full` : `schools over ${goalPercent}% full`} warn={overTarget.length > 0} />
           <GlanceItem value={wholeNumber(summary.unassignedStudents)} label="students without a school yet" warn={summary.unassignedStudents > 0.5} />
-          <GlanceItem value={'~' + wholeNumber(summary.movedFromOpen)} label="students move from schools staying open" estimate />
+          <GlanceItem value={wholeNumber(summary.movedFromOpen)} label="students move from schools staying open" estimate />
         </ul>
       )}
     </section>

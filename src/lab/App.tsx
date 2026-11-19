@@ -153,11 +153,11 @@ export default function App() {
   }, [staticData, planResults, ui.areas, plan.closures]);
   const planNumbers = useMemo(() => {
     if (!staticData) return new Map<number, SchoolNumber>();
-    return schoolNumbers(staticData, plan, planResults?.levels[ui.level] ?? null, ui.level, ui.year);
+    return schoolNumbers(staticData, plan, planResults?.levels[ui.level] ?? null, ui.level, ui.year, planResults?.differsFrom?.[ui.level]);
   }, [staticData, plan, planResults, ui.level, ui.year]);
   const compareNumbers = useMemo(() => {
     if (!staticData || !ui.compare) return new Map<number, SchoolNumber>();
-    return schoolNumbers(staticData, ui.compare, compareResults?.levels[ui.level] ?? null, ui.level, ui.year);
+    return schoolNumbers(staticData, ui.compare, compareResults?.levels[ui.level] ?? null, ui.level, ui.year, compareResults?.differsFrom?.[ui.level]);
   }, [staticData, ui.compare, compareResults, ui.level, ui.year]);
 
   // say so when an edit or a year change leaves the district's published figures
@@ -169,7 +169,7 @@ export default function App() {
     previousFigures.current = { level: ui.level, mode: ui.mode, hasDistrictFigures };
     const switchedView = previous?.level !== ui.level || previous?.mode !== ui.mode;   // opening Free draw on purpose needs no warning
     const leftDistrictFigures = previous?.hasDistrictFigures && !switchedView && !hasDistrictFigures;
-    if (leftDistrictFigures) useUI.getState().set({ toast: 'The district published no figures for this plan and year, so these are model estimates (~).' });
+    if (leftDistrictFigures) useUI.getState().set({ toast: 'The district published no figures for this plan and year, so these are model estimates.' });
   }, [planNumbers, ui.level, ui.mode]);
 
   // zoom to the areas shown; phones open closer in, on the schools the concepts change

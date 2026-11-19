@@ -22,7 +22,8 @@ export function loadStatic({ calibrated = true } = {}): Static {
   const homeColumns = { n: meta.homes.count, lon: homes.lon, lat: homes.lat, units: homes.units, node: homes.node, offsetFt: homes.offset_ft, isNew: homes.isNew,
                         w: { es: homes.w_es, ms: homes.w_ms, hs: homes.w_hs }, orig: { es: homes.orig_es, ms: homes.orig_ms, hs: homes.orig_hs } };
   const combos = readJson('combos.json');
-  if (calibrated && existsSync(DATA_DIR + 'calibration.json')) applyCalibration(schoolsFile.schools, homeColumns, combos, readJson('calibration.json'));
+  const presets = presetsFile.presets.map((preset: any) => ({ ...preset, edits: preset.edits.map((edit: any, k: number) => ({ ...edit, id: preset.id + k, kind: 'preset' })) }));
+  if (calibrated && existsSync(DATA_DIR + 'calibration.json')) applyCalibration(schoolsFile.schools, homeColumns, combos, readJson('calibration.json'), presets);
   return {
     meta, schools: schoolsFile.schools,
     homes: homeColumns,
@@ -30,7 +31,7 @@ export function loadStatic({ calibrated = true } = {}): Static {
                len: streets.len_ft, cls: streets.cls, name: streets.name, coordOff: streets.coord_off, coordLon: streets.coord_lon, coordLat: streets.coord_lat },
     zones: { es: readJson('zones_es.geojson'), ms: readJson('zones_ms.geojson'), hs: readJson('zones_hs.geojson') },
     faces: readJson('faces.geojson'), district: readJson('district.geojson'), planning: readJson('planning_areas.geojson'),
-    presets: presetsFile.presets.map((preset: any) => ({ ...preset, edits: preset.edits.map((edit: any, k: number) => ({ ...edit, id: preset.id + k, kind: 'preset' })) })),
+    presets,
     receivers: presetsFile.receivers, combos,
   } as Static;
 }

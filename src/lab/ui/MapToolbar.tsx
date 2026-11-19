@@ -4,6 +4,7 @@ import type { Static } from '../data';
 import { usePlan, useUI, type PickBy, type Tool } from '../store';
 import { UNASSIGNED, schoolColor } from '../colors';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const BRUSH_NONE = -2, BRUSH_UNASSIGNED = -1;
@@ -11,7 +12,7 @@ const BRUSH_NONE = -2, BRUSH_UNASSIGNED = -1;
 const TOOLS: { id: Tool; label: string; icon: typeof Hand; hint: string }[] = [
   { id: 'pan', label: 'Move', icon: Hand, hint: 'Drag to move the map; pinch or scroll to zoom.' },
   { id: 'areas', label: 'Pick areas', icon: MousePointerClick, hint: '' },
-  { id: 'trace', label: 'Trace', icon: Spline, hint: 'Tap along streets to draw a line from one boundary to another; it follows the roads between taps. Tap Done, then tap the side that should go to the school.' },
+  { id: 'trace', label: 'Trace', icon: Spline, hint: 'Tap to draw a line that starts and ends on a boundary line (red dots). It can cross several areas. Tap Done, then tap each piece that should go to the school.' },
   { id: 'erase', label: 'Remove', icon: Eraser, hint: 'Tap an area you changed to undo just that change.' },
 ];
 const PICK_AREAS_HINT: Record<PickBy, string> = {
@@ -63,6 +64,12 @@ export default function MapToolbar({ staticData, visibleSchools }: { staticData:
       <ToggleGroup type="single" value={tool} className="w-full" aria-label="Tool" onValueChange={value => value && chooseTool(value as Tool)}>
         {TOOLS.map(candidate => <ToggleGroupItem key={candidate.id} value={candidate.id} className="h-8"><candidate.icon />{candidate.label}</ToggleGroupItem>)}
       </ToggleGroup>
+      {tool === 'trace' && (
+        <label className="flex items-center justify-between gap-3 px-1 text-sm">
+          <span>Follow streets <span className="text-xs text-muted-foreground">(snap to intersections)</span></span>
+          <Switch checked={ui.followStreets} onCheckedChange={followStreets => ui.set({ followStreets })} aria-label="Follow streets" />
+        </label>
+      )}
       {tool === 'areas' && (
         <ToggleGroup type="single" value={ui.pickBy} className="w-full" aria-label="Pick by" onValueChange={value => value && choosePickBy(value as PickBy)}>
           <ToggleGroupItem value="planning">Planning areas</ToggleGroupItem>

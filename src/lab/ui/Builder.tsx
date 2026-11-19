@@ -2,8 +2,8 @@
 import type { Combos, ComboConcept, Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headlineSummary, type SchoolNumber } from '../numbers';
-import { activeMoves, defaultMoves } from '../planBuilder';
 import type { Build, Plan } from '../store';
+import EstimateMark from './EstimateMark';
 import Fold from './Fold';
 import { SchoolList } from './SchoolNumbers';
 import Scorecard from './Scorecard';
@@ -21,8 +21,6 @@ interface BuilderProps {
   build: Build;
   onBuildChange: (build: Build) => void;
   onEditByHand: () => void;
-  middleSchoolLinesOn: boolean;
-  onMiddleSchoolLinesChange: (on: boolean) => void;
   onSchoolSelect: (school: number) => void;
   part?: BuilderPart;   // phones split the builder: the Concept tab shows the concepts, the Schools tab the school list
 }
@@ -63,25 +61,14 @@ function SchoolsSection({ staticData, numbers, visibleSchools, result, onSchoolS
 
 function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
   const { staticData, plan, combos, elementaryResult, numbers, visibleSchools, build, onBuildChange, onEditByHand, onSchoolSelect } = props;
-  const { sel: selectedConcepts, moves: moveOverrides } = build;
-  const moves = activeMoves(combos, selectedConcepts, moveOverrides);
-  const automaticMoves = defaultMoves(combos, selectedConcepts);
+  const { sel: selectedConcepts } = build;
 
   const matchingOption = Object.entries(combos.options).find(([, concepts]) => concepts.every((conceptId, index) => conceptId === selectedConcepts[index]))?.[0];
-  const movesOnCount = combos.moves.filter(move => moves[move.id]).length;
 
   const pickConcept = (schoolIndex: number, conceptId: number) => {
     const nextConcepts = [...selectedConcepts];
     nextConcepts[schoolIndex] = conceptId;
     onBuildChange({ ...build, sel: nextConcepts, moves: null });
-  };
-  const toggleMove = (moveId: string) => {
-    const nextMoves = { ...moves, [moveId]: !moves[moveId] };
-    if (nextMoves[moveId]) {
-      const conflicting = combos.exclusive.filter(group => group.includes(moveId)).flat().filter(id => id !== moveId);
-      for (const id of conflicting) nextMoves[id] = false;
-    }
-    onBuildChange({ ...build, moves: nextMoves });
   };
 
   const movingPieces = combos.schools.flatMap((school, schoolIndex) => {
@@ -134,52 +121,16 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
                 <tr key={school.name + piece.to}>
                   <td>{school.name} → {piece.to}</td>
                   <td>{piece.district ?? '—'}</td>
-                  <td>{modelStudents === undefined ? '—' : '~' + Math.round(modelStudents)}</td>
+                  <td>{modelStudents === undefined ? '—' : <>{Math.round(modelStudents)}<EstimateMark /></>}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </Fold>
-        <Fold title={`Changes at schools staying open (${movesOnCount})`}>
-          <p className="section-note">
-            These come with the concepts you pick. Uncheck one to leave it out.
-            {moveOverrides && <> <button className="text-button" onClick={() => onBuildChange({ ...build, moves: null })}>Reset</button></>}
-          </p>
-          <ul className="move-list">
-            {combos.moves.map(move => {
-              const changedNote = automaticMoves[move.id] !== moves[move.id] ? ' · changed' : '';
-              return (
-                <li key={move.id}>
-                  <label>
-                    <input type="checkbox" checked={!!moves[move.id]} onChange={() => toggleMove(move.id)} />
-                    <span>{move.label} <span className="muted">· ~{move.model26} students{changedNote}</span></span>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
-        </Fold>
-        {combos.ms && <Fold title="Show middle school lines"><MiddleSchoolLinesPicker concepts={combos.ms.concepts} {...props} /></Fold>}
       </section>
 
       <button className="secondary-action" onClick={onEditByHand}>Edit this plan by hand</button>
     </>
-  );
-}
-
-/** Elementary view: which middle school concept's lines to overlay on the map. */
-function MiddleSchoolLinesPicker({ concepts, build, onBuildChange, middleSchoolLinesOn, onMiddleSchoolLinesChange }: BuilderProps & { concepts: MiddleSchools['concepts'] }) {
-  const showConcept = (conceptId: number) => {
-    onBuildChange({ ...build, ms: conceptId });
-    onMiddleSchoolLinesChange(true);
-  };
-  return (
-    <div className="mini-picker" role="group" aria-label="Middle school lines">
-      <button className={middleSchoolLinesOn ? '' : 'on'} onClick={() => onMiddleSchoolLinesChange(false)}>Off</button>
-      {concepts.map(concept => (
-        <button key={concept.id} className={middleSchoolLinesOn && concept.id === build.ms ? 'on' : ''} onClick={() => showConcept(concept.id)} title={`Show concept ${concept.id} lines`}>{concept.id}</button>
-      ))}
-    </div>
   );
 }
 
@@ -205,7 +156,7 @@ function MiddleSchoolBuilder(props: BuilderProps & { middleSchools: MiddleSchool
             <button key={candidate.id} className={candidate.id === build.ms ? 'on' : ''} aria-pressed={candidate.id === build.ms} onClick={() => onBuildChange({ ...build, ms: candidate.id })}>{candidate.id}</button>
           ))}
         </div>
-        <Scorecard staticData={staticData} plan={plan} result={middleSchoolResult} numbers={numbers} visibleSchools={visibleSchools} showStudentMoves={false} />
+        <Scorecard staticData={staticData} plan={plan} result={middleSchoolResult} numbers={numbers} visibleSchools={visibleSchools} />
       </section>
 
       {part === 'all' && schoolsSection}

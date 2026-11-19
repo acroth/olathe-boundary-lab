@@ -10,6 +10,7 @@ import { buildPlan } from '../src/lab/planBuilder';
 import { planFromPreset } from '../src/lab/store';
 import { INDIAN_CREEK } from '../pipeline/tools/calibrate/indianCreek';
 import { PARENT_SLIDE_TOTALS } from '../src/lab/parentSlides';
+import { schoolsThatDiffer } from '../src/lab/compute';
 import { loadStatic } from './support/loadStatic';
 
 let S: Static, engine: Engine;
@@ -337,7 +338,36 @@ describe('the headline number', () => {
 
   it('marks the source on every label', () => {
     const base = { school: 0, year: 2, model: 0.81, students: 400, parentSlide: null, districtPeak: null, questionable: null };
-    expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('~81.0%');
+    expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('81.0%');
     expect(headline({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
+  });
+});
+
+describe('district figures school by school', () => {
+  const run = (plan: any) => engine.run('es', { ...plan, includePreK: true }, false);
+  const differsFrom = (assign: Int16Array) => Object.fromEntries(Object.entries(S.combos!.options)
+    .map(([option, concepts]) => [option, schoolsThatDiffer(assign, run(buildPlan(S, concepts, null)).assign)]));
+  const sources = (numbers: Map<number, any>) => Object.fromEntries([...numbers.values()].map(n => [S.schools[n.school].name, n.source]));
+
+  it('a custom mix keeps the district figures for the schools it leaves alone', () => {
+    const mix = buildPlan(S, [1, 2, 1, 1, 1], null), result = run(mix);   // Scarborough's concept 2 instead of 1
+    const bySchool = sources(schoolNumbers(S, mix, result, 'es', 2, differsFrom(result.assign)));
+    expect(bySchool['Sunnyside']).toBe('model');
+    expect(bySchool['Madison Place']).toBe('model');
+    expect(bySchool['Bentwood']).toBe('district');
+    expect(bySchool['Brougham']).toBe('district');
+  });
+  it('moving even one home switches only the two schools involved', () => {
+    const plan = buildPlan(S, S.combos!.options['1'], null), result = run(plan);
+    const brougham = schoolNamed('es', 'Brougham').i, greenSprings = schoolNamed('es', 'Green Springs').i;
+    const assign = Int16Array.from(result.assign), home = assign.indexOf(brougham);
+    assign[home] = greenSprings;
+    const differing = differsFrom(assign);
+    expect(differing['1'].sort()).toEqual([brougham, greenSprings].sort());
+    const bySchool = sources(schoolNumbers(S, { ...plan, edits: [...plan.edits, { ...plan.edits[0], id: 'hand-edit' }] }, result, 'es', 2, differing));
+    expect(bySchool['Brougham']).toBe('model');
+    expect(bySchool['Green Springs']).toBe('model');
+    expect(bySchool['Bentwood']).toBe('district');
+    expect(bySchool['Havencroft']).toBe('district');
   });
 });

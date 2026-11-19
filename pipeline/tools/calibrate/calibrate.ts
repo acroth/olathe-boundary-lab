@@ -11,6 +11,8 @@
 // 4. First-year counts: closing schools' students start from the counts the district placed, and Indian Trail from its fall 2026 count.
 // 5. Middle school concepts: each detached piece left by reading the concept maps goes to the school around it. Every piece was
 //    checked against the concept maps in the Nov 2026 middle school deck; none is a separate area there.
+//    Elementary concept 1's Pleasant Ridge-to-Bentwood piece is redrawn along the Indian Creek trail (bentwood.ts), and concept 3's
+//    Indian Creek-to-Countryside piece stops at the drive off Lindenwood instead of running down to Santa Fe.
 // 6. District trend (districtTrend.ts): each school's year-by-year trend is fitted so the model lands on the district's five-year
 //    tables for its published concepts. Estimates extend the district's numbers to custom plans and to years after 2031-32.
 import { readFileSync, writeFileSync } from 'fs';
@@ -20,6 +22,7 @@ import { inMPoly, polyAcres, toMPoly, type MPoly } from '../../../src/lab/model/
 import type { Calibration } from '../../../src/lab/calibration';
 import { buildPlan } from '../../../src/lab/planBuilder';
 import { loadStatic } from '../../../tests/support/loadStatic';
+import { bentwoodSideOfCreek } from './bentwood';
 import { fitDistrictTrend } from './districtTrend';
 import { INDIAN_CREEK } from './indianCreek';
 
@@ -272,7 +275,28 @@ const conceptEdits = correctedConceptEdits();
 console.log(`roads: Black Bob ${BLACK_BOB.toFixed(5)}, 119th ${STREET_119TH.toFixed(5)}, 127th ${STREET_127TH.toFixed(5)}`);
 for (const [concept, edits] of Object.entries(conceptEdits)) console.log(`concept ${concept}: ${edits.length} corrections`);
 
-const calibration: Calibration = { capacity, capSource: 'district 2026 functional capacity (Nov 2026 boundary presentations)', prek, factorScale, yearScale, homeWeights, conceptEdits };
+/** Pleasant Ridge's area today, cut along the Indian Creek trail: the part elementary concept 1 gives Bentwood. */
+function pleasantRidgeToBentwood(): GeoJSON.MultiPolygon {
+  const pleasantRidge = schoolNamed('es', 'Pleasant Ridge').i;
+  const today = S.zones.es.features.find(feature => feature.properties!.school === pleasantRidge)!;
+  const piece = boolOp('intersection', toMPoly(today.geometry as any), [[bentwoodSideOfCreek()]]).filter(part => polyAcres(part) > 0.5);
+  return { type: 'MultiPolygon', coordinates: piece as any };
+}
+
+// On the district's concept 3 map, the Indian Creek piece given to Countryside ends just past the first drive off Lindenwood Drive
+// east of it, across to Mur-Len. The map reading carried the strip east of Lindenwood on down to Santa Fe.
+const LINDENWOOD_SIDE_STREET = 38.8859;
+
+/** Concept 3's Indian Creek-to-Countryside piece, cut off along the drive off Lindenwood. */
+function indianCreekToCountryside(): GeoJSON.MultiPolygon {
+  const move = combos.moves.find(candidate => candidate.id === 'IC-CS')!;
+  const north: MPoly = [[[[-95, LINDENWOOD_SIDE_STREET], [-94.5, LINDENWOOD_SIDE_STREET], [-94.5, 39.5], [-95, 39.5], [-95, LINDENWOOD_SIDE_STREET]]]];
+  const piece = boolOp('intersection', toMPoly(move.geom as any), north).filter(part => polyAcres(part) > 0.5);
+  return { type: 'MultiPolygon', coordinates: piece as any };
+}
+
+const calibration: Calibration = { capacity, capSource: 'district 2026 functional capacity (Nov 2026 boundary presentations)', prek, factorScale, yearScale, homeWeights, conceptEdits,
+  moveGeometries: { 'PR-BE': pleasantRidgeToBentwood(), 'IC-CS': indianCreekToCountryside() } };
 calibration.yearScale = fitDistrictTrend(calibration);
 writeFileSync(new URL('../../../public/data/calibration.json', import.meta.url), JSON.stringify(calibration));
 console.log(`capacity ${Object.keys(capacity).length} schools, Early Childhood ${Object.keys(prek).length}, middle school scales ${Object.keys(factorScale).length}, ` +

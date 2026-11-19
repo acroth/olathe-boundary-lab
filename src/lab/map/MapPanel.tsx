@@ -17,6 +17,7 @@ registerPmtiles();
 /** Feeder overlay line and school dots: the same dark brown for every school level. */
 export const OVERLAY_LINE = { color: '#431407', width: 3 };
 const LABEL_TAG = 'label-tag';   // the white rounded box behind overlay school names
+const ESTIMATE_MARK = 'estimate-mark';   // the ƒ-in-a-box beside a model estimate on the map
 
 const EMPTY_FEATURES: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const STREET_DRAWING_TOOLS = ['trace', 'polygon', 'freehand', 'edit'];
@@ -67,6 +68,20 @@ function addHatchPattern(map: any) {
   map.addImage('hatch', context.getImageData(0, 0, 16, 16) as any);
 }
 
+/** The ƒ-in-a-box mark, drawn to match the panel's icon, for labels that show a model estimate. */
+function addEstimateMark(map: any) {
+  if (map.hasImage(ESTIMATE_MARK)) return;
+  const scale = 2, size = 14 * scale, canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const context = canvas.getContext('2d')!;
+  context.fillStyle = '#ffffff'; context.strokeStyle = '#4b5563'; context.lineWidth = 1.6 * scale;
+  context.beginPath(); context.roundRect(1.2 * scale, 1.2 * scale, size - 2.4 * scale, size - 2.4 * scale, 3 * scale); context.fill(); context.stroke();
+  context.fillStyle = '#374151'; context.font = `italic 600 ${10 * scale}px Georgia, 'Times New Roman', serif`;
+  context.textAlign = 'center'; context.textBaseline = 'middle';
+  context.fillText('ƒ', size / 2, size / 2 + 0.5 * scale);
+  map.addImage(ESTIMATE_MARK, context.getImageData(0, 0, size, size) as any, { pixelRatio: scale });
+}
+
 /** A white rounded box that stretches to fit a label (icon-text-fit). */
 function addLabelTag(map: any) {
   if (map.hasImage(LABEL_TAG)) return;
@@ -96,6 +111,7 @@ export default function MapPanel(props: MapPanelProps) {
     const restoreHatch = (event: any) => {
       if (event.id === 'hatch') addHatchPattern(map);
       if (event.id === LABEL_TAG) addLabelTag(map);
+      if (event.id === ESTIMATE_MARK) addEstimateMark(map);
     };
     map.on('styleimagemissing', restoreHatch);
     return () => { map.off('styleimagemissing', restoreHatch); };
@@ -182,7 +198,7 @@ export default function MapPanel(props: MapPanelProps) {
       {props.title && <div className="map-title">{props.title}</div>}
       {props.children}
       <Map ref={mapRef} {...(props.view as any)} onMove={event => props.onView(event.viewState)} mapStyle={style}
-        style={{ position: 'absolute', inset: 0 }} onLoad={event => { addHatchPattern(event.target); addLabelTag(event.target); setLoaded(true); }} canvasContextAttributes={{ preserveDrawingBuffer: true } as any}
+        style={{ position: 'absolute', inset: 0 }} onLoad={event => { addHatchPattern(event.target); addLabelTag(event.target); addEstimateMark(event.target); setLoaded(true); }} canvasContextAttributes={{ preserveDrawingBuffer: true } as any}
         attributionControl={{ compact: true }} maxZoom={18} minZoom={9}>
         <ScaleControl position="bottom-left" unit="imperial" />
         <Source id="zones" type="geojson" data={zones as any}>
@@ -240,7 +256,8 @@ export default function MapPanel(props: MapPanelProps) {
         </Source>
         <Source id="schools" type="geojson" data={schoolsGeoJson as any}>
           <Layer id="school-points" type="circle" paint={{ 'circle-radius': 6, 'circle-color': ['case', ['==', ['get', 'closed'], 1], '#fff', '#111'], 'circle-stroke-color': '#111', 'circle-stroke-width': 2 }} />
-          <Layer id="school-labels" type="symbol" layout={{ visibility: schoolLabelVisibility, 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': 12, 'text-offset': [0, 0.9], 'text-anchor': 'top', 'text-allow-overlap': false }}
+          <Layer id="school-labels" type="symbol" layout={{ visibility: schoolLabelVisibility,
+            'text-field': ['case', ['==', ['get', 'estimate'], 1], ['format', ['get', 'label'], {}, ' ', {}, ['image', ESTIMATE_MARK], {}], ['get', 'label']] as any, 'text-font': ['Noto Sans Medium'], 'text-size': 12, 'text-offset': [0, 0.9], 'text-anchor': 'top', 'text-allow-overlap': false }}
             paint={{ 'text-color': ['case', ['==', ['get', 'closed'], 1], '#b71c1c', '#111'], 'text-halo-color': '#fff', 'text-halo-width': 1.6 }} />
         </Source>
       </Map>

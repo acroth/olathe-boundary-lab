@@ -81,6 +81,32 @@ export function publishedConcept(staticData: Static, plan: Plan): number | null 
   return concept?.id ?? null;
 }
 
+/** Every published concept's table at a level, by concept. */
+function conceptTables(staticData: Static, level: Level): Record<string, PublishedTable> {
+  const tables: Record<string, PublishedTable> = {};
+  if (level === 'es') {
+    for (const option of Object.keys(staticData.combos?.options ?? {})) {
+      const district = staticData.presets.find(preset => preset.id === 'dc' + option)?.district;
+      if (district) tables[option] = { concept: option, table: district.table, cap: district.cap };
+    }
+  }
+  if (level === 'ms' && staticData.combos?.ms) {
+    for (const concept of staticData.combos.ms.concepts) tables[String(concept.id)] = { concept: String(concept.id), table: concept.table, cap: staticData.combos.ms.cap };
+  }
+  return tables;
+}
+
+/** The district table that applies to one school when the plan as a whole isn't a published concept: a concept whose homes for
+ *  this school match the plan's exactly. Several matches must agree on the school's figures, or none applies. `single` says whether
+ *  exactly one concept matched, which is when that concept's notes (meeting slides, questionable figures) also apply. */
+function matchingTable(tables: Record<string, PublishedTable>, differsFrom: Record<string, number[]>, school: { i: number; name: string }) {
+  const matches = Object.values(tables).filter(table => table.table[school.name] && !differsFrom[table.concept]?.includes(school.i));
+  if (!matches.length) return null;
+  const figures = JSON.stringify(matches[0].table[school.name]) + matches[0].cap[school.name];
+  if (matches.some(table => JSON.stringify(table.table[school.name]) + table.cap[school.name] !== figures)) return null;
+  return { table: matches[0], single: matches.length === 1 };
+}
+
 function publishedTable(staticData: Static, plan: Plan, level: Level): PublishedTable | null {
   if (level === 'es') {
     const option = publishedOption(staticData, plan);
@@ -106,20 +132,25 @@ function districtStudents(published: PublishedTable | null, schoolName: string, 
   return students !== undefined && published?.cap[schoolName] ? students : null;
 }
 
-/** Headline numbers for a level's open schools. */
-export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResult | null, level: Level, year: number): Map<number, SchoolNumber> {
+/** Headline numbers for a level's open schools. A school keeps the district's figure while its homes are exactly those of a published
+ *  concept (`differsFrom`, from compute.ts), even when other schools in the plan were changed. */
+export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResult | null, level: Level, year: number,
+  differsFrom?: Record<string, number[]> | null): Map<number, SchoolNumber> {
   const numbers = new Map<number, SchoolNumber>();
   if (!result) return numbers;
 
-  const published = publishedTable(staticData, plan, level);
+  const wholePlan = publishedTable(staticData, plan, level);
+  const tables = !wholePlan && differsFrom ? conceptTables(staticData, level) : null;
   for (const school of staticData.schools) {
     const schoolResult = result.schools[school.i];
     if (school.level !== level || !schoolResult?.open) continue;
 
+    const match = wholePlan ? { table: wholePlan, single: true } : tables ? matchingTable(tables, differsFrom!, school) : null;
+    const published = match?.table ?? null, notesApply = !!match?.single;
     const students = districtStudents(published, school.name, year);
     const district = students === null ? null : students / published!.cap[school.name];
     const model = schoolResult.util[year];
-    const slide = district !== null && published ? PARENT_SLIDE_TOTALS[level]?.[published.concept]?.[school.name] : undefined;
+    const slide = district !== null && published && notesApply ? PARENT_SLIDE_TOTALS[level]?.[published.concept]?.[school.name] : undefined;
     numbers.set(school.i, {
       school: school.i, year, model, district, students: students ?? schoolResult.total[year],
       source: district === null ? 'model' : 'district',
@@ -127,7 +158,7 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
       agreement: district === null ? null : agreementOf(district, model, staticData.meta.target),
       parentSlide: slide ? { ...slide, percent: slide.students / school.capacity } : null,
       districtPeak: district === null ? null : districtPeak(published, school.name),
-      questionable: district !== null && published ? QUESTIONABLE_FIGURES[level]?.[Number(published.concept)]?.[school.name] ?? null : null,
+      questionable: district !== null && published && notesApply ? QUESTIONABLE_FIGURES[level]?.[Number(published.concept)]?.[school.name] ?? null : null,
     });
   }
   return numbers;
@@ -135,10 +166,9 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
 
 const percent = (utilization: number) => `${(utilization * 100).toFixed(1)}%`;
 
-/** 84.0% for a district figure, ~81.0% for a model estimate: the same text on the map, scorecard and tables. */
+/** The headline percent, the same text on the map, scorecard and tables. Estimates get the ƒ mark beside it, not in the text. */
 export function headline(schoolNumber: SchoolNumber): string {
-  const estimateMark = schoolNumber.source === 'model' ? '~' : '';
-  return estimateMark + percent(schoolNumber.value);
+  return percent(schoolNumber.value);
 }
 
 function describeSources(districtCount: number, modelCount: number, year: string): string {

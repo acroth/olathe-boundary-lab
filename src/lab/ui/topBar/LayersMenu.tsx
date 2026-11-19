@@ -7,8 +7,9 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
-import type { Level } from '../../data';
-import { OVERLAY_OPTIONS, shownOverlay, useUI } from '../../store';
+import type { Level, Static } from '../../data';
+import { currentStartingPlan, withStartingPlan } from '../../startingPlans';
+import { OVERLAY_OPTIONS, shownOverlay, usePlan, useUI } from '../../store';
 import { AREAS } from '../../visible';
 import LineSwatch from '../LineSwatch';
 import IconTip from './IconTip';
@@ -24,7 +25,31 @@ function SettingRow({ id, label, checked, onChange, swatch }: { id: string; labe
   );
 }
 
-export default function LayersMenu({ triggerClassName, side = 'bottom', align = 'start' }: { triggerClassName?: string; side?: 'bottom' | 'left'; align?: 'start' | 'end' }) {
+/** Which middle school concept's lines the overlay shows. In Free draw it sets the plan's middle school lines. */
+function MiddleSchoolConceptPicker({ staticData }: { staticData: Static }) {
+  const ui = useUI();
+  const plan = usePlan(state => state.plan);
+  const concepts = staticData.combos?.ms?.concepts ?? [];
+  const drawing = ui.mode === 'draw';
+  const current = drawing ? currentStartingPlan(staticData, plan, 'ms').replace(/^ms/, '') : String(ui.build.ms);
+  const choose = (conceptId: string) => {
+    if (!conceptId) return;
+    if (drawing) usePlan.getState().setPlan(withStartingPlan(staticData, plan, 'ms', 'ms' + conceptId));
+    else ui.set({ build: { ...ui.build, ms: Number(conceptId) } });
+  };
+  return (
+    <div className="space-y-2 pl-6">
+      <p className="text-xs text-muted-foreground">Middle school concept</p>
+      <ToggleGroup type="single" value={current} onValueChange={choose} className="w-full" aria-label="Middle school concept">
+        {concepts.map(concept => <ToggleGroupItem key={concept.id} value={String(concept.id)}>{concept.id}</ToggleGroupItem>)}
+      </ToggleGroup>
+    </div>
+  );
+}
+
+export default function LayersMenu({ staticData, triggerClassName, side = 'bottom', align = 'start' }: {
+  staticData: Static; triggerClassName?: string; side?: 'bottom' | 'left'; align?: 'start' | 'end';
+}) {
   const ui = useUI();
 
   const toggleArea = (area: string) => {
@@ -34,11 +59,6 @@ export default function LayersMenu({ triggerClassName, side = 'bottom', align = 
   const overlay = shownOverlay(ui.level, ui.overlay);
   const setOverlay = (level: Level, on: boolean) => ui.set({ overlay: on ? level : null });
 
-  const showMiddleSchoolNote = overlay === 'ms';
-  const conceptNote = ui.build.ms ? ` (concept ${ui.build.ms})` : '';
-  const middleSchoolNote = ui.mode === 'build'
-    ? `Shows the middle school concept picked in the Concept Builder${conceptNote}.`
-    : 'Shows this plan’s middle school lines. The starting plans leave Indian Trail’s area unassigned; build from the Concept Builder to include a middle school concept.';
 
   return (
     <Popover>
@@ -70,9 +90,11 @@ export default function LayersMenu({ triggerClassName, side = 'bottom', align = 
         <div className="space-y-3.5 p-4">
           <p className="text-sm font-semibold">Overlay feeder boundaries</p>
           {OVERLAY_OPTIONS[ui.level].map(level => (
-            <SettingRow key={level} id={'sw-ov-' + level} label={OVERLAY_NAME[level]} swatch checked={overlay === level} onChange={on => setOverlay(level, on)} />
+            <div key={level} className="space-y-3">
+              <SettingRow id={'sw-ov-' + level} label={OVERLAY_NAME[level]} swatch checked={overlay === level} onChange={on => setOverlay(level, on)} />
+              {level === 'ms' && overlay === 'ms' && <MiddleSchoolConceptPicker staticData={staticData} />}
+            </div>
           ))}
-          {showMiddleSchoolNote && <p className="text-xs text-muted-foreground">{middleSchoolNote}</p>}
         </div>
         <Separator />
         <div className="space-y-3.5 p-4">

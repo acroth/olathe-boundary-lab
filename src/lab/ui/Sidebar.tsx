@@ -52,10 +52,6 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
     ui.set({ focusSchool: schoolIndex });
     mapRef.current?.flyTo({ center: [school.lon, school.lat], zoom: 13.2, duration: 600 });
   };
-  const setMiddleSchoolLines = (on: boolean) => {
-    if (on) ui.set({ overlay: 'ms' });
-    else if (ui.overlay === 'ms') ui.set({ overlay: null });
-  };
   const editByHand = () => ui.set({ mode: 'draw', drawer: 'draw', sheet: 'peek', toast: 'This plan is ready to edit. Use the tools on the map.' });
 
   return (
@@ -63,7 +59,7 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
       {showBuilder && (
         <Builder part={part === 'all' ? 'all' : part === 'schools' ? 'schools' : 'concepts'} staticData={staticData} plan={plan} level={level} elementaryResult={planResults?.levels.es ?? null} middleSchoolResult={planResults?.levels.ms ?? null}
           numbers={numbers} visibleSchools={visibleSchools} onSchoolSelect={zoomToSchool} build={ui.build} onBuildChange={build => ui.set({ build })}
-          middleSchoolLinesOn={ui.overlay === 'ms'} onMiddleSchoolLinesChange={setMiddleSchoolLines} onEditByHand={editByHand} />
+          onEditByHand={editByHand} />
       )}
 
       {showDrawing && <PlanSummary staticData={staticData} plan={plan} level={level} result={result} numbers={numbers} visibleSchools={visibleSchools} decodeSavedPlan={decodeSavedPlan} />}

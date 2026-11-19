@@ -246,6 +246,13 @@ describe('parent-meeting slides', () => {
       for (const [name, slide] of Object.entries(schools)) expect(slide.students / published.cap[name], `${level} ${concept} ${name}`).toBeGreaterThan(published.table[name][1] / published.cap[name]);
     }
   });
+  it("say what a slide's own columns add up to only when they're more than 5 students off", () => {
+    for (const concepts of Object.values(PARENT_SLIDE_TOTALS)) for (const schools of Object.values(concepts!)) for (const slide of Object.values(schools)) {
+      if (slide.columnsAddUpTo !== undefined) expect(Math.abs(slide.students - slide.columnsAddUpTo)).toBeGreaterThan(5);
+    }
+    expect(PARENT_SLIDE_TOTALS.es![1].Brougham.columnsAddUpTo).toBe(385);
+    expect(PARENT_SLIDE_TOTALS.ms![1]['Frontier Trail'].columnsAddUpTo).toBe(977);
+  });
   it('appear on the published concept only', () => {
     const published = buildPlan(S, S.combos!.options['1'], null, 1), custom = buildPlan(S, [1, 2, 1, 1, 1], null, 1);
     const slideFor = (plan: any) => schoolNumbers(S, plan, engine.run('es', { ...plan, includePreK: true }, false), 'es', 2).get(schoolNamed('es', 'Brougham').i)!.parentSlide;

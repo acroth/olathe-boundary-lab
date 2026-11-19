@@ -65,12 +65,9 @@ export default function About() {
       <p>District numbers come first. When a plan exactly matches one the district published, the map and scorecard show the district&rsquo;s
         figure for each school and year it covers (2026&ndash;27 to 2031&ndash;32). Anything else, such as a custom mix, a hand edit, a later year
         or a school the district didn&rsquo;t list, shows a modeled estimate marked with a <b>~</b>.</p>
-      <p>Where both exist, the lab says how they compare:</p>
-      <ul>
-        <li><b>Close:</b> within 3 percentage points, on the same side of the 85% target.</li>
-        <li><b>Differs:</b> more than 3 points apart.</li>
-        <li><b>Too close to call:</b> on opposite sides of 85%, at any gap.</li>
-      </ul>
+      <p>Where both exist, tap a school to see how our estimate compares, such as &ldquo;about the same as the district&rsquo;s&rdquo; or
+        &ldquo;6 percentage points lower.&rdquo; If the district has a school under the 85% goal and our estimate puts it over (or the other way
+        around), the school is tagged &ldquo;We estimate over 85%&rdquo; or &ldquo;We estimate under 85%.&rdquo;</p>
       <p>The model starts from the district&rsquo;s verified facts: functional capacity, fall 2026 enrollment, and the students the district
         moves out of each closing school (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove, plus Indian Trail Middle School). It is not
         fitted to the district&rsquo;s five-year forecasts, so a gap between the two is real information rather than something adjusted away.

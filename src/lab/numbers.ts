@@ -23,7 +23,7 @@ export interface SchoolNumber {
   district: number | null;   // the district's utilization, where it published one
   model: number;
   agreement: Agreement | null;
-  parentSlide: { students: number; percent: number; printedPercent?: number } | null;   // a parent-meeting slide that showed this school fuller
+  parentSlide: { students: number; percent: number; printedPercent?: number; columnsAddUpTo?: number } | null;   // a parent-meeting slide that showed this school fuller
 }
 
 interface PublishedTable {

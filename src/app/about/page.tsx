@@ -15,7 +15,7 @@ export default function About() {
   return (
     <Shell active="about">
       <h1>About the Boundary Lab</h1>
-      <p className="lede">A map-based tool for looking at the elementary boundary concepts in Olathe USD 233&rsquo;s facility alignment:
+      <p className="lede">A map-based tool for looking at the elementary and middle school boundary concepts in Olathe USD 233&rsquo;s facility alignment:
         who moves where, how full each school gets, and how far families end up from their new school.</p>
       <Notice />
       <ul className="toc">
@@ -71,11 +71,13 @@ export default function About() {
         <li><b>Differs:</b> more than 3 points apart.</li>
         <li><b>Too close to call:</b> on opposite sides of 85%, at any gap.</li>
       </ul>
-      <p>The model starts from the district&rsquo;s verified facts: functional capacity, fall 2026 enrollment, and the students moving from
-        Heritage, Scarborough and Walnut Grove. It is not fitted to the district&rsquo;s five-year forecasts, so a gap between the two is real
-        information rather than something adjusted away. Across the district&rsquo;s published plans for 2027&ndash;28 to 2031&ndash;32, the model
-        lands an average of 3.5 points from the district at elementary schools and 4.0 points at middle schools, and within 5 points about 73% and
-        68% of the time.</p>
+      <p>The model starts from the district&rsquo;s verified facts: functional capacity, fall 2026 enrollment, and the students the district
+        moves out of each closing school (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove, plus Indian Trail Middle School). It is not
+        fitted to the district&rsquo;s five-year forecasts, so a gap between the two is real information rather than something adjusted away.
+        Across the district&rsquo;s published plans for 2027&ndash;28 to 2031&ndash;32, the model lands an average of 3.0 points from the district at
+        elementary schools and 4.2 points at middle schools, and within 5 points about 84% and 67% of the time.</p>
+      <p>A few parent-meeting slides showed a school fuller than the district&rsquo;s main presentation does for the same concept. The main
+        presentations stay the official numbers, and the school list notes where a slide differed.</p>
 
       <h2 id="model">How the model works</h2>
       <ol>
@@ -84,11 +86,15 @@ export default function About() {
         <li><b>Children per home.</b> Each home gets an expected number of elementary, middle and high school-age children from its census
           block&rsquo;s age counts. A 2010-to-2020 check within the district was used to tune how much those age patterns carry forward.</li>
         <li><b>Matching the district&rsquo;s facts.</b> For each school, those children are scaled so the school&rsquo;s total matches the district&rsquo;s
-          fall 2026 enrollment, then follow the July 2026 enrollment forecast&rsquo;s trend. For the five closing schools, students are placed
-          according to the district&rsquo;s student-dot maps.</li>
+          fall 2026 enrollment, then follow the July 2026 enrollment forecast&rsquo;s trend. Students at the five closing elementary schools are
+          placed according to the district&rsquo;s student-dot maps, and start at their new schools from the counts the district moves (Black Bob about 229,
+          Heritage 233, Scarborough 237, Tomahawk 322 and Walnut Grove 367). Indian Trail starts from its fall 2026 count of 570, and Frontier
+          Trail&rsquo;s forecast decline is spread evenly through 2031&ndash;32 rather than arriving in one year. For Heritage, Scarborough and Walnut
+          Grove, each moving piece also holds the district&rsquo;s count. Black Bob&rsquo;s and Tomahawk&rsquo;s piece counts don&rsquo;t add up to their
+          enrollment, so only their totals are matched.</li>
         <li><b>Moving boundaries.</b> When an area changes schools, its homes carry their projected students with them. Each school&rsquo;s
-          total is compared with its functional capacity, year by year. About half of Spanish immersion students are assumed to move with the
-          program to Arbor Creek, following the district&rsquo;s estimate.</li>
+          total is compared with its functional capacity, year by year. Following the district&rsquo;s estimate, about half of Black Bob&rsquo;s
+          236 Spanish immersion students (118) are assumed to move with the program to Arbor Creek.</li>
         <li><b>Distances.</b> Distances are measured along the street network, not in straight lines, and checked against the 2.5-mile busing threshold.</li>
       </ol>
 
@@ -137,7 +143,8 @@ export default function About() {
           district&rsquo;s map images. It runs offline, not on this site.</li>
         <li><b>The lab (Next.js and React).</b> The map runs in your browser with MapLibre. All boundary calculations run on your own device,
           so nothing about what you draw is sent anywhere unless you press Share.</li>
-        <li><b>Hosting and storage.</b> Hosted on Vercel. Shared links and feedback are stored in a Supabase (Postgres) database.</li>
+        <li><b>Hosting and storage.</b> Hosted on Vercel. Shared links are stored in a Supabase (Postgres) database. Feedback is emailed
+          to the site&rsquo;s owner and isn&rsquo;t stored on the site.</li>
       </ul>
       <p>No accounts, no ads and no tracking cookies.</p>
     </Shell>

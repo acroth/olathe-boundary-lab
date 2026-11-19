@@ -2,7 +2,8 @@
 import { readFileSync } from 'fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Engine } from '../src/lab/model/engine';
-import { inMPoly, toMPoly } from '../src/lab/model/geo';
+import { boolOp } from '../src/lab/model/clip';
+import { inMPoly, polyAcres, toMPoly } from '../src/lab/model/geo';
 import type { Static } from '../src/lab/data';
 import { agreementOf, headline, mapLabel, publishedConcept, publishedOption, schoolNumbers } from '../src/lab/numbers';
 import { buildPlan } from '../src/lab/planBuilder';
@@ -116,6 +117,24 @@ describe('whole planning areas in the reviewed concepts', () => {
         const shape = toMPoly(feature.geometry as any), schools = new Set<string>();
         for (let home = 0; home < S.homes.n; home++) if (inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) schools.add(S.schools[assigned[home]].name);
         expect([...schools], `concept ${concept}: ${area}`).toEqual([school]);
+      }
+    }
+  });
+});
+
+describe('reviewed lines follow the planning areas', () => {
+  const INTENTIONALLY_SPLIT: Record<number, string[]> = { 1: [], 2: [], 3: [], 4: ['400'] };
+  const EAST_SIDE = ['200', '210', '230', '240', '370', '380', '390', '400', '410', '420', '430', '440', '450', '460', '470', '610', '620', '625', '630', '635', '640', '645'];
+  it('keeps each east-side planning area in one school, apart from deliberate splits', () => {
+    for (const [concept, splits] of Object.entries(INTENTIONALLY_SPLIT)) {
+      const plan = buildPlan(S, [1, 1, 1, 1, 1], null, Number(concept));
+      const zones = engine.run('ms', { ...plan, includePreK: true }).zones.features.filter(zone => zone.properties!.school >= 0);
+      for (const area of EAST_SIDE.filter(name => !splits.includes(name))) {
+        const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+        const shape = toMPoly(feature.geometry as any);
+        const acresBySchool = zones.map(zone => boolOp('intersection', shape, toMPoly(zone.geometry as any)).reduce((total, polygon) => total + polyAcres(polygon), 0));
+        const strayAcres = acresBySchool.reduce((total, acres) => total + acres, 0) - Math.max(...acresBySchool);
+        expect(strayAcres, `concept ${concept}: ${area}`).toBeLessThan(0.5);   // neighboring planning areas overlap by slivers
       }
     }
   });

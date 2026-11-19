@@ -122,6 +122,8 @@ const FAR = { west: -95, east: -94.5, south: 38.7, north: 39.1 };
 interface RoadCut { from: string; to: string; west: number; east: number; south: number; north: number }
 interface AreaSplit { area: string; to: string; side: MPoly }
 const AREA_400_WEST = -94.7424;
+// East-side planning areas whose edges the reviewed boundaries follow
+const SNAPPED_AREAS = ['200', '210', '230', '240', '370', '380', '390', '400', '410', '420', '430', '440', '450', '460', '470', '625', '630', '635', '640', '645', '840'];
 const SOUTH_OF_INDIAN_CREEK: MPoly = [[[...INDIAN_CREEK, [INDIAN_CREEK[INDIAN_CREEK.length - 1][0], FAR.south], [INDIAN_CREEK[0][0], FAR.south], INDIAN_CREEK[0]]]];
 const CONCEPT_CORRECTIONS: Record<number, { planningAreas: Record<string, string>; areaSplits?: AreaSplit[]; drawnAreas?: string; roadCuts: RoadCut[] }> = {
   1: {
@@ -202,6 +204,18 @@ function roadCutEdits(conceptId: number, cuts: RoadCut[]): ConceptEdit[] {
   });
 }
 
+/** Gives each listed planning area wholly to the school holding most of it, so boundaries follow the planning-area lines. */
+function snappedAreaEdits(conceptId: number): ConceptEdit[] {
+  const areas = conceptAreas(conceptId);
+  return SNAPPED_AREAS.flatMap(area => {
+    const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+    const shape = toMPoly(feature.geometry as any);
+    const held = areas.map(({ school, shape: zone }) => ({ school, acres: boolOp('intersection', shape, zone).reduce((total, polygon) => total + polyAcres(polygon), 0) }));
+    const holder = held.sort((first, second) => second.acres - first.acres)[0];
+    return holder.acres > 0 ? [{ school: holder.school, to: S.schools[holder.school].name, faces: [], geom: feature.geometry as ConceptEdit['geom'] }] : [];
+  });
+}
+
 function detachedPieces(conceptId: number): ConceptEdit[] {
   const areas = conceptAreas(conceptId);
   return areas.flatMap(area => {
@@ -220,9 +234,10 @@ function correctedConceptEdits(): Calibration['conceptEdits'] {
     const corrections = CONCEPT_CORRECTIONS[concept.id];
     const steps: (() => ConceptEdit[])[] = [
       () => corrections?.drawnAreas ? drawnAreaEdits(corrections.drawnAreas) : [],
-      () => corrections ? planningAreaEdits(corrections.planningAreas) : [],   // whole planning areas win over drawn lines
-      () => corrections?.areaSplits ? areaSplitEdits(corrections.areaSplits) : [],
       () => corrections ? roadCutEdits(concept.id, corrections.roadCuts) : [],
+      () => corrections && !corrections.drawnAreas?.includes('concept5') ? snappedAreaEdits(concept.id) : [],
+      () => corrections ? planningAreaEdits(corrections.planningAreas) : [],   // named planning areas have the final say
+      () => corrections?.areaSplits ? areaSplitEdits(corrections.areaSplits) : [],
       () => detachedPieces(concept.id),
     ];
     conceptEdits[concept.id] = [];

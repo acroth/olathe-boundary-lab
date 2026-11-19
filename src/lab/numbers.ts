@@ -4,6 +4,7 @@ import type { Level, Static } from './data';
 import type { LevelResult } from './model/engine';
 import { PARENT_SLIDE_TOTALS } from './parentSlides';
 import { buildPlan } from './planBuilder';
+import { QUESTIONABLE_FIGURES } from './questionableFigures';
 import type { Plan } from './store';
 
 export type Source = 'district' | 'model';
@@ -25,6 +26,7 @@ export interface SchoolNumber {
   agreement: Agreement | null;
   parentSlide: { students: number; percent: number; printedPercent?: number; columnsAddUpTo?: number } | null;   // a parent-meeting slide that showed this school fuller
   districtPeak: { utilization: number; year: number } | null;   // the fullest year in the district's table (2026-27 to 2031-32)
+  questionable: string | null;   // why the district's figure here looks like an error
 }
 
 interface PublishedTable {
@@ -124,6 +126,7 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
       agreement: district === null ? null : agreementOf(district, model, staticData.meta.target),
       parentSlide: slide ? { ...slide, percent: slide.students / school.capacity } : null,
       districtPeak: district === null ? null : districtPeak(published, school.name),
+      questionable: district !== null && published ? QUESTIONABLE_FIGURES[level]?.[Number(published.concept)]?.[school.name] ?? null : null,
     });
   }
   return numbers;

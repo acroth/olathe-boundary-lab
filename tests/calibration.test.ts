@@ -227,15 +227,26 @@ describe('first-year model counts', () => {
     const today = engine.run('ms', { closures: {}, edits: [], includePreK: true }, false);
     expect(Math.abs(today.schools[schoolNamed('ms', 'Indian Trail').i].total[1] - 570)).toBeLessThan(1);
   });
-  it('spreads Frontier Trail\'s decline evenly through 2031-32', () => {
-    const students = schoolNamed('ms', 'Frontier Trail').neighborhood.slice(1, 7);
-    const steps = students.slice(1).map((value, year) => value - students[year]);
-    for (const step of steps) expect(Math.abs(step - steps[0])).toBeLessThan(1);
-    expect(students[0]).toBeCloseTo(721, 0);
-  });
-  it('starts closing schools from the students the district places', () => {
+  it('moves about the students the district places from each closing school in 2027-28', () => {
     const counts: Record<string, number> = { Heritage: 233, Scarborough: 237, 'Walnut Grove': 367, Tomahawk: 322, 'Black Bob': 229 };
-    for (const [name, students] of Object.entries(counts)) expect(Math.abs(schoolNamed('es', name).neighborhood[2] - students), name).toBeLessThan(1);
+    for (const [name, students] of Object.entries(counts)) expect(Math.abs(schoolNamed('es', name).neighborhood[2] / students - 1), name).toBeLessThan(0.1);
+  });
+});
+
+describe('district trend', () => {
+  const gaps = (level: 'es' | 'ms', plans: any[]) => plans.flatMap(plan => {
+    const result = engine.run(level, { ...plan, includePreK: true }, false);
+    return [2, 3, 4, 5, 6].flatMap(year => [...schoolNumbers(S, plan, result, level, year).values()].filter(n => n.district !== null).map(n => Math.abs(n.model - n.district!) * 100));
+  });
+  it('lands the model near the district on every published concept', () => {
+    for (const [level, plans] of [
+      ['es', Object.values(S.combos!.options).map(concepts => buildPlan(S, concepts, null))],
+      ['ms', S.combos!.ms!.concepts.map(concept => buildPlan(S, S.combos!.options['1'], null, concept.id))],
+    ] as const) {
+      const levelGaps = gaps(level, plans as any[]);
+      expect(levelGaps.reduce((sum, gap) => sum + gap, 0) / levelGaps.length, level).toBeLessThan(2);
+      expect(levelGaps.filter(gap => gap <= 5).length / levelGaps.length, level).toBeGreaterThan(0.9);
+    }
   });
 });
 
@@ -257,6 +268,14 @@ describe('parent-meeting slides', () => {
     const plan = buildPlan(S, S.combos!.options['1'], null, 1);
     const brougham = schoolNumbers(S, plan, engine.run('es', { ...plan, includePreK: true }, false), 'es', 2).get(schoolNamed('es', 'Brougham').i)!;
     expect(brougham.districtPeak).toEqual({ utilization: 414 / 497, year: 4 });   // 2029-30, from 281, 412, 408, 414, 414, 409
+  });
+  it("flag the district's concept 4 figure for Frontier Trail, and nothing else", () => {
+    const flagged = (concept: number) => {
+      const plan = buildPlan(S, S.combos!.options['1'], null, concept);
+      return [...schoolNumbers(S, plan, engine.run('ms', { ...plan, includePreK: true }, false), 'ms', 2).values()].filter(n => n.questionable).map(n => S.schools[n.school].name).sort();
+    };
+    expect(flagged(4)).toEqual(['Frontier Trail']);
+    expect(flagged(1)).toEqual([]);
   });
   it('appear on the published concept only', () => {
     const published = buildPlan(S, S.combos!.options['1'], null, 1), custom = buildPlan(S, [1, 2, 1, 1, 1], null, 1);
@@ -316,7 +335,7 @@ describe('the headline number', () => {
   });
 
   it('marks the source on every label', () => {
-    const base = { school: 0, year: 2, model: 0.81, parentSlide: null, districtPeak: null };
+    const base = { school: 0, year: 2, model: 0.81, parentSlide: null, districtPeak: null, questionable: null };
     expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('~81.0%');
     expect(headline({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
   });

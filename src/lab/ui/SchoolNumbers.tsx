@@ -51,7 +51,8 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
         <span className="school-row-top">
           <i className="school-dot" style={{ background: schoolColor(school as any) }} />
           <span className="school-name">{school.name}</span>
-          {slide && <span className="school-flag">Meeting slide: {percent(slide.percent)}</span>}
+          {schoolNumber.questionable && <span className="school-flag">District number may be off</span>}
+          {!schoolNumber.questionable && slide && <span className="school-flag">Meeting slide: {percent(slide.percent)}</span>}
           <b className={'school-value ' + tone}>{headline(schoolNumber)}</b>
           <ChevronDown className={'school-chevron' + (expanded ? ' open' : '')} aria-hidden />
         </span>
@@ -71,6 +72,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
               : <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)}</dd></div>}
             {showEstimates && compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? '~' + percent(compareSchool.peak) : 'Closing'}</dd></div>}
           </dl>
+          {schoolNumber.questionable && <p className="school-note">{schoolNumber.questionable}</p>}
           {capacityNote && <p className="school-note">{capacityNote}</p>}
           {slide && <p className="school-note">At a parent meeting, the district showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} That slide adds the moving students to this school year's (2026&ndash;27) classes.{columnsNote} The number above is the district's projection for {meta.years[schoolNumber.year]}.</p>}
         </div>

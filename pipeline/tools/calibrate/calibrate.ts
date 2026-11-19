@@ -8,12 +8,11 @@
 // 3. Moved students: home weights inside Heritage, Scarborough and Walnut Grove are raked so each concept's pieces hold the
 //    district's shares. Black Bob's and Tomahawk's published counts don't reconcile with their enrollment, so they're left alone.
 //
-// 4. First-year counts: closing schools' students start from the counts the district placed, Indian Trail from its fall 2026 count, and
-//    Frontier Trail's forecast decline is spread over five years.
+// 4. First-year counts: closing schools' students start from the counts the district placed, and Indian Trail from its fall 2026 count.
 // 5. Middle school concepts: each detached piece left by reading the concept maps goes to the school around it. Every piece was
 //    checked against the concept maps in the Nov 2026 middle school deck; none is a separate area there.
-//
-// The district's five-year forecasts are deliberately not used here: the model stays an independent check on them.
+// 6. District trend (districtTrend.ts): each school's year-by-year trend is fitted so the model lands on the district's five-year
+//    tables for its published concepts. Estimates extend the district's numbers to custom plans and to years after 2031-32.
 import { readFileSync, writeFileSync } from 'fs';
 import { boolOp } from '../../../src/lab/model/clip';
 import { Engine } from '../../../src/lab/model/engine';
@@ -21,12 +20,13 @@ import { inMPoly, polyAcres, toMPoly, type MPoly } from '../../../src/lab/model/
 import type { Calibration } from '../../../src/lab/calibration';
 import { buildPlan } from '../../../src/lab/planBuilder';
 import { loadStatic } from '../../../tests/support/loadStatic';
+import { fitDistrictTrend } from './districtTrend';
 import { INDIAN_CREEK } from './indianCreek';
 
 const RECONCILED_SCHOOLS = ['Heritage', 'Scarborough', 'Walnut Grove'];
 const RAKING_ROUNDS = 200;
 const MIN_SCALE = 0.4, MAX_SCALE = 2.5;
-const FIRST_PLAN_YEAR = 2, FRONTIER_TREND_END_YEAR = 6;   // 2027-28 and 2031-32
+const FIRST_PLAN_YEAR = 2;   // 2027-28
 const INDIAN_TRAIL_FALL_2026 = 570;                       // Indian Trail parent meeting deck
 const INDIAN_TRAIL_CAPACITY = 849;                        // Indian Trail parent meeting deck; the middle school deck doesn't list it
 // Students the parent-meeting decks place from each closing school. Black Bob's count differs by concept (225 to 247), so this is the middle value.
@@ -66,15 +66,6 @@ for (const [name, students] of Object.entries(CLOSING_SCHOOL_STUDENTS)) {
   const school = schoolNamed('es', name), firstYearScale = students / school.neighborhood[FIRST_PLAN_YEAR];
   yearScale[school.i] = school.neighborhood.map((_, year) => year >= FIRST_PLAN_YEAR ? Number(firstYearScale.toFixed(5)) : 1);
 }
-
-// Frontier Trail grew two years running, so its forecast decline is spread evenly from fall 2026 to 2031-32 instead of landing at once.
-const frontier = schoolNamed('ms', 'Frontier Trail'), frontierStart = fallCountsMiddle['Frontier Trail'];
-const frontierScale = factorScale[frontier.i], frontierEnd = frontier.neighborhood[FRONTIER_TREND_END_YEAR] * frontierScale;
-yearScale[frontier.i] = frontier.neighborhood.map((students, year) => {
-  if (year <= 1 || year >= FRONTIER_TREND_END_YEAR) return 1;
-  const steady = frontierStart + (frontierEnd - frontierStart) * (year - 1) / (FRONTIER_TREND_END_YEAR - 1);
-  return Number((steady / (students * frontierScale)).toFixed(5));
-});
 
 /** Rakes one closing school's home weights toward the district's piece shares; returns each home's scale. */
 function rakeToDistrictShares(name: string) {
@@ -282,6 +273,7 @@ console.log(`roads: Black Bob ${BLACK_BOB.toFixed(5)}, 119th ${STREET_119TH.toFi
 for (const [concept, edits] of Object.entries(conceptEdits)) console.log(`concept ${concept}: ${edits.length} corrections`);
 
 const calibration: Calibration = { capacity, capSource: 'district 2026 functional capacity (Nov 2026 boundary presentations)', prek, factorScale, yearScale, homeWeights, conceptEdits };
+calibration.yearScale = fitDistrictTrend(calibration);
 writeFileSync(new URL('../../../public/data/calibration.json', import.meta.url), JSON.stringify(calibration));
 console.log(`capacity ${Object.keys(capacity).length} schools, Early Childhood ${Object.keys(prek).length}, middle school scales ${Object.keys(factorScale).length}, ` +
             `${homeWeights.reduce((sum, group) => sum + group.homes.length, 0)} homes reweighted`);

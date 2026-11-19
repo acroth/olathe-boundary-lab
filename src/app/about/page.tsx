@@ -41,7 +41,7 @@ export default function About() {
       <h2 id="data">District numbers vs. modeled numbers</h2>
       <p>The lab shows two kinds of numbers because they answer different questions. <b>District numbers</b> are what the district officially
         projects for the plans it published. <b>Modeled numbers</b> estimate what would likely happen under any boundary, including ones the
-        district never drew. The model is checked against the district&rsquo;s plans, so you can judge how far to trust it for plans the district never drew.</p>
+        district never drew. The model follows the district&rsquo;s own projections, so its estimates pick up where the district&rsquo;s numbers stop.</p>
       <div className="split">
         <div>
           <h3>{D} From the district</h3>
@@ -72,10 +72,14 @@ export default function About() {
       <p>Where the lab shows a district number, it doesn&rsquo;t show our estimate beside it. Estimates appear only where they&rsquo;re the number
         being used.</p>
       <p>The model starts from the district&rsquo;s verified facts: functional capacity, fall 2026 enrollment, and the students the district
-        moves out of each closing school (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove, plus Indian Trail Middle School). It is not
-        fitted to the district&rsquo;s five-year forecasts, so a gap between the two is real information rather than something adjusted away.
-        Across the district&rsquo;s published plans for 2027&ndash;28 to 2031&ndash;32, the model lands an average of 3.0 points from the district at
-        elementary schools and 4.2 points at middle schools, and within 5 points about 84% and 67% of the time.</p>
+        moves out of each closing school (Black Bob, Heritage, Scarborough, Tomahawk and Walnut Grove, plus Indian Trail Middle School). Each
+        school&rsquo;s year-by-year trend is then tuned to the district&rsquo;s five-year projections for its published concepts, so our estimates
+        extend the district&rsquo;s numbers to custom plans and to years after 2031&ndash;32. On the district&rsquo;s published plans for 2027&ndash;28 to
+        2031&ndash;32, the model lands an average of 1.6 points from the district at elementary schools and 1.1 points at middle schools, and within
+        5 points about 94% and 98% of the time. One district figure is left out of the tuning: in middle school concept 4, Frontier Trail shows
+        933 students in 2027&ndash;28, as if the areas it gives California Trail (620, 630 and 650) never left, and that concept&rsquo;s total is about
+        160 students higher than the rest. That looks like an error, so the lab still shows the district&rsquo;s number there, with a note, but
+        doesn&rsquo;t bend the model toward it.</p>
       <p>A few parent-meeting slides showed a school fuller than the district&rsquo;s main presentation does for the same concept. The main
         presentations stay the official numbers, and the school list notes where a slide differed.</p>
 
@@ -86,10 +90,10 @@ export default function About() {
         <li><b>Children per home.</b> Each home gets an expected number of elementary, middle and high school-age children from its census
           block&rsquo;s age counts. A 2010-to-2020 check within the district was used to tune how much those age patterns carry forward.</li>
         <li><b>Matching the district&rsquo;s facts.</b> For each school, those children are scaled so the school&rsquo;s total matches the district&rsquo;s
-          fall 2026 enrollment, then follow the July 2026 enrollment forecast&rsquo;s trend. Students at the five closing elementary schools are
+          fall 2026 enrollment. Through 2031&ndash;32, each school&rsquo;s trend is tuned to the district&rsquo;s five-year projections; after that, it
+          follows the July 2026 enrollment forecast&rsquo;s trend from where the district&rsquo;s projections end. Students at the five closing elementary schools are
           placed according to the district&rsquo;s student-dot maps, and start at their new schools from the counts the district moves (Black Bob about 229,
-          Heritage 233, Scarborough 237, Tomahawk 322 and Walnut Grove 367). Indian Trail starts from its fall 2026 count of 570, and Frontier
-          Trail&rsquo;s forecast decline is spread evenly through 2031&ndash;32 rather than arriving in one year. For Heritage, Scarborough and Walnut
+          Heritage 233, Scarborough 237, Tomahawk 322 and Walnut Grove 367). Indian Trail starts from its fall 2026 count of 570. For Heritage, Scarborough and Walnut
           Grove, each moving piece also holds the district&rsquo;s count. Black Bob&rsquo;s and Tomahawk&rsquo;s piece counts don&rsquo;t add up to their
           enrollment, so only their totals are matched.</li>
         <li><b>Moving boundaries.</b> When an area changes schools, its homes carry their projected students with them. Each school&rsquo;s
@@ -105,10 +109,10 @@ export default function About() {
           <thead><tr><th>Source</th><th>Type</th><th>Used for</th></tr></thead>
           <tbody>
             <tr><td>Facility alignment boundary presentations, Nov 2026 (elementary and middle school decks, and parent-meeting decks)</td><td>{D}</td>
-              <td>Capacities, fall 2026 enrollment, five-year estimates by concept, students moving by piece, elementary and middle school concept maps, student-dot maps</td></tr>
+              <td>Capacities, fall 2026 enrollment, five-year estimates by concept (also used to tune the model&rsquo;s trends), students moving by piece, elementary and middle school concept maps, student-dot maps</td></tr>
             <tr><td>District 2026 planning-area map</td><td>{D}</td><td>Planning areas (the numbered areas such as 610 or 750)</td></tr>
             <tr><td>Demographic Analytics Advisors, <i>Enrollment Forecasting, Capacity and Utilization Analysis</i> (July 2026), prepared for the district</td><td>{D}</td>
-              <td>Utilization projections by school, 2025&ndash;26 through 2034&ndash;35</td></tr>
+              <td>Utilization projections by school, 2025&ndash;26 through 2034&ndash;35; the trend after the district&rsquo;s five-year tables end</td></tr>
             <tr><td><a href="https://www.ksde.gov" rel="noopener">Kansas State Department of Education</a>, 2025&ndash;26 headcount by building and grade</td><td>{P}</td>
               <td>Starting enrollment and grade mix by school</td></tr>
             <tr><td><a href="https://nces.ed.gov/ccd/" rel="noopener">NCES Common Core of Data</a>, 2024&ndash;25</td><td>{P}</td><td>Pre-K counts by building</td></tr>

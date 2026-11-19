@@ -1,6 +1,6 @@
 // Verified district facts layered on the pipeline's files (public/data/calibration.json, written by pipeline/tools/calibrate).
-// Facts only: capacities, fall 2026 counts and moved-student counts. The district's forecasts are never fitted, so the model
-// stays an independent check on them.
+// Capacities, fall 2026 counts, moved-student counts, and each school's yearly trend tuned to the district's five-year tables, so
+// the model's estimates extend the district's numbers.
 import type { Combos, Homes, MsConcept, School } from './data';
 
 export interface Calibration {

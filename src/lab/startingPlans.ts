@@ -12,7 +12,7 @@ export interface StartingPlan { id: string; name: string }
 
 /** The choices for a level. High schools don't change, so they have none. */
 export function startingPlans(staticData: Static, level: Level): StartingPlan[] {
-  const blank = { id: BLANK_START, name: 'Current boundaries, closing schools left blank' };
+  const blank = { id: BLANK_START, name: 'Current boundaries' };   // closing schools' areas are left for you to assign
   if (level === 'es') {
     return [blank, ...Object.keys(staticData.combos!.options).map(option => ({ id: ELEMENTARY_PREFIX + option, name: `District concept ${option}` }))];
   }
@@ -55,4 +55,9 @@ export function currentStartingPlan(staticData: Static, plan: Plan, level: Level
     return levelEditIds === '' ? BLANK_START : '';
   }
   return '';
+}
+
+/** Free draw's default: today's lines at every level, with the closing schools' areas left for you to assign. */
+export function blankPlan(staticData: Static, plan: Plan): Plan {
+  return withStartingPlan(staticData, withStartingPlan(staticData, plan, 'es', BLANK_START), 'ms', BLANK_START);
 }

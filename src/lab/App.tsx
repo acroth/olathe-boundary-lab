@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapRef, ViewState } from 'react-map-gl/maplibre';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import Rail from '@/components/Rail';
 import { facesGeometry, LEVELS, loadStatic, type Level, type Static } from './data';
 import { useDrawCallbacks } from './hooks/useDrawCallbacks';
+import { isMobileWidth, useIsMobile } from './hooks/useIsMobile';
 import { useModelResults, type Results } from './hooks/useModelResults';
 import { applyLinkedState, writeLinkedState } from './linkedState';
 import MapPanel from './map/MapPanel';
 import { schoolNumbers, type SchoolNumber } from './numbers';
 import { buildPlan } from './planBuilder';
+import { blankPlan } from './startingPlans';
 import { shownOverlay, usePlan, useUI } from './store';
 import Legend from './ui/Legend';
+import { DRAWER_TITLE, MapButtons, MobileSearch, MobileTabs, MobileTopBar } from './ui/mobile/MobileChrome';
 import MapToolbar from './ui/MapToolbar';
 import Sidebar from './ui/Sidebar';
 import TopBar from './ui/TopBar';
@@ -47,12 +50,37 @@ function boundsOfAreas(staticData: Static, areas: string[]): [[number, number], 
   return east > west ? [[west, south], [east, north]] : null;
 }
 
-/** Map padding that keeps fitted areas clear of the floating panel, top bar and legend. */
+/** The schools closing at a level: where the boundaries change most. */
+function closingSchoolNames(staticData: Static, level: Level): Set<string> {
+  if (level === 'ms') return new Set(['Indian Trail']);
+  return new Set(level === 'es' ? staticData.combos?.schools.map(school => school.name) ?? [] : []);
+}
+
+/** The bounding box of today's attendance areas for the schools closing at a level; null for high schools. */
+function boundsOfClosures(staticData: Static, level: Level): [[number, number], [number, number]] | null {
+  const names = closingSchoolNames(staticData, level);
+  let west = 180, south = 90, east = -180, north = -90;
+  for (const feature of staticData.zones[level].features) {
+    if (!names.has(staticData.schools[feature.properties!.school].name)) continue;
+    const geometry = feature.geometry as GeoJSON.Polygon | GeoJSON.MultiPolygon;
+    for (const polygon of geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates) {
+      for (const [longitude, latitude] of polygon[0]) {
+        west = Math.min(west, longitude); south = Math.min(south, latitude);
+        east = Math.max(east, longitude); north = Math.max(north, latitude);
+      }
+    }
+  }
+  return east > west ? [[west, south], [east, north]] : null;
+}
+
+const MOBILE_TOP_CLEARANCE = 64, MOBILE_DRAW_TOP_CLEARANCE = 140, MOBILE_TABS_CLEARANCE = 92;
+
+/** Map padding that keeps fitted areas clear of the floating panel, top bar and legend (phones: top bar, tabs and drawer). */
 export function mapPadding() {
-  const { sheet, panelOpen } = useUI.getState();
-  if (window.innerWidth >= 768) return { top: 104, left: panelOpen ? 420 : 40, right: 60, bottom: 40 };
-  const sheetHeight = { peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[sheet];
-  return { top: 132, left: 16, right: 16, bottom: sheetHeight + 16 };
+  const { sheet, panelOpen, drawer, mode } = useUI.getState();
+  if (!isMobileWidth()) return { top: 104, left: panelOpen ? 420 : 40, right: 60, bottom: 40 };
+  const drawerHeight = drawer ? { peek: 170, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[sheet] : 0;
+  return { top: mode === 'draw' ? MOBILE_DRAW_TOP_CLEARANCE : MOBILE_TOP_CLEARANCE, left: 56, right: 56, bottom: MOBILE_TABS_CLEARANCE + drawerHeight + 8 };
 }
 
 export default function App() {
@@ -63,6 +91,7 @@ export default function App() {
   const mapRef = useRef<MapRef | null>(null);
   const plan = usePlan(state => state.plan);
   const ui = useUI();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadStatic().then(data => {
@@ -132,23 +161,27 @@ export default function App() {
   }, [staticData, ui.compare, compareResults, ui.level, ui.year]);
 
   // say so when an edit or a year change leaves the district's published figures
-  const previousFigures = useRef<{ level: Level; hasDistrictFigures: boolean } | null>(null);
+  const previousFigures = useRef<{ level: Level; mode: string; hasDistrictFigures: boolean } | null>(null);
   useEffect(() => {
     if (!planNumbers.size) return;
     const hasDistrictFigures = [...planNumbers.values()].some(schoolNumber => schoolNumber.source === 'district');
     const previous = previousFigures.current;
-    previousFigures.current = { level: ui.level, hasDistrictFigures };
-    const leftDistrictFigures = previous?.hasDistrictFigures && previous.level === ui.level && !hasDistrictFigures;
+    previousFigures.current = { level: ui.level, mode: ui.mode, hasDistrictFigures };
+    const switchedView = previous?.level !== ui.level || previous?.mode !== ui.mode;   // opening Free draw on purpose needs no warning
+    const leftDistrictFigures = previous?.hasDistrictFigures && !switchedView && !hasDistrictFigures;
     if (leftDistrictFigures) useUI.getState().set({ toast: 'The district published no figures for this plan and year, so these are model estimates (~).' });
-  }, [planNumbers, ui.level]);
+  }, [planNumbers, ui.level, ui.mode]);
 
-  // zoom to the areas shown
+  // zoom to the areas shown; phones open closer in, on the schools the concepts change
   const shownAreasKey = ui.areas.slice().sort().join(',');
+  const openedZoom = useRef(false);
   useEffect(() => {
     const map = mapRef.current?.getMap();
     if (!staticData || !map) return;
-    const bounds = boundsOfAreas(staticData, ui.areas);
-    if (bounds) map.fitBounds(bounds, { padding: mapPadding(), duration: 500 });
+    const firstFit = !openedZoom.current;
+    openedZoom.current = true;
+    const bounds = (firstFit && isMobileWidth() && boundsOfClosures(staticData, useUI.getState().level)) || boundsOfAreas(staticData, ui.areas);
+    if (bounds) map.fitBounds(bounds, { padding: mapPadding(), duration: firstFit ? 0 : 500 });
   }, [shownAreasKey, staticData, mapReady]);
 
   if (loadError) return <div className="loading">Could not load data: {loadError}</div>;
@@ -157,7 +190,8 @@ export default function App() {
   const inBuilder = ui.mode === 'build';
   const panelTitle = inBuilder ? 'Concept builder' : 'Free draw';
   const panelSubtitle = inBuilder ? BUILDER_SUBTITLE[ui.level] : 'Start from a plan, then redraw it on the map';
-  const labClassName = `lab sheet-${ui.sheet} ${ui.panelOpen ? 'panel-open' : 'panel-closed'} mode-${ui.mode}`;
+  const drawerClass = isMobile ? (ui.drawer ? ` mobile drawer-open drawer-${ui.drawer}` : ' mobile') : '';
+  const labClassName = `lab sheet-${ui.sheet} ${ui.panelOpen ? 'panel-open' : 'panel-closed'} mode-${ui.mode}${drawerClass}`;
   const selectedGeometry = plan.edits.find(edit => edit.id === ui.selectedEdit)?.geom ?? null;
   const comparePlanName = ui.compare?.name || staticData.presets.find(preset => preset.id === ui.compare?.preset)?.name || 'other plan';
 
@@ -168,7 +202,12 @@ export default function App() {
     onView: (nextView: ViewState) => setView(nextView),
   };
   const switchTool = (mode: 'build' | 'draw') => {
+    if (mode === 'draw' && ui.mode !== 'draw') usePlan.getState().setPlan(blankPlan(staticData, plan));
     ui.set(mode === 'build' ? { mode: 'build', tool: 'pan', panelOpen: true } : { mode: 'draw', panelOpen: true, sheet: 'peek' });
+  };
+  const recenter = () => {
+    const bounds = boundsOfClosures(staticData, ui.level) ?? boundsOfAreas(staticData, ui.areas);
+    if (bounds) mapRef.current?.getMap().fitBounds(bounds, { padding: mapPadding(), duration: 500 });
   };
   const handleMapRef = (map: MapRef | null) => {
     mapRef.current = map;
@@ -178,7 +217,7 @@ export default function App() {
 
   return (
     <div className={labClassName}>
-      <Rail active={ui.mode} onMode={switchTool} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />
+      {!isMobile && <Rail active={ui.mode} onMode={switchTool} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />}
       <main className="lab-main">
         <div className={'maps' + (ui.compare ? ' split' : '')}>
           <MapPanel {...sharedMapProps} result={planResults?.levels ?? null} numbers={planNumbers} closures={plan.closures} tool={inBuilder ? 'pan' : ui.tool} interactive drawCallbacks={drawCallbacks}
@@ -187,22 +226,30 @@ export default function App() {
             <MapPanel {...sharedMapProps} result={compareResults?.levels ?? null} numbers={compareNumbers} closures={ui.compare.closures} tool="pan" interactive={false} title={'Compare: ' + comparePlanName} />
           )}
         </div>
-        <TopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} />
-        <aside className="panel" aria-label={panelTitle}>
-          <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: NEXT_SHEET_SIZE[ui.sheet] })}><span /></button>
-          <header className="panel-head">
-            <div className="min-w-0">
-              <h2 className="text-[15px] font-semibold tracking-tight">{panelTitle}</h2>
-              <p className="truncate text-xs text-muted-foreground">{panelSubtitle}</p>
+        {isMobile
+          ? <MobileTopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} />
+          : <TopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} />}
+        {(!isMobile || ui.drawer) && (
+          <aside className="panel" aria-label={isMobile && ui.drawer ? DRAWER_TITLE[ui.drawer] : panelTitle}>
+            <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: NEXT_SHEET_SIZE[ui.sheet] })}><span /></button>
+            <header className="panel-head">
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-semibold tracking-tight">{isMobile && ui.drawer ? DRAWER_TITLE[ui.drawer] : panelTitle}</h2>
+                {!isMobile && <p className="truncate text-xs text-muted-foreground">{panelSubtitle}</p>}
+              </div>
+              {isUpdating && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
+              {isMobile && <button className="drawer-close" aria-label="Close" onClick={() => ui.set({ drawer: null })}><X className="size-5" /></button>}
+            </header>
+            <div className="panel-body lg">
+              <Sidebar staticData={staticData} planResults={planResults} compareResults={compareResults} mapRef={mapRef} faceGeometry={faceGeometry} visibleSchools={visibleSchools} numbers={planNumbers}
+                part={isMobile && ui.drawer ? ui.drawer : 'all'} />
             </div>
-            {isUpdating && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}
-          </header>
-          <div className="panel-body lg">
-            <Sidebar staticData={staticData} planResults={planResults} compareResults={compareResults} mapRef={mapRef} faceGeometry={faceGeometry} visibleSchools={visibleSchools} numbers={planNumbers} />
-          </div>
-        </aside>
+          </aside>
+        )}
         {!inBuilder && <MapToolbar staticData={staticData} visibleSchools={visibleSchools} />}
-        <Legend staticData={staticData} visibleSchools={visibleSchools} mapRef={mapRef} />
+        {isMobile
+          ? <><MapButtons staticData={staticData} visibleSchools={visibleSchools} onRecenter={recenter} /><MobileSearch staticData={staticData} mapRef={mapRef} padding={mapPadding} /><MobileTabs staticData={staticData} /></>
+          : <Legend staticData={staticData} visibleSchools={visibleSchools} mapRef={mapRef} />}
         {ui.toast && <div className="toast" role="status">{ui.toast}</div>}
       </main>
     </div>

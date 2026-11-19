@@ -7,7 +7,7 @@ import { useUI } from '../../store';
 import IconTip from './IconTip';
 
 /** Chooses the projection year shown across the lab. */
-export default function YearMenu({ staticData }: { staticData: Static }) {
+export default function YearMenu({ staticData, showYear = false }: { staticData: Static; showYear?: boolean }) {
   const ui = useUI();
   const { years, firstPlanYear } = staticData.meta;
   const selectedYear = years[ui.year], lastYear = years.length - 1;
@@ -17,7 +17,7 @@ export default function YearMenu({ staticData }: { staticData: Static }) {
       <IconTip label="Projection year">
         <PopoverTrigger asChild>
           <Button variant="ghost" className="h-9 gap-1.5 px-2.5" aria-label={'Projection year ' + selectedYear}>
-            <CalendarDays className="size-[18px]" /><span className="hidden text-[13px] tabular-nums lg:inline">{selectedYear}</span>
+            <CalendarDays className="size-[18px]" /><span className={(showYear ? 'inline' : 'hidden lg:inline') + ' text-[13px] tabular-nums'}>{selectedYear}</span>
           </Button>
         </PopoverTrigger>
       </IconTip>

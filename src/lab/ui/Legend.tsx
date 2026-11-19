@@ -26,11 +26,16 @@ interface LegendProps {
   mapRef: MutableRefObject<MapRef | null>;
 }
 
-/** Bottom-right legend card and zoom buttons. */
-export default function Legend({ staticData, visibleSchools, mapRef }: LegendProps) {
+/** The legend's title for the current coloring. */
+export function legendTitle(staticData: Static): string {
+  const ui = useUI.getState();
+  return ui.colorBy === 'util' ? `% full, ${staticData.meta.years[ui.year]}` : 'Map key';
+}
+
+/** What each color and line on the map means. */
+export function LegendList({ staticData, visibleSchools, className }: { staticData: Static; visibleSchools: Set<number>; className?: string }) {
   const ui = useUI();
   const plan = usePlan(state => state.plan);
-  const [open, setOpen] = useState(false);
 
   const isClosing = (school: number) => plan.closures[String(school)] !== undefined;
   const schools = staticData.schools
@@ -40,16 +45,8 @@ export default function Legend({ staticData, visibleSchools, mapRef }: LegendPro
   const closingSchools = schools.filter(school => isClosing(school.i));
   const overlay = shownOverlay(ui.level, ui.overlay);
 
-  const title = ui.colorBy === 'util' ? `% full, ${staticData.meta.years[ui.year]}` : 'Map key';
-
   return (
-    <div className="legend-dock pointer-events-none absolute z-10 flex items-end gap-3">
-      <div className="pointer-events-auto w-[220px] overflow-hidden rounded-2xl border bg-card shadow-float">
-        <button className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold" onClick={() => setOpen(isOpen => !isOpen)} aria-expanded={open}>
-          {title}<ChevronDown className={cn('size-4 text-muted-foreground transition-transform', !open && '-rotate-90')} />
-        </button>
-        {open && (
-          <ul className="max-h-[min(340px,45vh)] space-y-1.5 overflow-y-auto px-4 pb-3.5">
+          <ul className={cn('space-y-1.5 overflow-y-auto', className)}>
             {ui.colorBy === 'util'
               ? TIERS.map(tier => <LegendItem key={tier.label} color={tier.color} label={tier.label} />)
               : (
@@ -62,7 +59,21 @@ export default function Legend({ staticData, visibleSchools, mapRef }: LegendPro
             {overlay && <li className="pt-1.5 text-xs font-medium text-muted-foreground">Feeder overlay</li>}
             {overlay && <li className="flex items-center gap-2.5 text-[13px] leading-5"><LineSwatch />{OVERLAY_NAME[overlay]}</li>}
           </ul>
-        )}
+  );
+}
+
+/** Bottom-right legend card and zoom buttons. */
+export default function Legend({ staticData, visibleSchools, mapRef }: LegendProps) {
+  useUI(state => state.colorBy + state.year);   // re-render the title when coloring or year changes
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="legend-dock pointer-events-none absolute z-10 flex items-end gap-3">
+      <div className="pointer-events-auto w-[220px] overflow-hidden rounded-2xl border bg-card shadow-float">
+        <button className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold" onClick={() => setOpen(isOpen => !isOpen)} aria-expanded={open}>
+          {legendTitle(staticData)}<ChevronDown className={cn('size-4 text-muted-foreground transition-transform', !open && '-rotate-90')} />
+        </button>
+        {open && <LegendList staticData={staticData} visibleSchools={visibleSchools} className="max-h-[min(340px,45vh)] px-4 pb-3.5" />}
       </div>
       <div className="pointer-events-auto hidden flex-col overflow-hidden rounded-xl border bg-card shadow-float md:flex">
         <button className="flex size-10 cursor-pointer items-center justify-center hover:bg-accent" aria-label="Zoom in" onClick={() => mapRef.current?.zoomIn()}><Plus className="size-[18px]" /></button>

@@ -24,7 +24,10 @@ interface BuilderProps {
   middleSchoolLinesOn: boolean;
   onMiddleSchoolLinesChange: (on: boolean) => void;
   onSchoolSelect: (school: number) => void;
+  part?: BuilderPart;   // phones split the builder: the Concept tab shows the concepts, the Schools tab the school list
 }
+
+export type BuilderPart = 'all' | 'concepts' | 'schools';
 
 export default function Builder(props: BuilderProps) {
   const { staticData, level } = props;
@@ -87,6 +90,10 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
     return pieces.map(piece => ({ school, piece, modelStudents: elementaryResult?.schools[piece.school]?.movedInByOriginFall2026[school.i] }));
   });
 
+  const { part = 'all' } = props;
+  const schoolsSection = <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={elementaryResult} onSchoolSelect={onSchoolSelect} />;
+  if (part === 'schools') return schoolsSection;
+
   return (
     <>
       <section className="panel-section">
@@ -100,7 +107,7 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
         <Scorecard staticData={staticData} plan={plan} result={elementaryResult} numbers={numbers} visibleSchools={visibleSchools} />
       </section>
 
-      <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={elementaryResult} onSchoolSelect={onSchoolSelect} />
+      {part === 'all' && schoolsSection}
 
       <section className="panel-section folds">
         <Fold title="Mix and match closing schools">
@@ -185,6 +192,9 @@ function changesIn(summary: string): string[] {
 function MiddleSchoolBuilder(props: BuilderProps & { middleSchools: MiddleSchools }) {
   const { staticData, plan, middleSchools, middleSchoolResult, numbers, visibleSchools, build, onBuildChange, onSchoolSelect } = props;
   const concept = middleSchools.concepts.find(candidate => candidate.id === build.ms);
+  const { part = 'all' } = props;
+  const schoolsSection = <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={middleSchoolResult} onSchoolSelect={onSchoolSelect} />;
+  if (part === 'schools') return schoolsSection;
 
   return (
     <>
@@ -198,7 +208,7 @@ function MiddleSchoolBuilder(props: BuilderProps & { middleSchools: MiddleSchool
         <Scorecard staticData={staticData} plan={plan} result={middleSchoolResult} numbers={numbers} visibleSchools={visibleSchools} showStudentMoves={false} />
       </section>
 
-      <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={middleSchoolResult} onSchoolSelect={onSchoolSelect} />
+      {part === 'all' && schoolsSection}
 
       <section className="panel-section folds">
         <Fold title="What changes in this concept">

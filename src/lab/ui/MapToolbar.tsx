@@ -53,7 +53,7 @@ export default function MapToolbar({ staticData, visibleSchools }: { staticData:
           <span className="size-3.5 shrink-0 rounded-full border border-black/20" style={{ background: brushColor }} />
           <select id="map-brush" value={ui.brush} aria-label="School to draw" onChange={event => chooseBrush(Number(event.target.value))}
             className="h-full min-w-0 flex-1 cursor-pointer bg-transparent outline-none">
-            <option value={BRUSH_NONE} disabled>Give areas to…</option>
+            <option value={BRUSH_NONE} disabled>Select a school</option>
             {openSchools.map(school => <option key={school.i} value={school.i}>{school.name}</option>)}
             <option value={BRUSH_UNASSIGNED}>Unassigned</option>
           </select>

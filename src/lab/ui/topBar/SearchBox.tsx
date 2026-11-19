@@ -3,6 +3,7 @@ import { useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject } 
 import type { MapRef } from 'react-map-gl/maplibre';
 import { MapPin, School, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isMobileWidth } from '../../hooks/useIsMobile';
 import { LEVEL_NAME, type Level, type Static } from '../../data';
 import { usePlan, useUI, type Plan } from '../../store';
 
@@ -76,9 +77,12 @@ interface SearchBoxProps {
   staticData: Static;
   mapRef: MutableRefObject<MapRef | null>;
   padding: () => any;
+  opensUp?: boolean;        // phones: the box sits at the bottom, so results open above it
+  autoFocus?: boolean;
+  onPicked?: () => void;
 }
 
-export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProps) {
+export default function SearchBox({ staticData, mapRef, padding, opensUp = false, autoFocus = false, onPicked }: SearchBoxProps) {
   const [queryText, setQueryText] = useState('');
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -91,7 +95,7 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
     if (query.length < MIN_QUERY_LENGTH) return [];
     const context: HitContext = {
       staticData, plan, level: ui.level, query, map: () => mapRef.current, padding,
-      focusSchool: school => ui.set({ focusSchool: school }),
+      focusSchool: school => ui.set({ focusSchool: school, ...(isMobileWidth() ? { drawer: 'schools' as const, sheet: 'half' as const } : {}) }),
       showPlanningAreas: () => ui.set({ showAreas: true }),
     };
     return rankHits([...schoolHits(context), ...planningAreaHits(context)], query);
@@ -101,6 +105,7 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
     hit.go();
     setOpen(false);
     input.current?.blur();
+    onPicked?.();
   };
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown') {
@@ -128,14 +133,14 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
     <div className="relative min-w-0 flex-1 md:max-w-[380px]">
       <div className="flex h-12 items-center gap-2.5 rounded-2xl border bg-card px-4 shadow-float">
         <Search className="size-[18px] shrink-0 text-muted-foreground" />
-        <input ref={input} value={queryText} placeholder="Search schools or planning areas" aria-label="Search" role="combobox" aria-expanded={open && hits.length > 0} aria-controls="search-results"
+        <input ref={input} autoFocus={autoFocus} value={queryText} placeholder="Search schools or planning areas" aria-label="Search" role="combobox" aria-expanded={open && hits.length > 0} aria-controls="search-results"
           className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
           onChange={event => { setQueryText(event.target.value); setActiveIndex(0); setOpen(true); }}
           onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)} onKeyDown={handleKeyDown} />
         {queryText && <button className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Clear search" onClick={clearQuery}><X className="size-4" /></button>}
       </div>
       {showResults && (
-        <div id="search-results" role="listbox" className="absolute inset-x-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-2xl border bg-popover p-1.5 shadow-float">
+        <div id="search-results" role="listbox" className={cn('absolute inset-x-0 z-40 overflow-hidden', opensUp ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]', 'rounded-2xl border bg-popover p-1.5 shadow-float')}>
           {hits.length === 0 && <p className="px-3 py-2.5 text-sm text-muted-foreground">No schools or planning areas match “{trimmedQuery}”.</p>}
           {hits.map((hit, index) => {
             const Icon = KIND_ICON[hit.kind];

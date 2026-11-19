@@ -102,3 +102,43 @@
 
 /* Drawing on the map: a large crosshair with a white halo, so it shows on any background. The drawing tools set "crosshair" inline. */
 .lab .maplibregl-canvas[style*="cursor: crosshair"] { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g stroke-linecap='round'><path d='M16 2v9M16 21v9M2 16h9M21 16h9' stroke='%23fff' stroke-width='6'/><path d='M16 2v9M16 21v9M2 16h9M21 16h9' stroke='%23111' stroke-width='2.5'/></g><circle cx='16' cy='16' r='4.5' fill='%23fff'/><circle cx='16' cy='16' r='2.6' fill='%23e0457b'/></svg>") 16 16, crosshair !important; }
+
+/* Phones: map-first layout (src/lab/ui/mobile/MobileChrome.tsx). The map fills the screen; the bottom tabs open drawers. */
+.lab.mobile .lab-main { inset: 0; }
+.mobile-top { top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 6px; }
+.mobile-chip { display: flex; flex: none; align-items: center; height: 44px; padding: 0 3px; background: var(--ui-card); border: 1px solid var(--ui-border); border-radius: 14px; box-shadow: var(--ui-shadow); }
+.mobile-chip button { height: 36px; }
+.mobile-chip svg { width: 17px !important; height: 17px !important; }
+.mobile-level { flex: 1; min-width: 0; padding: 3px !important; border-radius: 14px !important; }
+.mobile-level .level-option { flex: 1 1 auto; height: 36px; min-width: 0; padding: 0 6px; font-size: 13px; font-weight: 600; border-radius: 11px; }
+.map-buttons { right: 10px; bottom: calc(90px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
+.lab.mobile .map-button { width: 44px; height: 44px; background: var(--ui-card); border: 1px solid var(--ui-border); border-radius: 12px; box-shadow: var(--ui-shadow); }
+.mobile-left { left: 10px; bottom: calc(90px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.mobile-left.open { right: 62px; }
+.mobile-search { display: flex; align-items: center; gap: 8px; align-self: stretch; }
+.map-stack { display: flex; flex-direction: column; width: 44px; overflow: hidden; background: var(--ui-card); border: 1px solid var(--ui-border); border-radius: 12px; box-shadow: var(--ui-shadow); }
+.map-stack button { width: 42px; height: 42px; border-radius: 0; }
+.map-stack button + button { border-top: 1px solid var(--ui-border); }
+.mobile-search input { font-size: 15px; }   /* 15px+ keeps iOS from zooming in on focus */
+.lab.mobile.drawer-open.sheet-half :is(.map-buttons, .mobile-left), .lab.mobile.drawer-open.sheet-full :is(.map-buttons, .mobile-left) { display: none; }
+.lab.mobile.drawer-open.sheet-peek :is(.map-buttons, .mobile-left) { bottom: calc(90px + 170px + 8px + env(safe-area-inset-bottom)); }
+.mobile-tabs { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); height: 64px; padding: 6px; display: flex; align-items: stretch; gap: 6px;
+  background: var(--ui-card); border: 1px solid var(--ui-border); border-radius: 20px; box-shadow: var(--ui-shadow); }
+.mobile-tab { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: 0; border-radius: 14px;
+  color: var(--ui-muted-fg); font-size: 11px; font-weight: 600; }
+.mobile-tab-icon { display: inline-flex; }
+.mobile-tab-icon svg { width: 20px; height: 20px; }
+.mobile-tab.on { background: var(--ui-primary); color: var(--ui-primary-fg); }
+.mobile-tab-label { max-width: 100%; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab.mobile .panel { top: auto; left: 8px; right: 8px; bottom: calc(82px + env(safe-area-inset-bottom)); border: 1px solid var(--ui-border); border-radius: 20px; }
+.lab.mobile.sheet-peek .panel { height: 170px; } .lab.mobile.sheet-half .panel { height: 50%; }
+.lab.mobile.sheet-full .panel { height: calc(100% - 82px - 64px - env(safe-area-inset-bottom)); }
+.lab.mobile .panel-head { padding: 4px 10px 8px 18px; }
+.drawer-close { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; color: var(--ui-muted-fg); background: none; border: 0; }
+.drawer-close:hover { background: var(--ui-muted); }
+.lab.mobile.mode-draw .drawbar { display: flex; top: 62px; bottom: auto; left: 10px; right: 10px; }
+.lab.mobile .drawbar [data-slot="toggle-group-item"] { height: 30px; padding: 0 4px; font-size: 12.5px; }
+.lab.mobile .drawbar select { font-size: 13.5px; }
+.lab.mobile .toast { top: 64px; } .lab.mobile.mode-draw .toast { top: 150px; }
+.lab.mobile .maplibregl-ctrl-bottom-left, .lab.mobile .maplibregl-ctrl-bottom-right { bottom: calc(84px + env(safe-area-inset-bottom)); }
+.lab.mobile .maplibregl-ctrl-bottom-left { left: 58px; }

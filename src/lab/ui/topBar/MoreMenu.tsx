@@ -1,7 +1,7 @@
 // Saving, sharing, exporting and links, plus the small form that names a saved plan.
 import { useState, type FormEvent, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import { Download, FileJson, FileSpreadsheet, Image as ImageIcon, Info, Link2, MessageSquareText, MoreHorizontal, Save } from 'lucide-react';
+import { Download, FileJson, FileSpreadsheet, Image as ImageIcon, Info, Link2, Menu, MessageSquareText, MoreHorizontal, Save, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -24,9 +24,10 @@ interface MoreMenuProps {
   mapRef: MutableRefObject<MapRef | null>;
   planResults: Results | null;
   onShare: () => void;
+  asMenu?: boolean;   // phones: a ☰ button on the left that also holds Share
 }
 
-export default function MoreMenu({ staticData, mapRef, planResults, onShare }: MoreMenuProps) {
+export default function MoreMenu({ staticData, mapRef, planResults, onShare, asMenu = false }: MoreMenuProps) {
   const ui = useUI();
   const plan = usePlan(state => state.plan);
   const savePlan = useSaved(state => state.save);
@@ -46,10 +47,10 @@ export default function MoreMenu({ staticData, mapRef, planResults, onShare }: M
   return (
     <>
       <DropdownMenu>
-        <IconTip label="More"><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="More"><MoreHorizontal className="size-[18px]" /></Button></DropdownMenuTrigger></IconTip>
-        <DropdownMenuContent align="end" className="w-60">
+        <IconTip label={asMenu ? 'Menu' : 'More'}><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label={asMenu ? 'Menu' : 'More'}>{asMenu ? <Menu className="size-5" /> : <MoreHorizontal className="size-[18px]" />}</Button></DropdownMenuTrigger></IconTip>
+        <DropdownMenuContent align={asMenu ? 'start' : 'end'} className="w-60">
           <DropdownMenuItem onSelect={() => setTimeout(() => setPlanName(plan.name ?? ''), 50)}><Save />Save plan in this browser</DropdownMenuItem>
-          <DropdownMenuItem onSelect={onShare}><Link2 />Copy link to this view</DropdownMenuItem>
+          <DropdownMenuItem onSelect={onShare}>{asMenu ? <><Share2 />Share this view</> : <><Link2 />Copy link to this view</>}</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="flex items-center gap-1.5"><Download className="size-3.5" />Export</DropdownMenuLabel>
           <DropdownMenuItem disabled={!planResults} onSelect={() => planResults && exportGeoJSON(staticData, planResults, plan)}><FileJson />Boundaries (GeoJSON)</DropdownMenuItem>
@@ -61,7 +62,7 @@ export default function MoreMenu({ staticData, mapRef, planResults, onShare }: M
         </DropdownMenuContent>
       </DropdownMenu>
       {planName !== null && (
-        <div className="pointer-events-auto absolute top-[calc(100%+8px)] right-0 z-40 w-72 rounded-xl border bg-popover p-4 text-popover-foreground shadow-float" onKeyDown={event => event.key === 'Escape' && setPlanName(null)}>
+        <div className={'pointer-events-auto absolute top-[calc(100%+8px)] z-40 w-72 ' + (asMenu ? 'left-0' : 'right-0') + ' rounded-xl border bg-popover p-4 text-popover-foreground shadow-float'} onKeyDown={event => event.key === 'Escape' && setPlanName(null)}>
           <form onSubmit={saveNamedPlan} className="space-y-3">
             <Label htmlFor="plan-name">Name this plan</Label>
             <Input id="plan-name" autoFocus value={planName} onChange={event => setPlanName(event.target.value)} placeholder="e.g. Concept 2 with Heritage 1" />

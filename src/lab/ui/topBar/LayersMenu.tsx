@@ -24,7 +24,7 @@ function SettingRow({ id, label, checked, onChange, swatch }: { id: string; labe
   );
 }
 
-export default function LayersMenu() {
+export default function LayersMenu({ triggerClassName, side = 'bottom', align = 'start' }: { triggerClassName?: string; side?: 'bottom' | 'left'; align?: 'start' | 'end' }) {
   const ui = useUI();
 
   const toggleArea = (area: string) => {
@@ -42,8 +42,8 @@ export default function LayersMenu() {
 
   return (
     <Popover>
-      <IconTip label="Layers and map"><PopoverTrigger asChild><Button variant="ghost" size="icon" aria-label="Layers and map"><Layers className="size-[18px]" /></Button></PopoverTrigger></IconTip>
-      <PopoverContent align="start" className="w-80 p-0">
+      <IconTip label="Layers and map"><PopoverTrigger asChild><Button variant="ghost" size="icon" className={triggerClassName} aria-label="Layers and map"><Layers className="size-[18px]" /></Button></PopoverTrigger></IconTip>
+      <PopoverContent side={side} align={align} className="max-h-[70vh] w-80 overflow-y-auto p-0">
         <div className="space-y-3 p-4">
           <p className="text-sm font-semibold">Areas shown</p>
           <div className="flex flex-wrap gap-1.5">

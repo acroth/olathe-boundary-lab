@@ -19,10 +19,10 @@ import YearMenu from './topBar/YearMenu';
 const COPIED_MESSAGE_MS = 2000;
 
 /** School level for the whole lab; the map, panel and tools all follow it. */
-function LevelSwitch() {
+export function LevelSwitch({ className = 'topbar-level' }: { className?: string }) {
   const ui = useUI();
   return (
-    <div className="topbar-level pointer-events-auto rounded-2xl border bg-card p-1 shadow-float">
+    <div className={className + ' pointer-events-auto rounded-2xl border bg-card p-1 shadow-float'}>
       <ToggleGroup type="single" value={ui.level} className="level-switch w-full bg-transparent p-0" aria-label="School level" onValueChange={level => level && ui.set({ level: level as Level, brush: -2 })}>
         {LEVELS.map(level => <ToggleGroupItem key={level} value={level} className="level-option">{LEVEL_NAME[level]}</ToggleGroupItem>)}
       </ToggleGroup>
@@ -45,19 +45,11 @@ async function shareableLink(staticData: Static, planName: string | undefined): 
   return location.href;
 }
 
-interface TopBarProps {
-  staticData: Static;
-  mapRef: MutableRefObject<MapRef | null>;
-  planResults: Results | null;
-  padding: () => any;
-}
-
-export default function TopBar({ staticData, mapRef, planResults, padding }: TopBarProps) {
+/** Copies a link to this view; `copied` stays true for a moment afterwards. */
+export function useShare(staticData: Static) {
   const ui = useUI();
   const plan = usePlan(state => state.plan);
-  const history = useStore(usePlan.temporal);
   const [copied, setCopied] = useState(false);
-
   const share = async () => {
     const link = await shareableLink(staticData, plan.name);
     try {
@@ -69,6 +61,29 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
       ui.set({ toast: 'Copy this link to share: ' + link });
     }
   };
+  return { share, copied };
+}
+
+export function UndoRedo() {
+  const history = useStore(usePlan.temporal);
+  return (
+    <>
+      <IconTip label="Undo"><Button variant="ghost" size="icon" onClick={() => history.undo()} disabled={!history.pastStates.length} aria-label="Undo"><Undo2 className="size-[18px]" /></Button></IconTip>
+      <IconTip label="Redo"><Button variant="ghost" size="icon" onClick={() => history.redo()} disabled={!history.futureStates.length} aria-label="Redo"><Redo2 className="size-[18px]" /></Button></IconTip>
+    </>
+  );
+}
+
+interface TopBarProps {
+  staticData: Static;
+  mapRef: MutableRefObject<MapRef | null>;
+  planResults: Results | null;
+  padding: () => any;
+}
+
+export default function TopBar({ staticData, mapRef, planResults, padding }: TopBarProps) {
+  const ui = useUI();
+  const { share, copied } = useShare(staticData);
 
   return (
     <div className="topbar pointer-events-none absolute z-20">
@@ -81,8 +96,7 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
           {ui.mode === 'draw' && (
             <>
               <Separator orientation="vertical" className="mx-1 !h-6" />
-              <IconTip label="Undo"><Button variant="ghost" size="icon" onClick={() => history.undo()} disabled={!history.pastStates.length} aria-label="Undo"><Undo2 className="size-[18px]" /></Button></IconTip>
-              <IconTip label="Redo"><Button variant="ghost" size="icon" onClick={() => history.redo()} disabled={!history.futureStates.length} aria-label="Redo"><Redo2 className="size-[18px]" /></Button></IconTip>
+              <UndoRedo />
             </>
           )}
           <Separator orientation="vertical" className="mx-1 !h-6" />

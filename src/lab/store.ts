@@ -5,6 +5,8 @@ import type { Edit, Level, Preset } from './data';
 export interface Plan { preset: string; closures: Record<string, number>; edits: Edit[]; name?: string }
 export type Tool = 'trace' | 'areas' | 'polygon' | 'freehand' | 'blocks' | 'edit' | 'erase' | 'pan';
 export type PickBy = 'planning' | 'zones';
+/** Phones: the drawers the bottom tabs open. */
+export type MobileDrawer = 'concepts' | 'schools' | 'draw';
 /** Concept Builder choice: elementary concept per closing school, open-school moves (null = defaults), middle school concept (0 = none). */
 export interface Build { sel: number[]; moves: Record<string, boolean> | null; ms: number }
 
@@ -27,13 +29,14 @@ export const usePlan = create<PlanState>()(temporal((set) => ({
 interface UIState {
   level: Level; brush: number; tool: Tool; year: number; colorBy: 'school' | 'util'; showHomes: boolean; showStreets: boolean; showAreas: boolean;
   sheet: 'peek' | 'half' | 'full'; panelOpen: boolean; pickBy: PickBy;
+  drawer: MobileDrawer | null;   // phones: which bottom-tab drawer is open
   mode: 'draw' | 'build'; build: Build;
   includePreK: boolean; snap: boolean; overlay: Level | null; areas: string[]; doneTick: number; selectedEdit: string | null; focusSchool: number | null; compare: Plan | null; diff: boolean; toast: string | null;
   set: (p: Partial<UIState>) => void;
 }
 export const useUI = create<UIState>()((set) => ({
   level: 'es', brush: -2, tool: 'pan', year: 2, colorBy: 'school', showHomes: false, showStreets: true, showAreas: true,
-  sheet: 'half', panelOpen: true, pickBy: 'planning',
+  sheet: 'half', panelOpen: true, pickBy: 'planning', drawer: null,
   mode: 'build', build: { sel: [1, 1, 1, 1, 1], moves: null, ms: 1 },
   includePreK: true, snap: false, overlay: null, areas: ['South', 'East'], doneTick: 0, selectedEdit: null, focusSchool: null, compare: null, diff: false, toast: null,
   set: (p) => set(p),

@@ -22,10 +22,11 @@ export interface SchoolNumber {
   source: Source;
   value: number;             // the headline utilization
   district: number | null;   // the district's utilization, where it published one
+  students: number;          // students behind the headline: the district's count, or the model's
   model: number;
   agreement: Agreement | null;
   parentSlide: { students: number; percent: number; printedPercent?: number; columnsAddUpTo?: number } | null;   // a parent-meeting slide that showed this school fuller
-  districtPeak: { utilization: number; year: number } | null;   // the fullest year in the district's table (2026-27 to 2031-32)
+  districtPeak: { utilization: number; students: number; year: number } | null;   // the fullest year in the district's table (2026-27 to 2031-32)
   questionable: string | null;   // why the district's figure here looks like an error
 }
 
@@ -97,13 +98,12 @@ function districtPeak(published: PublishedTable | null, schoolName: string): Sch
   const students = published?.table[schoolName], capacity = published?.cap[schoolName];
   if (!students || !capacity) return null;
   const fullest = students.indexOf(Math.max(...students));
-  return { utilization: students[fullest] / capacity, year: fullest + FIRST_DISTRICT_TABLE_YEAR };
+  return { utilization: students[fullest] / capacity, students: students[fullest], year: fullest + FIRST_DISTRICT_TABLE_YEAR };
 }
 
-function districtUtilization(published: PublishedTable | null, schoolName: string, year: number): number | null {
+function districtStudents(published: PublishedTable | null, schoolName: string, year: number): number | null {
   const students = published?.table[schoolName]?.[year - FIRST_DISTRICT_TABLE_YEAR];
-  const capacity = published?.cap[schoolName];
-  return students !== undefined && capacity ? students / capacity : null;
+  return students !== undefined && published?.cap[schoolName] ? students : null;
 }
 
 /** Headline numbers for a level's open schools. */
@@ -116,11 +116,12 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
     const schoolResult = result.schools[school.i];
     if (school.level !== level || !schoolResult?.open) continue;
 
-    const district = districtUtilization(published, school.name, year);
+    const students = districtStudents(published, school.name, year);
+    const district = students === null ? null : students / published!.cap[school.name];
     const model = schoolResult.util[year];
     const slide = district !== null && published ? PARENT_SLIDE_TOTALS[level]?.[published.concept]?.[school.name] : undefined;
     numbers.set(school.i, {
-      school: school.i, year, model, district,
+      school: school.i, year, model, district, students: students ?? schoolResult.total[year],
       source: district === null ? 'model' : 'district',
       value: district ?? model,
       agreement: district === null ? null : agreementOf(district, model, staticData.meta.target),

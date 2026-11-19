@@ -175,6 +175,9 @@ section.row.between .lbl { margin: 0; }
 .school-name { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 550; }
 .school-flag { flex: none; padding: 1px 7px; border-radius: 9px; background: #fff1dc; color: #92510a; font-size: 11.5px; font-weight: 600; }
 .school-value { flex: none; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.estimate-mark { display: inline-flex; flex: none; align-items: center; vertical-align: -2px; color: var(--muted); cursor: help; border-radius: 4px; }
+.estimate-mark svg { width: 14px; height: 14px; }
+.estimate-mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .school-value.over { color: var(--warn); } .school-value.near { color: #92510a; }
 .school-chevron { flex: none; width: 15px; height: 15px; color: var(--muted); transition: transform .15s; } .school-chevron.open { transform: rotate(180deg); }
 .meter { position: relative; display: block; height: 6px; margin-top: 7px; background: #e8eeee; border-radius: 3px; }

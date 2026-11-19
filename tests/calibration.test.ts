@@ -267,7 +267,8 @@ describe('parent-meeting slides', () => {
   it('give the fullest year from the district table on a published concept', () => {
     const plan = buildPlan(S, S.combos!.options['1'], null, 1);
     const brougham = schoolNumbers(S, plan, engine.run('es', { ...plan, includePreK: true }, false), 'es', 2).get(schoolNamed('es', 'Brougham').i)!;
-    expect(brougham.districtPeak).toEqual({ utilization: 414 / 497, year: 4 });   // 2029-30, from 281, 412, 408, 414, 414, 409
+    expect(brougham.districtPeak).toEqual({ utilization: 414 / 497, students: 414, year: 4 });
+    expect(brougham.students).toBe(412);   // 2027-28   // 2029-30, from 281, 412, 408, 414, 414, 409
   });
   it("flag the district's concept 4 figure for Frontier Trail, and nothing else", () => {
     const flagged = (concept: number) => {
@@ -335,7 +336,7 @@ describe('the headline number', () => {
   });
 
   it('marks the source on every label', () => {
-    const base = { school: 0, year: 2, model: 0.81, parentSlide: null, districtPeak: null, questionable: null };
+    const base = { school: 0, year: 2, model: 0.81, students: 400, parentSlide: null, districtPeak: null, questionable: null };
     expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('~81.0%');
     expect(headline({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
   });

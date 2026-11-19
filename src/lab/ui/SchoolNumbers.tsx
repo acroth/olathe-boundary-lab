@@ -5,12 +5,14 @@ import { schoolColor } from '../colors';
 import type { Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headline, type SchoolNumber } from '../numbers';
+import EstimateMark from './EstimateMark';
 
 const COLLAPSED_SCHOOL_COUNT = 5, LONGEST_FULL_LIST = 6;   // a list of six is short enough to show whole
 const NEAR_GOAL_POINTS = 5;
 const METER_MAX = 1.1;   // the bar's full width stands for 110% full
 
 const percent = (utilization: number) => `${(utilization * 100).toFixed(1)}%`;
+const studentCount = (students: number) => Math.round(students).toLocaleString();
 
 function fullnessTone(utilization: number, goal: number): 'over' | 'near' | 'room' {
   if (utilization > goal + 1e-9) return 'over';
@@ -53,6 +55,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
           <span className="school-name">{school.name}</span>
           {schoolNumber.questionable && <span className="school-flag">District number may be off</span>}
           {!schoolNumber.questionable && slide && <span className="school-flag">Meeting slide: {percent(slide.percent)}</span>}
+          {schoolNumber.source === 'model' && <EstimateMark focusable={false} />}
           <b className={'school-value ' + tone}>{headline(schoolNumber)}</b>
           <ChevronDown className={'school-chevron' + (expanded ? ' open' : '')} aria-hidden />
         </span>
@@ -64,13 +67,12 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
       {expanded && (
         <div className="school-details">
           <dl>
-            {district !== null && <div><dt>District's number</dt><dd>{percent(district)}</dd></div>}
-            {showEstimates && <div><dt>Our estimate</dt><dd>~{percent(model)}</dd></div>}
-            <div><dt>Max Functional Capacity</dt><dd>{Math.round(school.capacity).toLocaleString()}</dd></div>
+            <div><dt>Students ({meta.years[schoolNumber.year]})</dt><dd>{showEstimates ? '~' : ''}{studentCount(schoolNumber.students)}</dd></div>
+            <div><dt>Max Functional Capacity</dt><dd>{studentCount(school.capacity)}</dd></div>
             {schoolNumber.districtPeak
-              ? <div><dt>Fullest it gets ({meta.years[schoolNumber.districtPeak.year]})</dt><dd>{percent(schoolNumber.districtPeak.utilization)}</dd></div>
-              : <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)}</dd></div>}
-            {showEstimates && compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? '~' + percent(compareSchool.peak) : 'Closing'}</dd></div>}
+              ? <div><dt>Fullest it gets ({meta.years[schoolNumber.districtPeak.year]})</dt><dd>{percent(schoolNumber.districtPeak.utilization)} · {studentCount(schoolNumber.districtPeak.students)} students</dd></div>
+              : <div><dt>Fullest it gets ({meta.years[schoolResult.peakYear]})</dt><dd>~{percent(schoolResult.peak)} · ~{studentCount(schoolResult.total[schoolResult.peakYear])} students</dd></div>}
+            {showEstimates && compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? `~${percent(compareSchool.peak)} · ~${studentCount(compareSchool.total[compareSchool.peakYear])} students` : 'Closing'}</dd></div>}
           </dl>
           {schoolNumber.questionable && <p className="school-note">{schoolNumber.questionable}</p>}
           {capacityNote && <p className="school-note">{capacityNote}</p>}
@@ -119,7 +121,7 @@ export function SchoolList({ staticData, numbers, schools, result, compareResult
         <button className="show-all" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer schools' : `Show all ${openSchools.length} schools`}</button>
       )}
       {closingSchools.length > 0 && <p className="list-note">Closing: {closingSchools.map(school => staticData.schools[school].name).join(', ')}</p>}
-      {hasEstimates && <p className="list-note">~ means our own estimate, because the district hasn't published a number.</p>}
+      {hasEstimates && <p className="list-note"><EstimateMark /> and ~ mark our own estimates, where the district hasn't published a number.</p>}
     </>
   );
 }

@@ -3,6 +3,7 @@ import type { Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headlineSummary, type SchoolNumber } from '../numbers';
 import type { Plan } from '../store';
+import EstimateMark from './EstimateMark';
 
 interface ScorecardInput {
   staticData: Static;
@@ -24,11 +25,11 @@ export function calculateScorecard({ staticData, result, numbers, visibleSchools
   };
 }
 
-export function GlanceItem({ value, label, detail, warn }: { value: string | number; label: string; detail?: string; warn?: boolean }) {
+export function GlanceItem({ value, label, detail, warn, estimate }: { value: string | number; label: string; detail?: string; warn?: boolean; estimate?: boolean }) {
   return (
     <li className={'glance-item' + (warn ? ' warn' : '')}>
       <b>{value}</b>
-      <span>{label}{detail && <small>{detail}</small>}</span>
+      <span>{label}{estimate && <> <EstimateMark /></>}{detail && <small>{detail}</small>}</span>
     </li>
   );
 }
@@ -42,7 +43,7 @@ export default function Scorecard(input: ScorecardInput) {
   return (
     <ul className="glance">
       <GlanceItem value={scorecard.overTargetCount} label={overLabel} detail={scorecard.overTargetNames} warn={scorecard.overTargetCount > 0} />
-      {showStudentMoves && <GlanceItem value={scorecard.movedFromOpenLabel} label="students move from schools staying open" />}
+      {showStudentMoves && <GlanceItem value={scorecard.movedFromOpenLabel} label="students move from schools staying open" estimate />}
     </ul>
   );
 }

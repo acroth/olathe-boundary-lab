@@ -8,6 +8,7 @@ export interface Calibration {
   capSource: string;
   prek: Record<string, number>;         // school number -> Early Childhood in the building, from fall 2026 enrollment
   factorScale: Record<string, number>;  // school number -> scale that matches the district's fall 2026 count
+  yearScale: Record<string, number[]>;  // school number -> scale for each school year, where one year's projection needs adjusting
   homeWeights: { scale: number; homes: number[] }[];   // elementary home groups (delta-encoded) and their weight scale
   conceptEdits: Record<string, MsConcept['edits']>;    // middle school concept -> detached map-reading pieces, given to the school around them
 }
@@ -23,6 +24,11 @@ export function applyCalibration(schools: School[], homes: Homes, combos: Combos
     const target = schools[Number(school)];
     target.factor = target.factor.map(value => value * scale);
     target.neighborhood = target.neighborhood.map(value => value * scale);
+  }
+  for (const [school, scales] of Object.entries(calibration.yearScale)) {
+    const target = schools[Number(school)];
+    target.factor = target.factor.map((value, year) => value * scales[year]);
+    target.neighborhood = target.neighborhood.map((value, year) => value * scales[year]);
   }
   for (const group of calibration.homeWeights) {
     let home = 0;

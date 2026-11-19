@@ -9,6 +9,7 @@ import { agreementOf, headline, publishedConcept, publishedOption, schoolNumbers
 import { buildPlan } from '../src/lab/planBuilder';
 import { planFromPreset } from '../src/lab/store';
 import { INDIAN_CREEK } from '../pipeline/tools/calibrate/indianCreek';
+import { PARENT_SLIDE_TOTALS } from '../src/lab/parentSlides';
 import { loadStatic } from './support/loadStatic';
 
 let S: Static, engine: Engine;
@@ -221,6 +222,38 @@ describe('reviewed concept 4 boundaries', () => {
   });
 });
 
+describe('first-year model counts', () => {
+  it('starts Indian Trail from its fall 2026 count', () => {
+    const today = engine.run('ms', { closures: {}, edits: [], includePreK: true }, false);
+    expect(Math.abs(today.schools[schoolNamed('ms', 'Indian Trail').i].total[1] - 570)).toBeLessThan(1);
+  });
+  it('spreads Frontier Trail\'s decline evenly through 2031-32', () => {
+    const students = schoolNamed('ms', 'Frontier Trail').neighborhood.slice(1, 7);
+    const steps = students.slice(1).map((value, year) => value - students[year]);
+    for (const step of steps) expect(Math.abs(step - steps[0])).toBeLessThan(1);
+    expect(students[0]).toBeCloseTo(721, 0);
+  });
+  it('starts closing schools from the students the district places', () => {
+    const counts: Record<string, number> = { Heritage: 233, Scarborough: 237, 'Walnut Grove': 367, Tomahawk: 322, 'Black Bob': 229 };
+    for (const [name, students] of Object.entries(counts)) expect(Math.abs(schoolNamed('es', name).neighborhood[2] - students), name).toBeLessThan(1);
+  });
+});
+
+describe('parent-meeting slides', () => {
+  it('only note schools a slide showed fuller than the main deck', () => {
+    for (const [level, concepts] of Object.entries(PARENT_SLIDE_TOTALS)) for (const [concept, schools] of Object.entries(concepts!)) {
+      const published = level === 'es' ? S.presets.find(p => p.id === 'dc' + concept)!.district! : { table: S.combos!.ms!.concepts.find(c => c.id === Number(concept))!.table, cap: S.combos!.ms!.cap };
+      for (const [name, slide] of Object.entries(schools)) expect(slide.students / published.cap[name], `${level} ${concept} ${name}`).toBeGreaterThan(published.table[name][1] / published.cap[name]);
+    }
+  });
+  it('appear on the published concept only', () => {
+    const published = buildPlan(S, S.combos!.options['1'], null, 1), custom = buildPlan(S, [1, 2, 1, 1, 1], null, 1);
+    const slideFor = (plan: any) => schoolNumbers(S, plan, engine.run('es', { ...plan, includePreK: true }, false), 'es', 2).get(schoolNamed('es', 'Brougham').i)!.parentSlide;
+    expect(slideFor(published)?.students).toBe(461);
+    expect(slideFor(custom)).toBeNull();
+  });
+});
+
 describe('agreement labels', () => {
   it('close means within 3 points on the same side of the target', () => {
     expect(agreementOf(0.80, 0.77, 0.85)).toBe('close');
@@ -271,7 +304,7 @@ describe('the headline number', () => {
   });
 
   it('marks the source on every label', () => {
-    const base = { school: 0, year: 2, model: 0.81 };
+    const base = { school: 0, year: 2, model: 0.81, parentSlide: null };
     expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('~81.0%');
     expect(headline({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
   });

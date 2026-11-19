@@ -2,6 +2,7 @@
 // tables all read from here so they can't disagree.
 import type { Level, Static } from './data';
 import type { LevelResult } from './model/engine';
+import { PARENT_SLIDE_TOTALS } from './parentSlides';
 import { buildPlan } from './planBuilder';
 import type { Plan } from './store';
 
@@ -22,9 +23,11 @@ export interface SchoolNumber {
   district: number | null;   // the district's utilization, where it published one
   model: number;
   agreement: Agreement | null;
+  parentSlide: { students: number; percent: number; printedPercent?: number } | null;   // a parent-meeting slide that showed this school fuller
 }
 
 interface PublishedTable {
+  concept: string;
   table: Record<string, number[]>;
   cap: Record<string, number>;
 }
@@ -77,12 +80,12 @@ export function publishedConcept(staticData: Static, plan: Plan): number | null 
 function publishedTable(staticData: Static, plan: Plan, level: Level): PublishedTable | null {
   if (level === 'es') {
     const option = publishedOption(staticData, plan);
-    return option ? staticData.presets.find(preset => preset.id === 'dc' + option)!.district! : null;
+    return option ? { concept: option, ...staticData.presets.find(preset => preset.id === 'dc' + option)!.district! } : null;
   }
   if (level === 'ms') {
     const conceptId = publishedConcept(staticData, plan), middleSchools = staticData.combos?.ms;
     if (!conceptId || !middleSchools) return null;
-    return { table: middleSchools.concepts.find(concept => concept.id === conceptId)!.table, cap: middleSchools.cap };
+    return { concept: String(conceptId), table: middleSchools.concepts.find(concept => concept.id === conceptId)!.table, cap: middleSchools.cap };
   }
   return null;
 }
@@ -105,11 +108,13 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
 
     const district = districtUtilization(published, school.name, year);
     const model = schoolResult.util[year];
+    const slide = district !== null && published ? PARENT_SLIDE_TOTALS[level]?.[published.concept]?.[school.name] : undefined;
     numbers.set(school.i, {
       school: school.i, year, model, district,
       source: district === null ? 'model' : 'district',
       value: district ?? model,
       agreement: district === null ? null : agreementOf(district, model, staticData.meta.target),
+      parentSlide: slide ? { ...slide, percent: slide.students / school.capacity } : null,
     });
   }
   return numbers;

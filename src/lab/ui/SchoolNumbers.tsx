@@ -41,6 +41,8 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
   const tone = fullnessTone(value, meta.target);
   const note = agreementNote(schoolNumber, goalPercent);
   const compareSchool = compareResult?.schools[schoolNumber.school];
+  const slide = schoolNumber.parentSlide;
+  const printedNote = slide?.printedPercent !== undefined ? ` The slide printed ${slide.printedPercent}%.` : '';
   const meterWidth = `${Math.min(value / METER_MAX, 1) * 100}%`, goalPosition = `${(meta.target / METER_MAX) * 100}%`;
 
   return (
@@ -51,6 +53,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
           <i className="school-dot" style={{ background: schoolColor(school as any) }} />
           <span className="school-name">{school.name}</span>
           {agreement === 'tooClose' && <span className="school-flag">Too close to call</span>}
+          {agreement !== 'tooClose' && slide && <span className="school-flag">Slide: {percent(slide.percent)}</span>}
           <b className={'school-value ' + tone}>{headline(schoolNumber)}</b>
           <ChevronDown className={'school-chevron' + (expanded ? ' open' : '')} aria-hidden />
         </span>
@@ -69,6 +72,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
             {compareResult && <div><dt>Fullest in the compared plan</dt><dd>{compareSchool?.open ? '~' + percent(compareSchool.peak) : 'Closing'}</dd></div>}
           </dl>
           {note && <p className="school-note">{note}</p>}
+          {slide && <p className="school-note">A parent-meeting slide showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} It counts this year's students as if they moved now. The number above is the district's projection for the year shown.</p>}
         </div>
       )}
     </li>

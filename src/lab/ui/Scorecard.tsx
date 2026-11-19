@@ -1,17 +1,8 @@
-// The Concept Builder's four headline figures, using the same numbers as the map.
-import type { ReactNode } from 'react';
+// The plan's headline facts, in plain words, using the same numbers as the map.
 import type { Static } from '../data';
 import type { LevelResult } from '../model/engine';
-import { headline, headlineSummary, publishedOption, type SchoolNumber, type Source } from '../numbers';
+import { headlineSummary, publishedOption, type SchoolNumber } from '../numbers';
 import type { Plan } from '../store';
-import { SourceTag } from './SchoolNumbers';
-
-const WARNING_UTILIZATION = 0.85, SEVERE_UTILIZATION = 0.9;
-
-function utilizationTone(utilization: number): string {
-  if (utilization > SEVERE_UTILIZATION) return 'bad';
-  return utilization > WARNING_UTILIZATION ? 'warn' : '';
-}
 
 /** Students the model moves out of closing schools, counted in fall 2026 so they compare with the district's counts. */
 function modelStudentsFromClosingSchools(plan: Plan, result: LevelResult | null): number {
@@ -31,61 +22,46 @@ interface ScorecardInput {
   result: LevelResult | null;
   numbers: Map<number, SchoolNumber>;
   visibleSchools: Set<number>;
+  showStudentMoves?: boolean;
 }
 
 export function calculateScorecard({ staticData, plan, result, numbers, visibleSchools }: ScorecardInput) {
-  const summary = headlineSummary(staticData, numbers, visibleSchools);
-  const { fullest, overTarget, districtCount } = summary;
-
+  const { overTarget } = headlineSummary(staticData, numbers, visibleSchools);
   const option = publishedOption(staticData, plan);
   const districtPieces = option ? staticData.presets.find(preset => preset.id === 'dc' + option)!.district!.pieces : null;
   const studentsMoved = districtPieces
     ? districtPieces.reduce((total, piece) => total + piece.n, 0)
     : modelStudentsFromClosingSchools(plan, result);
-
-  const anyOverTargetIsModel = overTarget.some(schoolNumber => schoolNumber.source === 'model');
-  const overTargetSource: Source = districtCount && !anyOverTargetIsModel ? 'district' : 'model';
-  const overTargetNames = overTarget.map(schoolNumber => staticData.schools[schoolNumber.school].name).join(', ');
   const movedFromOpenSchools = result?.summary.movedFromOpen ?? null;
 
   return {
-    sourceLabel: summary.sourceLabel,
-    fullest,
-    fullestName: fullest ? staticData.schools[fullest.school].name : '—',
     overTargetCount: overTarget.length,
-    overTargetLabel: overTarget.length ? `Over 85%: ${overTargetNames}` : 'Schools over 85%',
-    overTargetSource,
+    overTargetNames: overTarget.map(schoolNumber => staticData.schools[schoolNumber.school].name).join(', '),
     studentsMovedLabel: (districtPieces ? '' : '~') + Math.round(studentsMoved).toLocaleString(),
-    studentsMovedSource: (districtPieces ? 'district' : 'model') as Source,
-    movedFromOpenSchools,
+    movedFromOpenLabel: movedFromOpenSchools === null ? '—' : `~${Math.round(movedFromOpenSchools).toLocaleString()}`,
   };
 }
 
-function ScoreTile({ tone = '', value, label, source }: { tone?: string; value: ReactNode; label: ReactNode; source?: Source }) {
+export function GlanceItem({ value, label, detail, warn }: { value: string | number; label: string; detail?: string; warn?: boolean }) {
   return (
-    <div className={'stat ' + tone}>
+    <li className={'glance-item' + (warn ? ' warn' : '')}>
       <b>{value}</b>
-      <span>{label}</span>
-      {source && <SourceTag source={source} />}
-    </div>
+      <span>{label}{detail && <small>{detail}</small>}</span>
+    </li>
   );
 }
 
 export default function Scorecard(input: ScorecardInput) {
+  const { showStudentMoves = true } = input;
   const scorecard = calculateScorecard(input);
-  const { fullest, movedFromOpenSchools } = scorecard;
-
-  const movedFromOpenValue = movedFromOpenSchools === null ? '—' : `~${Math.round(movedFromOpenSchools).toLocaleString()}`;
+  const goalPercent = input.staticData.meta.target * 100;
+  const overLabel = scorecard.overTargetCount === 1 ? `school over ${goalPercent}% full` : `schools over ${goalPercent}% full`;
 
   return (
-    <>
-      <p className="note source-line">{scorecard.sourceLabel}</p>
-      <div className="stats score">
-        <ScoreTile tone={utilizationTone(fullest?.value ?? 0)} value={fullest ? headline(fullest) : '—'} label={`Fullest: ${scorecard.fullestName}`} source={fullest?.source} />
-        <ScoreTile tone={scorecard.overTargetCount ? 'warn' : ''} value={scorecard.overTargetCount} label={scorecard.overTargetLabel} source={scorecard.overTargetSource} />
-        <ScoreTile value={scorecard.studentsMovedLabel} label="Students moved from closing schools" source={scorecard.studentsMovedSource} />
-        <ScoreTile value={movedFromOpenValue} label="Students moved from non-closing schools" source="model" />
-      </div>
-    </>
+    <ul className="glance">
+      <GlanceItem value={scorecard.overTargetCount} label={overLabel} detail={scorecard.overTargetNames} warn={scorecard.overTargetCount > 0} />
+      {showStudentMoves && <GlanceItem value={scorecard.studentsMovedLabel} label="students leave closing schools" />}
+      {showStudentMoves && <GlanceItem value={scorecard.movedFromOpenLabel} label="students move from schools staying open" />}
+    </ul>
   );
 }

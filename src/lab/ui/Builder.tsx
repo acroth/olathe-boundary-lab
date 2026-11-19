@@ -1,11 +1,14 @@
-// Concept Builder: pick one district concept per closing school and see the combination.
+// Concept Builder: pick a district concept and see what it means for each school.
 import type { Combos, ComboConcept, Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headlineSummary, type SchoolNumber } from '../numbers';
 import { activeMoves, defaultMoves } from '../planBuilder';
 import type { Build, Plan } from '../store';
-import { SchoolNumbersTable } from './SchoolNumbers';
+import Fold from './Fold';
+import { SchoolList } from './SchoolNumbers';
 import Scorecard from './Scorecard';
+
+type MiddleSchools = NonNullable<Combos['ms']>;
 
 interface BuilderProps {
   staticData: Static;
@@ -26,13 +29,13 @@ interface BuilderProps {
 export default function Builder(props: BuilderProps) {
   const { staticData, level } = props;
   const combos = staticData.combos;
-  if (!combos) return <section><p className="note">Concept data not loaded.</p></section>;
+  if (!combos) return <section><p className="list-note">Concept data not loaded.</p></section>;
 
   if (level === 'hs') {
-    return <section className="builder"><p className="note">None of the district’s concepts change high school boundaries, so these are the current areas.</p></section>;
+    return <section className="panel-section"><p className="plain-note">The district's concepts don't change high school boundaries, so these are today's areas.</p></section>;
   }
   if (level === 'ms') {
-    if (!combos.ms) return <section><p className="note">Middle school concepts not loaded.</p></section>;
+    if (!combos.ms) return <section><p className="list-note">Middle school concepts not loaded.</p></section>;
     return <MiddleSchoolBuilder {...props} middleSchools={combos.ms} />;
   }
   return <ElementaryBuilder {...props} combos={combos} />;
@@ -42,12 +45,24 @@ function selectedConcept(concepts: ComboConcept[], conceptId: number): ComboConc
   return concepts.find(concept => concept.id === conceptId)!;
 }
 
+/** The schools section both builder views share. */
+function SchoolsSection({ staticData, numbers, visibleSchools, result, onSchoolSelect }: Pick<BuilderProps, 'staticData' | 'numbers' | 'visibleSchools' | 'onSchoolSelect'> & { result: LevelResult | null }) {
+  const summary = headlineSummary(staticData, numbers, visibleSchools);
+  const goalPercent = staticData.meta.target * 100;
+  return (
+    <section className="panel-section">
+      <h3 className="panel-heading">How full each school would be</h3>
+      <p className="section-note">{summary.sourceLabel} The district's goal is {goalPercent}% full or less.</p>
+      {result && <SchoolList staticData={staticData} numbers={numbers} schools={summary.schools.map(schoolNumber => schoolNumber.school)} result={result} onSchoolSelect={onSchoolSelect} />}
+    </section>
+  );
+}
+
 function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
   const { staticData, plan, combos, elementaryResult, numbers, visibleSchools, build, onBuildChange, onEditByHand, onSchoolSelect } = props;
   const { sel: selectedConcepts, moves: moveOverrides } = build;
   const moves = activeMoves(combos, selectedConcepts, moveOverrides);
   const automaticMoves = defaultMoves(combos, selectedConcepts);
-  const summary = headlineSummary(staticData, numbers, visibleSchools);
 
   const matchingOption = Object.entries(combos.options).find(([, concepts]) => concepts.every((conceptId, index) => conceptId === selectedConcepts[index]))?.[0];
   const movesOnCount = combos.moves.filter(move => moves[move.id]).length;
@@ -74,46 +89,39 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
 
   return (
     <>
-      <section className="builder">
-        <div className="row between">
-          <span className="lbl">District concepts</span>
-          {!matchingOption && <span className="tag">Custom mix</span>}
-        </div>
-        <div className="seg opts">
+      <section className="panel-section">
+        <h3 className="panel-heading">Choose a concept</h3>
+        <div className="concept-picker">
           {Object.entries(combos.options).map(([option, concepts]) => (
-            <button key={option} className={matchingOption === option ? 'on' : ''} onClick={() => onBuildChange({ ...build, sel: [...concepts], moves: null })}>{option}</button>
+            <button key={option} className={matchingOption === option ? 'on' : ''} aria-pressed={matchingOption === option} onClick={() => onBuildChange({ ...build, sel: [...concepts], moves: null })}>{option}</button>
           ))}
         </div>
+        {!matchingOption && <p className="section-note picker-note">You're viewing a custom mix of the district's concepts.</p>}
         <Scorecard staticData={staticData} plan={plan} result={elementaryResult} numbers={numbers} visibleSchools={visibleSchools} />
       </section>
 
-      <section className="builder">
-        {combos.schools.map((school, schoolIndex) => (
-          <div key={school.name} className="bschool">
-            <div className="row between">
-              <b>{school.name}</b>
-              <div className="seg small">
-                {school.concepts.map(concept => (
-                  <button key={concept.id} className={concept.id === selectedConcepts[schoolIndex] ? 'on' : ''} onClick={() => pickConcept(schoolIndex, concept.id)} title={concept.summary}>{concept.id}</button>
-                ))}
+      <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={elementaryResult} onSchoolSelect={onSchoolSelect} />
+
+      <section className="panel-section folds">
+        <Fold title="Mix and match closing schools">
+          <p className="section-note">Choose where each closing school's students would go.</p>
+          {combos.schools.map((school, schoolIndex) => (
+            <div key={school.name} className="closing-school">
+              <div className="closing-school-top">
+                <b>{school.name}</b>
+                <div className="mini-picker">
+                  {school.concepts.map(concept => (
+                    <button key={concept.id} className={concept.id === selectedConcepts[schoolIndex] ? 'on' : ''} onClick={() => pickConcept(schoolIndex, concept.id)} title={concept.summary}>{concept.id}</button>
+                  ))}
+                </div>
               </div>
+              <p className="section-note">{selectedConcept(school.concepts, selectedConcepts[schoolIndex]).summary}</p>
             </div>
-            <p className="note">{selectedConcept(school.concepts, selectedConcepts[schoolIndex]).summary}</p>
-          </div>
-        ))}
-      </section>
-
-      {combos.ms && <MiddleSchoolLinesPicker concepts={combos.ms.concepts} {...props} />}
-
-      <section className="builder">
-        <details className="more" open>
-          <summary>School numbers</summary>
-          {elementaryResult && <SchoolNumbersTable staticData={staticData} numbers={numbers} schools={summary.schools.map(schoolNumber => schoolNumber.school)} result={elementaryResult} onSchoolSelect={onSchoolSelect} />}
-        </details>
-        <details className="more">
-          <summary>Students moving, by piece</summary>
-          <table className="tbl">
-            <thead><tr><th>From → to</th><th>District</th><th>Model</th></tr></thead>
+          ))}
+        </Fold>
+        <Fold title="Where students would go">
+          <table className="simple-table">
+            <thead><tr><th>From → to</th><th>District</th><th>Estimate</th></tr></thead>
             <tbody>
               {movingPieces.map(({ school, piece, modelStudents }) => (
                 <tr key={school.name + piece.to}>
@@ -124,35 +132,33 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
               ))}
             </tbody>
           </table>
-          <p className="note">2026-27 K–5 students. District counts come from the parent-meeting decks.</p>
-        </details>
-        <details className="more">
-          <summary>Moves between open schools ({movesOnCount} on)</summary>
-          <p className="note">
-            Set automatically by the concepts you pick. Tap to override.
-            {moveOverrides && <> <button className="link" onClick={() => onBuildChange({ ...build, moves: null })}>Reset</button></>}
+        </Fold>
+        <Fold title={`Changes at schools staying open (${movesOnCount})`}>
+          <p className="section-note">
+            These come with the concepts you pick. Uncheck one to leave it out.
+            {moveOverrides && <> <button className="text-button" onClick={() => onBuildChange({ ...build, moves: null })}>Reset</button></>}
           </p>
-          <ul className="moves">
+          <ul className="move-list">
             {combos.moves.map(move => {
               const changedNote = automaticMoves[move.id] !== moves[move.id] ? ' · changed' : '';
               return (
                 <li key={move.id}>
-                  <label className="chk">
+                  <label>
                     <input type="checkbox" checked={!!moves[move.id]} onChange={() => toggleMove(move.id)} />
-                    <span>{move.label} <span className="muted">· ~{move.model26}{changedNote}</span></span>
+                    <span>{move.label} <span className="muted">· ~{move.model26} students{changedNote}</span></span>
                   </label>
                 </li>
               );
             })}
           </ul>
-        </details>
-        <button className="link-btn" onClick={onEditByHand}>Edit this combination by hand →</button>
+        </Fold>
+        {combos.ms && <Fold title="Show middle school lines"><MiddleSchoolLinesPicker concepts={combos.ms.concepts} {...props} /></Fold>}
       </section>
+
+      <button className="secondary-action" onClick={onEditByHand}>Edit this plan by hand</button>
     </>
   );
 }
-
-type MiddleSchools = NonNullable<Combos['ms']>;
 
 /** Elementary view: which middle school concept's lines to overlay on the map. */
 function MiddleSchoolLinesPicker({ concepts, build, onBuildChange, middleSchoolLinesOn, onMiddleSchoolLinesChange }: BuilderProps & { concepts: MiddleSchools['concepts'] }) {
@@ -161,46 +167,46 @@ function MiddleSchoolLinesPicker({ concepts, build, onBuildChange, middleSchoolL
     onMiddleSchoolLinesChange(true);
   };
   return (
-    <section className="builder">
-      <div className="row between">
-        <b>Middle school lines</b>
-        <div className="seg small">
-          <button className={middleSchoolLinesOn ? '' : 'on'} onClick={() => onMiddleSchoolLinesChange(false)} title="Hide middle school lines">Off</button>
-          {concepts.map(concept => (
-            <button key={concept.id} className={middleSchoolLinesOn && concept.id === build.ms ? 'on' : ''} onClick={() => showConcept(concept.id)} title={`Show concept ${concept.id} lines`}>{concept.id}</button>
-          ))}
-        </div>
-      </div>
-    </section>
+    <div className="mini-picker" role="group" aria-label="Middle school lines">
+      <button className={middleSchoolLinesOn ? '' : 'on'} onClick={() => onMiddleSchoolLinesChange(false)}>Off</button>
+      {concepts.map(concept => (
+        <button key={concept.id} className={middleSchoolLinesOn && concept.id === build.ms ? 'on' : ''} onClick={() => showConcept(concept.id)} title={`Show concept ${concept.id} lines`}>{concept.id}</button>
+      ))}
+    </div>
   );
 }
 
+/** The concept's summary as a short list of changes. */
+function changesIn(summary: string): string[] {
+  return summary.split(/;\s*/).map(change => change.replace(/\.$/, '')).map(change => change.charAt(0).toUpperCase() + change.slice(1));
+}
+
 /** Middle school concept picker (the district's five concepts, independent of the elementary concepts). */
-function MiddleSchoolBuilder({ staticData, middleSchools, middleSchoolResult, numbers, visibleSchools, build, onBuildChange, onSchoolSelect }: BuilderProps & { middleSchools: MiddleSchools }) {
+function MiddleSchoolBuilder(props: BuilderProps & { middleSchools: MiddleSchools }) {
+  const { staticData, plan, middleSchools, middleSchoolResult, numbers, visibleSchools, build, onBuildChange, onSchoolSelect } = props;
   const concept = middleSchools.concepts.find(candidate => candidate.id === build.ms);
-  const summary = headlineSummary(staticData, numbers, visibleSchools);
-  const conceptSummary = concept ? concept.summary : 'No middle school concept: Indian Trail’s area is left unassigned.';
 
   return (
-    <section className="builder">
-      <div className="bschool">
-        <div className="row between">
-          <b>Middle schools</b>
-          <div className="seg small">
-            {middleSchools.concepts.map(candidate => (
-              <button key={candidate.id} className={candidate.id === build.ms ? 'on' : ''} onClick={() => onBuildChange({ ...build, ms: candidate.id })} title={candidate.summary}>{candidate.id}</button>
-            ))}
-            <button className={build.ms === 0 ? 'on' : ''} onClick={() => onBuildChange({ ...build, ms: 0 })} title="Leave Indian Trail's area unassigned">–</button>
-          </div>
+    <>
+      <section className="panel-section">
+        <h3 className="panel-heading">Choose a concept</h3>
+        <div className="concept-picker">
+          {middleSchools.concepts.map(candidate => (
+            <button key={candidate.id} className={candidate.id === build.ms ? 'on' : ''} aria-pressed={candidate.id === build.ms} onClick={() => onBuildChange({ ...build, ms: candidate.id })}>{candidate.id}</button>
+          ))}
         </div>
-        <p className="note">{conceptSummary} The district shows these separately from the elementary concepts, so any pairing works.</p>
-      </div>
-      <details className="more" open>
-        <summary>Middle school numbers</summary>
-        <p className="note source-line">{summary.sourceLabel}</p>
-        {middleSchoolResult && <SchoolNumbersTable staticData={staticData} numbers={numbers} schools={summary.schools.map(schoolNumber => schoolNumber.school)} result={middleSchoolResult} onSchoolSelect={onSchoolSelect} />}
-        <p className="note">District: five-year estimates from the middle school deck, over functional capacity. Lines are read from the deck’s concept maps onto street blocks.</p>
-      </details>
-    </section>
+        <Scorecard staticData={staticData} plan={plan} result={middleSchoolResult} numbers={numbers} visibleSchools={visibleSchools} showStudentMoves={false} />
+      </section>
+
+      <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={middleSchoolResult} onSchoolSelect={onSchoolSelect} />
+
+      <section className="panel-section folds">
+        <Fold title="What changes in this concept">
+          {concept
+            ? <ul className="change-list">{changesIn(concept.summary).map(change => <li key={change}>{change}</li>)}</ul>
+            : <p className="section-note">No concept is selected, so Indian Trail's area has no school yet.</p>}
+        </Fold>
+      </section>
+    </>
   );
 }

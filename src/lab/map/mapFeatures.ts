@@ -1,7 +1,7 @@
 // GeoJSON the map draws, built from the lab's data and a plan's results.
 import type { Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
-import { mapLabel, type SchoolNumber } from '../numbers';
+import { headline, type SchoolNumber } from '../numbers';
 
 type FeatureCollection = GeoJSON.FeatureCollection;
 
@@ -30,7 +30,7 @@ export function schoolFeatures(staticData: Static, level: Level, visibleSchools:
     features: schools.map(school => {
       const schoolNumber = numbers.get(school.i);
       const closed = closures[String(school.i)] !== undefined;
-      const numberLabel = schoolNumber && !closed ? mapLabel(schoolNumber) : '';
+      const numberLabel = schoolNumber && !closed ? headline(schoolNumber) : '';
       return {
         type: 'Feature',
         properties: { school: school.i, name: school.name, label: closed ? `${school.name}\n(closing)` : `${school.name}\n${numberLabel}`, closed: closed ? 1 : 0 },

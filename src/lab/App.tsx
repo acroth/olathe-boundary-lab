@@ -23,9 +23,9 @@ const LINK_UPDATE_DELAY_MS = 300;
 const TOAST_MS = 3500;
 const NEXT_SHEET_SIZE = { peek: 'half', half: 'full', full: 'peek' } as const;
 const BUILDER_SUBTITLE: Record<Level, string> = {
-  es: 'Pick a district concept for each closing school',
-  ms: 'Pick a middle school concept',
-  hs: 'No district concept changes high schools',
+  es: 'See how each district concept changes elementary schools',
+  ms: 'See how each district concept changes middle schools',
+  hs: 'High school boundaries stay the same',
 };
 
 /** The bounding box of every attendance area in the chosen high school areas; null when there are none. */
@@ -50,7 +50,7 @@ function boundsOfAreas(staticData: Static, areas: string[]): [[number, number], 
 /** Map padding that keeps fitted areas clear of the floating panel, top bar and legend. */
 export function mapPadding() {
   const { sheet, panelOpen } = useUI.getState();
-  if (window.innerWidth >= 768) return { top: 90, left: panelOpen ? 420 : 40, right: 260, bottom: 40 };
+  if (window.innerWidth >= 768) return { top: 104, left: panelOpen ? 420 : 40, right: 60, bottom: 40 };
   const sheetHeight = { peek: 190, half: window.innerHeight * 0.5, full: window.innerHeight * 0.5 }[sheet];
   return { top: 132, left: 16, right: 16, bottom: sheetHeight + 16 };
 }
@@ -156,7 +156,7 @@ export default function App() {
 
   const inBuilder = ui.mode === 'build';
   const panelTitle = inBuilder ? 'Concept builder' : 'Free draw';
-  const panelSubtitle = inBuilder ? BUILDER_SUBTITLE[ui.level] : 'Start from a plan, then redraw on the map';
+  const panelSubtitle = inBuilder ? BUILDER_SUBTITLE[ui.level] : 'Start from a plan, then redraw it on the map';
   const labClassName = `lab sheet-${ui.sheet} ${ui.panelOpen ? 'panel-open' : 'panel-closed'} mode-${ui.mode}`;
   const selectedGeometry = plan.edits.find(edit => edit.id === ui.selectedEdit)?.geom ?? null;
   const comparePlanName = ui.compare?.name || staticData.presets.find(preset => preset.id === ui.compare?.preset)?.name || 'other plan';
@@ -202,7 +202,7 @@ export default function App() {
           </div>
         </aside>
         {!inBuilder && <MapToolbar staticData={staticData} visibleSchools={visibleSchools} />}
-        <Legend staticData={staticData} visibleSchools={visibleSchools} mapRef={mapRef} numbers={planNumbers} />
+        <Legend staticData={staticData} visibleSchools={visibleSchools} mapRef={mapRef} />
         {ui.toast && <div className="toast" role="status">{ui.toast}</div>}
       </main>
     </div>

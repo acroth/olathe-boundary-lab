@@ -17,7 +17,7 @@ export default function YearMenu({ staticData }: { staticData: Static }) {
       <IconTip label="Projection year">
         <PopoverTrigger asChild>
           <Button variant="ghost" className="h-9 gap-1.5 px-2.5" aria-label={'Projection year ' + selectedYear}>
-            <CalendarDays className="size-[18px]" /><span className="hidden text-[13px] tabular-nums sm:inline">{selectedYear}</span>
+            <CalendarDays className="size-[18px]" /><span className="hidden text-[13px] tabular-nums lg:inline">{selectedYear}</span>
           </Button>
         </PopoverTrigger>
       </IconTip>

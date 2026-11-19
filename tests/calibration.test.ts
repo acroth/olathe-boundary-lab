@@ -5,7 +5,7 @@ import { Engine } from '../src/lab/model/engine';
 import { boolOp } from '../src/lab/model/clip';
 import { inMPoly, polyAcres, toMPoly } from '../src/lab/model/geo';
 import type { Static } from '../src/lab/data';
-import { agreementOf, headline, mapLabel, publishedConcept, publishedOption, schoolNumbers } from '../src/lab/numbers';
+import { agreementOf, headline, publishedConcept, publishedOption, schoolNumbers } from '../src/lab/numbers';
 import { buildPlan } from '../src/lab/planBuilder';
 import { planFromPreset } from '../src/lab/store';
 import { INDIAN_CREEK } from '../pipeline/tools/calibrate/indianCreek';
@@ -273,7 +273,6 @@ describe('the headline number', () => {
   it('marks the source on every label', () => {
     const base = { school: 0, year: 2, model: 0.81 };
     expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('~81.0%');
-    expect(mapLabel({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
-    expect(mapLabel({ ...base, source: 'district', value: 0.87, district: 0.87, agreement: 'tooClose' })).toBe('87.0% · model ~81.0%');
+    expect(headline({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
   });
 });

@@ -1,4 +1,4 @@
-/* Plain content pages. Colors come from the tokens in lab/styles.css (light and dark). */
+/* Plain content pages. Colors come from the tokens in lab/styles.css . */
 .site { min-height: 100%; display: flex; flex-direction: column; background: var(--bg); }
 .site-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding: 12px max(16px, calc((100% - 760px) / 2)); border-bottom: 1px solid var(--line); background: var(--panel); }
@@ -27,8 +27,6 @@
 .site .stag.district { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
 .site .stag.public { background: color-mix(in srgb, #2e7d32 16%, transparent); color: #2e7d32; }
 .site .stag.model { background: color-mix(in srgb, #b26a00 18%, transparent); color: #b26a00; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .site .stag.public { color: #81c784; } :root:not([data-theme="light"]) .site .stag.model { color: #ffb74d; } }
-:root[data-theme="dark"] .site .stag.public { color: #81c784; } :root[data-theme="dark"] .site .stag.model { color: #ffb74d; }
 .site .src-wrap { overflow-x: auto; margin: 12px 0; }
 .site .src { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.45; }
 .site .src th { text-align: left; font-size: 12.5px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 6px 8px 6px 0; }

@@ -1,19 +1,18 @@
-// Floating search across schools, planning areas and streets.
+// Floating search across schools and planning areas.
 import { useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
-import { MapPin, School, Search, Waypoints, X } from 'lucide-react';
+import { MapPin, School, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LEVEL_NAME, type Level, type Static } from '../../data';
 import { usePlan, useUI, type Plan } from '../../store';
 
-type HitKind = 'school' | 'area' | 'street';
+type HitKind = 'school' | 'area';
 interface SearchHit { kind: HitKind; key: string; title: string; sub: string; go: () => void }
 type LngLatBounds = [[number, number], [number, number]];
 
-const MIN_QUERY_LENGTH = 2, MAX_HITS = 9, MAX_STREET_HITS = 6;
-const LOCAL_STREET_CLASS_LIMIT = 8;   // street classes from here up are paths and service roads, not searchable streets
-const KIND_RANK: Record<HitKind, number> = { school: 0, area: 1, street: 2 };
-const KIND_ICON = { school: School, area: MapPin, street: Waypoints };
+const MIN_QUERY_LENGTH = 2, MAX_HITS = 9;
+const KIND_RANK: Record<HitKind, number> = { school: 0, area: 1 };
+const KIND_ICON = { school: School, area: MapPin };
 
 function boundsOf(coordinates: number[][]): LngLatBounds {
   let west = 180, south = 90, east = -180, north = -90;
@@ -26,18 +25,6 @@ function boundsOf(coordinates: number[][]): LngLatBounds {
 
 function outerRingCoordinates(geometry: any): number[][] {
   return geometry.type === 'Polygon' ? geometry.coordinates[0] : geometry.coordinates.flatMap((polygon: any) => polygon[0]);
-}
-
-/** Street name number -> the street edges carrying that name. */
-function indexStreetsByName(staticData: Static): Map<number, number[]> {
-  const streets = staticData.streets, edgesByName = new Map<number, number[]>();
-  for (let edge = 0; edge < streets.nEdges; edge++) {
-    const name = streets.name[edge];
-    if (streets.cls[edge] >= LOCAL_STREET_CLASS_LIMIT || !name) continue;
-    if (!edgesByName.has(name)) edgesByName.set(name, []);
-    edgesByName.get(name)!.push(edge);
-  }
-  return edgesByName;
 }
 
 interface HitContext {
@@ -79,26 +66,7 @@ function planningAreaHits({ staticData, query, map, padding, showPlanningAreas }
   });
 }
 
-function streetHits({ staticData, query, map, padding }: HitContext, edgesByName: Map<number, number[]>): SearchHit[] {
-  const streets = staticData.streets, names = staticData.meta.streetNames;
-  const hits: SearchHit[] = [];
-  for (let name = 0; name < names.length && hits.length < MAX_STREET_HITS; name++) {
-    if (!names[name].toLowerCase().includes(query) || !edgesByName.has(name)) continue;
-    hits.push({
-      kind: 'street', key: 'r' + name, title: names[name], sub: 'Street',
-      go: () => {
-        const coordinates: number[][] = [];
-        for (const edge of edgesByName.get(name)!) {
-          for (let point = streets.coordOff[edge]; point < streets.coordOff[edge + 1]; point++) coordinates.push([streets.coordLon[point], streets.coordLat[point]]);
-        }
-        map()?.fitBounds(boundsOf(coordinates), { padding: padding(), duration: 700, maxZoom: 16 });
-      },
-    });
-  }
-  return hits;
-}
-
-/** Schools first, then areas, then streets; within each, titles that start with the query come first. */
+/** Schools first, then areas; within each, titles that start with the query come first. */
 function rankHits(hits: SearchHit[], query: string): SearchHit[] {
   const startsWithQuery = (hit: SearchHit) => hit.title.toLowerCase().startsWith(query) ? 0 : 1;
   return hits.sort((first, second) => KIND_RANK[first.kind] - KIND_RANK[second.kind] || startsWithQuery(first) - startsWithQuery(second)).slice(0, MAX_HITS);
@@ -118,7 +86,6 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
   const ui = useUI();
   const plan = usePlan(state => state.plan);
 
-  const edgesByName = useMemo(() => indexStreetsByName(staticData), [staticData]);
   const hits = useMemo<SearchHit[]>(() => {
     const query = queryText.trim().toLowerCase();
     if (query.length < MIN_QUERY_LENGTH) return [];
@@ -127,8 +94,8 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
       focusSchool: school => ui.set({ focusSchool: school }),
       showPlanningAreas: () => ui.set({ showAreas: true }),
     };
-    return rankHits([...schoolHits(context), ...planningAreaHits(context), ...streetHits(context, edgesByName)], query);
-  }, [queryText, staticData, edgesByName, plan.closures, ui.level]);
+    return rankHits([...schoolHits(context), ...planningAreaHits(context)], query);
+  }, [queryText, staticData, plan.closures, ui.level]);
 
   const pickHit = (hit: SearchHit) => {
     hit.go();
@@ -161,7 +128,7 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
     <div className="relative min-w-0 flex-1 md:max-w-[380px]">
       <div className="flex h-12 items-center gap-2.5 rounded-2xl border bg-card px-4 shadow-float">
         <Search className="size-[18px] shrink-0 text-muted-foreground" />
-        <input ref={input} value={queryText} placeholder="Search schools, areas, streets" aria-label="Search" role="combobox" aria-expanded={open && hits.length > 0} aria-controls="search-results"
+        <input ref={input} value={queryText} placeholder="Search schools or planning areas" aria-label="Search" role="combobox" aria-expanded={open && hits.length > 0} aria-controls="search-results"
           className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
           onChange={event => { setQueryText(event.target.value); setActiveIndex(0); setOpen(true); }}
           onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)} onKeyDown={handleKeyDown} />
@@ -169,7 +136,7 @@ export default function SearchBox({ staticData, mapRef, padding }: SearchBoxProp
       </div>
       {showResults && (
         <div id="search-results" role="listbox" className="absolute inset-x-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-2xl border bg-popover p-1.5 shadow-float">
-          {hits.length === 0 && <p className="px-3 py-2.5 text-sm text-muted-foreground">No schools, planning areas or streets match “{trimmedQuery}”.</p>}
+          {hits.length === 0 && <p className="px-3 py-2.5 text-sm text-muted-foreground">No schools or planning areas match “{trimmedQuery}”.</p>}
           {hits.map((hit, index) => {
             const Icon = KIND_ICON[hit.kind];
             return (

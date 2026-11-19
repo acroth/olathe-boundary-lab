@@ -1,5 +1,5 @@
 'use client';
-// The floating bar above the map: school level, search, map settings, undo and sharing.
+// The floating bar above the map: search on the left, school level in the center, map tools and sharing on the right.
 import { useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useStore } from 'zustand';
@@ -22,9 +22,9 @@ const COPIED_MESSAGE_MS = 2000;
 function LevelSwitch() {
   const ui = useUI();
   return (
-    <div className="pointer-events-auto order-last flex h-12 w-full items-center rounded-2xl border bg-card px-1.5 shadow-float md:order-first md:w-auto md:shrink-0">
-      <ToggleGroup type="single" value={ui.level} className="w-full" aria-label="School level" onValueChange={level => level && ui.set({ level: level as Level, brush: -2 })}>
-        {LEVELS.map(level => <ToggleGroupItem key={level} value={level} className="h-9 flex-auto px-3">{LEVEL_NAME[level]}</ToggleGroupItem>)}
+    <div className="topbar-level pointer-events-auto rounded-2xl border bg-card p-1 shadow-float">
+      <ToggleGroup type="single" value={ui.level} className="level-switch w-full bg-transparent p-0" aria-label="School level" onValueChange={level => level && ui.set({ level: level as Level, brush: -2 })}>
+        {LEVELS.map(level => <ToggleGroupItem key={level} value={level} className="level-option">{LEVEL_NAME[level]}</ToggleGroupItem>)}
       </ToggleGroup>
     </div>
   );
@@ -71,25 +71,27 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
   };
 
   return (
-    <div className="topbar pointer-events-none absolute z-20 flex flex-wrap items-start gap-2 md:flex-nowrap md:gap-3">
+    <div className="topbar pointer-events-none absolute z-20">
+      <div className="topbar-search pointer-events-auto min-w-0"><SearchBox staticData={staticData} mapRef={mapRef} padding={padding} /></div>
       <LevelSwitch />
-      <div className="pointer-events-auto contents"><SearchBox staticData={staticData} mapRef={mapRef} padding={padding} /></div>
-      <div className="pointer-events-auto relative flex h-12 shrink-0 items-center gap-0.5 rounded-2xl border bg-card px-1.5 shadow-float">
-        <LayersMenu />
-        <YearMenu staticData={staticData} />
-        {ui.mode === 'draw' && (
-          <>
-            <Separator orientation="vertical" className="mx-1 !h-6" />
-            <IconTip label="Undo"><Button variant="ghost" size="icon" onClick={() => history.undo()} disabled={!history.pastStates.length} aria-label="Undo"><Undo2 className="size-[18px]" /></Button></IconTip>
-            <IconTip label="Redo"><Button variant="ghost" size="icon" onClick={() => history.redo()} disabled={!history.futureStates.length} aria-label="Redo"><Redo2 className="size-[18px]" /></Button></IconTip>
-          </>
-        )}
-        <Separator orientation="vertical" className="mx-1 !h-6" />
-        <MoreMenu staticData={staticData} mapRef={mapRef} planResults={planResults} onShare={share} />
+      <div className="topbar-tools pointer-events-auto flex items-start justify-end gap-2">
+        <div className="relative flex h-12 shrink-0 items-center gap-0.5 rounded-2xl border bg-card px-1.5 shadow-float">
+          <LayersMenu />
+          <YearMenu staticData={staticData} />
+          {ui.mode === 'draw' && (
+            <>
+              <Separator orientation="vertical" className="mx-1 !h-6" />
+              <IconTip label="Undo"><Button variant="ghost" size="icon" onClick={() => history.undo()} disabled={!history.pastStates.length} aria-label="Undo"><Undo2 className="size-[18px]" /></Button></IconTip>
+              <IconTip label="Redo"><Button variant="ghost" size="icon" onClick={() => history.redo()} disabled={!history.futureStates.length} aria-label="Redo"><Redo2 className="size-[18px]" /></Button></IconTip>
+            </>
+          )}
+          <Separator orientation="vertical" className="mx-1 !h-6" />
+          <MoreMenu staticData={staticData} mapRef={mapRef} planResults={planResults} onShare={share} />
+        </div>
+        <Button onClick={share} className="hidden h-12 shrink-0 rounded-2xl px-3.5 shadow-float min-[480px]:inline-flex xl:px-5" aria-label="Share this view">
+          {copied ? <Check className="size-[18px]" /> : <Share2 className="size-[18px]" />}<span className="hidden xl:inline">{copied ? 'Copied' : 'Share'}</span>
+        </Button>
       </div>
-      <Button onClick={share} className="pointer-events-auto hidden h-12 shrink-0 rounded-2xl px-5 shadow-float sm:inline-flex md:hidden lg:inline-flex" aria-label="Share this view">
-        {copied ? <Check className="size-[18px]" /> : <Share2 className="size-[18px]" />}{copied ? 'Copied' : 'Share'}
-      </Button>
     </div>
   );
 }

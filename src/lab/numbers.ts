@@ -123,16 +123,10 @@ export function headline(schoolNumber: SchoolNumber): string {
   return estimateMark + percent(schoolNumber.value);
 }
 
-/** The map adds the model's estimate when it doesn't agree with the district. */
-export function mapLabel(schoolNumber: SchoolNumber): string {
-  const disagrees = schoolNumber.agreement === 'differs' || schoolNumber.agreement === 'tooClose';
-  return disagrees ? `${headline(schoolNumber)} · model ~${percent(schoolNumber.model)}` : headline(schoolNumber);
-}
-
 function describeSources(districtCount: number, modelCount: number, year: string): string {
-  if (!districtCount) return `Model estimate, ${year}`;
-  if (!modelCount) return `District figures, ${year}`;
-  return `District where published, model elsewhere, ${year} (${districtCount} district, ${modelCount} model)`;
+  if (!districtCount) return `Our estimates for ${year}.`;
+  if (!modelCount) return `District numbers for ${year}.`;
+  return `District numbers for ${year}, with our estimates where it has none.`;
 }
 
 /** The visible schools' headline numbers, fullest first, with what the scorecard and legend say about them. */

@@ -3,10 +3,9 @@ import { useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { ChevronDown, Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LEVEL_NAME, type Static } from '../data';
+import type { Static } from '../data';
 import { TIERS, schoolColor } from '../colors';
 import { shownOverlay, usePlan, useUI } from '../store';
-import { headlineSummary, type SchoolNumber } from '../numbers';
 import LineSwatch from './LineSwatch';
 
 const OVERLAY_NAME = { es: 'Elementary school', ms: 'Middle school', hs: 'High school' };
@@ -25,14 +24,13 @@ interface LegendProps {
   staticData: Static;
   visibleSchools: Set<number>;
   mapRef: MutableRefObject<MapRef | null>;
-  numbers: Map<number, SchoolNumber>;
 }
 
 /** Bottom-right legend card and zoom buttons. */
-export default function Legend({ staticData, visibleSchools, mapRef, numbers }: LegendProps) {
+export default function Legend({ staticData, visibleSchools, mapRef }: LegendProps) {
   const ui = useUI();
   const plan = usePlan(state => state.plan);
-  const [open, setOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768);
+  const [open, setOpen] = useState(false);
 
   const isClosing = (school: number) => plan.closures[String(school)] !== undefined;
   const schools = staticData.schools
@@ -42,8 +40,7 @@ export default function Legend({ staticData, visibleSchools, mapRef, numbers }: 
   const closingSchools = schools.filter(school => isClosing(school.i));
   const overlay = shownOverlay(ui.level, ui.overlay);
 
-  const title = ui.colorBy === 'util' ? `% full, ${staticData.meta.years[ui.year]}` : `${LEVEL_NAME[ui.level]} schools`;
-  const { sourceLabel } = headlineSummary(staticData, numbers, visibleSchools);
+  const title = ui.colorBy === 'util' ? `% full, ${staticData.meta.years[ui.year]}` : 'Map key';
 
   return (
     <div className="legend-dock pointer-events-none absolute z-10 flex items-end gap-3">
@@ -51,7 +48,6 @@ export default function Legend({ staticData, visibleSchools, mapRef, numbers }: 
         <button className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold" onClick={() => setOpen(isOpen => !isOpen)} aria-expanded={open}>
           {title}<ChevronDown className={cn('size-4 text-muted-foreground transition-transform', !open && '-rotate-90')} />
         </button>
-        {open && <p className="px-4 pb-2 text-xs leading-snug text-muted-foreground">{sourceLabel}. A ~ marks a model estimate.</p>}
         {open && (
           <ul className="max-h-[min(340px,45vh)] space-y-1.5 overflow-y-auto px-4 pb-3.5">
             {ui.colorBy === 'util'

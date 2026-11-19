@@ -1,18 +1,19 @@
-// The side panel: the Concept Builder, or Free draw's plan summary and detail sections.
+// The side panel: the Concept Builder, or Free draw's plan summary and details.
 import { useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { Results } from '../App';
 import { areaGeom, type Static } from '../data';
-import type { SchoolNumber } from '../numbers';
+import { headlineSummary, type SchoolNumber } from '../numbers';
 import { usePlan, useUI } from '../store';
 import { decodePlan } from '../url';
 import Builder from './Builder';
+import Fold from './Fold';
 import ChecksSection from './freeDraw/ChecksSection';
 import CompareSection from './freeDraw/CompareSection';
 import DistrictSection from './freeDraw/DistrictSection';
 import GradesSection from './freeDraw/GradesSection';
-import PlanSummary, { type FreeDrawSection } from './freeDraw/PlanSummary';
-import { SchoolNumbersTable } from './SchoolNumbers';
+import PlanSummary from './freeDraw/PlanSummary';
+import { SchoolList } from './SchoolNumbers';
 
 interface SidebarProps {
   staticData: Static;
@@ -27,7 +28,6 @@ interface SidebarProps {
 export default function Sidebar({ staticData, planResults, compareResults, mapRef, faceGeometry, visibleSchools, numbers }: SidebarProps) {
   const plan = usePlan(state => state.plan);
   const ui = useUI();
-  const [section, setSection] = useState<FreeDrawSection>('schools');
   const [compareLink, setCompareLink] = useState('');
 
   const level = ui.level, inFreeDraw = ui.mode === 'draw';
@@ -36,7 +36,8 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
     .filter(school => school.level === level && visibleSchools.has(school.i))
     .sort((first, second) => first.name.localeCompare(second.name));
   const focusedSchool = ui.focusSchool !== null && staticData.schools[ui.focusSchool]?.level === level ? ui.focusSchool : null;
-  const showSchoolsTable = inFreeDraw ? section === 'schools' : level === 'hs';
+  const showSchoolList = inFreeDraw || level === 'hs';
+  const { sourceLabel } = headlineSummary(staticData, numbers, visibleSchools);
 
   const decodeSavedPlan = (encoded: string) => decodePlan(encoded, staticData.presets, faceGeometry, reference => areaGeom(staticData, reference));
   const zoomToSchool = (schoolIndex: number) => {
@@ -48,7 +49,7 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
     if (on) ui.set({ overlay: 'ms' });
     else if (ui.overlay === 'ms') ui.set({ overlay: null });
   };
-  const editByHand = () => ui.set({ mode: 'draw', toast: 'This combination is now your free-draw plan. Edit it with the tools on the map.' });
+  const editByHand = () => ui.set({ mode: 'draw', toast: 'This plan is ready to edit. Use the tools on the map.' });
 
   return (
     <>
@@ -58,31 +59,30 @@ export default function Sidebar({ staticData, planResults, compareResults, mapRe
           middleSchoolLinesOn={ui.overlay === 'ms'} onMiddleSchoolLinesChange={setMiddleSchoolLines} onEditByHand={editByHand} />
       )}
 
-      {inFreeDraw && (
-        <PlanSummary staticData={staticData} plan={plan} level={level} result={result} numbers={numbers} visibleSchools={visibleSchools}
-          section={section} onSectionChange={setSection} decodeSavedPlan={decodeSavedPlan} />
-      )}
+      {inFreeDraw && <PlanSummary staticData={staticData} plan={plan} level={level} result={result} numbers={numbers} visibleSchools={visibleSchools} decodeSavedPlan={decodeSavedPlan} />}
 
-      {showSchoolsTable && result && (
-        <section>
-          <SchoolNumbersTable staticData={staticData} numbers={numbers} schools={schools.map(school => school.i)} result={result}
+      {showSchoolList && result && (
+        <section className="panel-section">
+          <h3 className="panel-heading">How full each school would be</h3>
+          <p className="section-note">{sourceLabel} The district's goal is {staticData.meta.target * 100}% full or less.</p>
+          <SchoolList staticData={staticData} numbers={numbers} schools={schools.map(school => school.i)} result={result}
             compareResult={compareResults?.levels[level]} focusedSchool={focusedSchool} onSchoolSelect={zoomToSchool} />
-          <p className="note">Tap a row to zoom to the school.</p>
         </section>
       )}
 
-      {inFreeDraw && section === 'district' && result && level === 'es' && <DistrictSection staticData={staticData} result={result} plan={plan} year={ui.year} />}
-      {inFreeDraw && section === 'district' && level !== 'es' && <section><p className="note">District numbers are loaded for elementary schools only.</p></section>}
-      {inFreeDraw && section === 'grades' && result && <GradesSection staticData={staticData} result={result} focusedSchool={focusedSchool} onSchoolSelect={zoomToSchool} schools={schools} year={ui.year} />}
-      {inFreeDraw && section === 'checks' && result && (
-        <ChecksSection staticData={staticData} plan={plan} result={result} feeder={planResults!.feeder} schools={schools} visibleSchools={visibleSchools} onSchoolSelect={zoomToSchool} />
-      )}
-      {inFreeDraw && section === 'plan' && (
-        <CompareSection staticData={staticData} plan={plan} level={level} planResults={planResults} mapRef={mapRef}
-          compareLink={compareLink} onCompareLinkChange={setCompareLink} decodeSavedPlan={decodeSavedPlan} />
+      {inFreeDraw && result && (
+        <section className="panel-section folds">
+          {level === 'es' && <Fold title="District numbers"><DistrictSection staticData={staticData} result={result} plan={plan} year={ui.year} /></Fold>}
+          <Fold title="Grade by grade"><GradesSection staticData={staticData} result={result} focusedSchool={focusedSchool} onSchoolSelect={zoomToSchool} schools={schools} year={ui.year} /></Fold>
+          <Fold title="Plan checks"><ChecksSection staticData={staticData} plan={plan} result={result} feeder={planResults!.feeder} schools={schools} visibleSchools={visibleSchools} onSchoolSelect={zoomToSchool} /></Fold>
+          <Fold title="Compare and export">
+            <CompareSection staticData={staticData} plan={plan} level={level} planResults={planResults} mapRef={mapRef}
+              compareLink={compareLink} onCompareLinkChange={setCompareLink} decodeSavedPlan={decodeSavedPlan} />
+          </Fold>
+        </section>
       )}
 
-      <p className="indep">Independent project, not affiliated with Olathe Public Schools. Mixes district figures with modeled estimates. <a href="/about">About &amp; data</a> · <a href="/contact">Feedback</a></p>
+      <p className="indep">Independent project, not affiliated with Olathe Public Schools. <a href="/about">About the data</a> · <a href="/contact">Send feedback</a></p>
     </>
   );
 }

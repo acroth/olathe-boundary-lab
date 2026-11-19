@@ -20,7 +20,7 @@ export const OVERLAY_LINE = { color: '#7c2d12', width: 3 };
 const EMPTY_FEATURES: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] };
 const STREET_DRAWING_TOOLS = ['trace', 'polygon', 'freehand', 'edit'];
 const HOMES_RETRY_MS = 300;
-const SCHOOL_FILL_OPACITY = 0.68, MIDDLE_SCHOOL_FILL_OPACITY = 0.85;   // middle schools stay close to the district's solid map colors
+const SCHOOL_FILL_OPACITY = 0.4;   // light enough to read the streets and neighborhoods underneath
 const HOME_UNASSIGNED = -1, HOME_HIDDEN = -2;
 
 interface MapPanelProps {
@@ -104,7 +104,7 @@ export default function MapPanel(props: MapPanelProps) {
 
   const overlayGeoJson = useMemo(() => overlayFeatures(staticData, props.result, props.overlay), [props.result, props.overlay, staticData]);
   const schoolsGeoJson = useMemo(() => schoolFeatures(staticData, level, visibleSchools, numbers, props.closures), [staticData, level, numbers, props.closures, visibleSchools]);
-  const planningGeoJson = useMemo(() => planningFeatures(staticData, visibleSchools, level, props.year), [staticData, visibleSchools, level, props.year]);
+  const planningGeoJson = useMemo(() => planningFeatures(staticData, visibleSchools, level, props.year, !props.overlay), [staticData, visibleSchools, level, props.year, props.overlay]);
   const homesGeoJson = useMemo(() => props.showHomes ? homeFeatures(staticData) : EMPTY_FEATURES, [staticData, props.showHomes]);
   const streetsGeoJson = useMemo(() => streetsNeeded ? streetFeatures(staticData) : EMPTY_FEATURES, [staticData, streetsNeeded]);
 
@@ -151,8 +151,8 @@ export default function MapPanel(props: MapPanelProps) {
   }, [staticData]);
 
   const zoneFillColor = props.colorBy === 'util' ? utilizationColorExpression : schoolColorExpression;
-  const schoolFillOpacity = level === 'ms' ? MIDDLE_SCHOOL_FILL_OPACITY : SCHOOL_FILL_OPACITY;
-  const zoneFillOpacity = props.colorBy === 'util' ? 0.42 : schoolFillOpacity;
+  const zoneFillOpacity = props.colorBy === 'util' ? 0.42 : SCHOOL_FILL_OPACITY;
+  const schoolLabelVisibility = props.overlay ? 'none' : 'visible';   // an overlay's labels take over while it's on
   const planningVisibility = props.showAreas ? 'visible' : 'none';
   const streetVisibility = streetsNeeded ? 'visible' : 'none';
   const homesVisibility = props.showHomes ? 'visible' : 'none';
@@ -217,7 +217,7 @@ export default function MapPanel(props: MapPanelProps) {
         </Source>
         <Source id="schools" type="geojson" data={schoolsGeoJson as any}>
           <Layer id="school-points" type="circle" paint={{ 'circle-radius': 6, 'circle-color': ['case', ['==', ['get', 'closed'], 1], '#fff', '#111'], 'circle-stroke-color': '#111', 'circle-stroke-width': 2 }} />
-          <Layer id="school-labels" type="symbol" layout={{ 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': 12, 'text-offset': [0, 0.9], 'text-anchor': 'top', 'text-allow-overlap': false }}
+          <Layer id="school-labels" type="symbol" layout={{ visibility: schoolLabelVisibility, 'text-field': ['get', 'label'], 'text-font': ['Noto Sans Medium'], 'text-size': 12, 'text-offset': [0, 0.9], 'text-anchor': 'top', 'text-allow-overlap': false }}
             paint={{ 'text-color': ['case', ['==', ['get', 'closed'], 1], '#b71c1c', '#111'], 'text-halo-color': '#fff', 'text-halo-width': 1.6 }} />
         </Source>
       </Map>

@@ -40,14 +40,15 @@ export function schoolFeatures(staticData: Static, level: Level, visibleSchools:
   };
 }
 
-/** District planning areas: dashed lines plus "number / students living there" for the level and year shown. */
-export function planningFeatures(staticData: Static, visibleSchools: Set<number>, level: Level, year: number): FeatureCollection {
+/** District planning areas: dashed lines plus each area's number and, unless hidden, the students living there for the level and year shown. */
+export function planningFeatures(staticData: Static, visibleSchools: Set<number>, level: Level, year: number, showStudents: boolean): FeatureCollection {
   const visibleNames = new Set(staticData.schools.filter(school => visibleSchools.has(school.i) && school.level === 'es').map(school => school.name));
   const areas = staticData.planning.features.filter(feature => visibleNames.has(feature.properties!.school));
   const outlines = areas.map(feature => ({ ...feature, properties: { pa: feature.properties!.pa } }));
   const labels = areas.map((feature): GeoJSON.Feature => {
     const area = feature.properties!, students = Math.round(area[level][year]);
-    return { type: 'Feature', properties: { label: `${area.pa}\n${students} ${GRADE_RANGE[level]}` }, geometry: { type: 'Point', coordinates: [area.lon, area.lat] } };
+    const label = showStudents ? `${area.pa}\n${students} ${GRADE_RANGE[level]}` : String(area.pa);
+    return { type: 'Feature', properties: { label }, geometry: { type: 'Point', coordinates: [area.lon, area.lat] } };
   });
   return { type: 'FeatureCollection', features: [...outlines, ...labels] };
 }

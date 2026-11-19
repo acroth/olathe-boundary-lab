@@ -99,6 +99,28 @@ describe('reviewed middle school boundaries', () => {
   });
 });
 
+describe('whole planning areas in the reviewed concepts', () => {
+  const RULES: Record<number, Record<string, string>> = {
+    1: { 590: 'Oregon Trail', 600: 'Santa Fe Trail', 730: 'Frontier Trail' },
+    2: { 600: 'Oregon Trail', 730: 'Frontier Trail', 750: 'Frontier Trail', 770: 'Frontier Trail' },
+    3: { 460: 'California Trail' },
+    4: { 590: 'Oregon Trail', 600: 'Santa Fe Trail', 730: 'Frontier Trail' },
+    5: { 600: 'Santa Fe Trail', 750: 'Frontier Trail', 770: 'Frontier Trail' },
+  };
+  it('send every home in each named area to its school', () => {
+    for (const [concept, areas] of Object.entries(RULES)) {
+      const plan = buildPlan(S, [1, 1, 1, 1, 1], null, Number(concept));
+      const assigned = engine.run('ms', { ...plan, includePreK: true }, false).assign;
+      for (const [area, school] of Object.entries(areas)) {
+        const feature = S.planning.features.find(candidate => String(candidate.properties!.pa) === area && candidate.geometry.type !== 'Point')!;
+        const shape = toMPoly(feature.geometry as any), schools = new Set<string>();
+        for (let home = 0; home < S.homes.n; home++) if (inMPoly(S.homes.lon[home], S.homes.lat[home], shape)) schools.add(S.schools[assigned[home]].name);
+        expect([...schools], `concept ${concept}: ${area}`).toEqual([school]);
+      }
+    }
+  });
+});
+
 describe('hand-drawn concept 2 boundary', () => {
   it('puts every home around 850 at the school drawn for it', () => {
     const drawn = JSON.parse(readFileSync(new URL('../pipeline/data/map_readings/middle_school_concept2_850_drawn.geojson', import.meta.url), 'utf8'));

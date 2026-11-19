@@ -72,7 +72,7 @@ export default function PlanSummary({ staticData, plan, level, result, numbers, 
             <StatTile value={fullest ? headline(fullest) : '—'} label={fullestLabel} warn={(fullest?.value ?? 0) > meta.target} />
             <StatTile value={String(overTarget.length)} label={`Schools over ${meta.target * 100}%`} warn={overTarget.length > 0} />
             <StatTile value={wholeNumber(summary.unassignedStudents)} label="Students unassigned" warn={summary.unassignedStudents > 0.5} />
-            <StatTile value={'~' + percent(summary.shareBeyondBusMiles)} label={`Moved kids ${meta.busMiles}+ mi away (model)`} />
+            <StatTile value={'~' + wholeNumber(summary.movedFromOpen)} label="Students moved from non-closing schools (model)" />
           </div>
         )}
         {summary && (
@@ -81,7 +81,7 @@ export default function PlanSummary({ staticData, plan, level, result, numbers, 
             <div className="stats">
               <StatTile value={wholeNumber(summary.studentsFromClosingSchools)} label="Students from closing schools placed" />
               <StatTile value={summary.averageTripMiles ? summary.averageTripMiles.toFixed(2) + ' mi' : '—'} label="Average trip, moved students" />
-              <StatTile value={wholeNumber(summary.movedFromOpen)} label="Moved from open schools" />
+              <StatTile value={'~' + percent(summary.shareBeyondBusMiles)} label={`Moved kids ${meta.busMiles}+ mi away`} />
               {level === 'es' && <StatTile value={wholeNumber(summary.inBuildingNotPlaced)} label="Pre-K at closing schools, not placed" />}
             </div>
             <p className="note">These are model estimates. Model peaks run 2027-28 to 2034-35. Year and Pre-K are in the top bar.</p>

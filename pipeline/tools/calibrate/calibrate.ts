@@ -125,11 +125,14 @@ const AREA_400_WEST = -94.7424;
 const SOUTH_OF_INDIAN_CREEK: MPoly = [[[...INDIAN_CREEK, [INDIAN_CREEK[INDIAN_CREEK.length - 1][0], FAR.south], [INDIAN_CREEK[0][0], FAR.south], INDIAN_CREEK[0]]]];
 const CONCEPT_CORRECTIONS: Record<number, { planningAreas: Record<string, string>; areaSplits?: AreaSplit[]; drawnAreas?: string; roadCuts: RoadCut[] }> = {
   1: {
-    planningAreas: { 600: 'Santa Fe Trail', 610: 'Pioneer Trail', 620: 'Pioneer Trail', 660: 'Frontier Trail', 680: 'Frontier Trail' },
+    planningAreas: { 590: 'Oregon Trail', 600: 'Santa Fe Trail', 610: 'Pioneer Trail', 620: 'Pioneer Trail', 660: 'Frontier Trail', 680: 'Frontier Trail', 730: 'Frontier Trail' },
     roadCuts: [{ from: 'Pioneer Trail', to: 'California Trail', ...FAR, west: BLACK_BOB, north: STREET_119TH }],   // Pioneer stays west of Black Bob south of 119th
   },
   2: {
-    planningAreas: { 610: 'California Trail', 620: 'California Trail', 625: 'California Trail', 630: 'California Trail', 650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail' },
+    planningAreas: {
+      600: 'Oregon Trail', 610: 'California Trail', 620: 'California Trail', 625: 'California Trail', 630: 'California Trail',
+      650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail', 730: 'Frontier Trail', 750: 'Frontier Trail', 770: 'Frontier Trail',
+    },
     drawnAreas: 'middle_school_concept2_850_drawn.geojson',   // the Frontier and Chisholm line around 850, drawn by hand in the lab
     roadCuts: [
       { from: 'Pioneer Trail', to: 'California Trail', ...FAR, north: STREET_127TH },   // Pioneer north of 127th, California south of it
@@ -137,14 +140,15 @@ const CONCEPT_CORRECTIONS: Record<number, { planningAreas: Record<string, string
     ],
   },
   3: {
-    planningAreas: { 380: 'Pioneer Trail', 610: 'Pioneer Trail', 390: 'California Trail', 620: 'California Trail', 630: 'California Trail', 650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail', 685: 'Frontier Trail', 850: 'Frontier Trail' },
+    planningAreas: { 380: 'Pioneer Trail', 610: 'Pioneer Trail', 390: 'California Trail', 460: 'California Trail', 620: 'California Trail', 625: 'California Trail', 630: 'California Trail', 650: 'Frontier Trail', 660: 'Frontier Trail', 680: 'Frontier Trail', 685: 'Frontier Trail', 850: 'Frontier Trail' },
     roadCuts: [],
   },
   4: {
     planningAreas: {
       610: 'California Trail', 620: 'California Trail', 625: 'California Trail', 630: 'California Trail', 650: 'California Trail', 410: 'California Trail',
       210: 'Pioneer Trail', 380: 'Pioneer Trail', 400: 'Pioneer Trail',
-      660: 'Frontier Trail', 680: 'Frontier Trail', 850: 'Frontier Trail',
+      660: 'Frontier Trail', 680: 'Frontier Trail', 730: 'Frontier Trail', 850: 'Frontier Trail',
+      590: 'Oregon Trail', 600: 'Santa Fe Trail',
     },
     areaSplits: [{ area: '400', to: 'California Trail', side: SOUTH_OF_INDIAN_CREEK }],   // 400 divides along Indian Creek
     roadCuts: [
@@ -153,7 +157,7 @@ const CONCEPT_CORRECTIONS: Record<number, { planningAreas: Record<string, string
     ],
   },
   5: {
-    planningAreas: {},
+    planningAreas: { 600: 'Santa Fe Trail', 750: 'Frontier Trail', 770: 'Frontier Trail' },
     drawnAreas: 'middle_school_concept5_drawn.geojson',   // the concept's lines, drawn by hand in the lab
     roadCuts: [],
   },
@@ -215,9 +219,9 @@ function correctedConceptEdits(): Calibration['conceptEdits'] {
   for (const concept of middle.concepts) {
     const corrections = CONCEPT_CORRECTIONS[concept.id];
     const steps: (() => ConceptEdit[])[] = [
-      () => corrections ? planningAreaEdits(corrections.planningAreas) : [],
-      () => corrections?.areaSplits ? areaSplitEdits(corrections.areaSplits) : [],
       () => corrections?.drawnAreas ? drawnAreaEdits(corrections.drawnAreas) : [],
+      () => corrections ? planningAreaEdits(corrections.planningAreas) : [],   // whole planning areas win over drawn lines
+      () => corrections?.areaSplits ? areaSplitEdits(corrections.areaSplits) : [],
       () => corrections ? roadCutEdits(concept.id, corrections.roadCuts) : [],
       () => detachedPieces(concept.id),
     ];

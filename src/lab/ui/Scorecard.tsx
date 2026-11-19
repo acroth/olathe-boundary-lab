@@ -46,7 +46,7 @@ export function calculateScorecard({ staticData, plan, result, numbers, visibleS
   const anyOverTargetIsModel = overTarget.some(schoolNumber => schoolNumber.source === 'model');
   const overTargetSource: Source = districtCount && !anyOverTargetIsModel ? 'district' : 'model';
   const overTargetNames = overTarget.map(schoolNumber => staticData.schools[schoolNumber.school].name).join(', ');
-  const movedBetweenOpenSchools = result?.summary.movedFromOpen ?? 0;
+  const movedFromOpenSchools = result?.summary.movedFromOpen ?? null;
 
   return {
     sourceLabel: summary.sourceLabel,
@@ -57,8 +57,7 @@ export function calculateScorecard({ staticData, plan, result, numbers, visibleS
     overTargetSource,
     studentsMovedLabel: (districtPieces ? '' : '~') + Math.round(studentsMoved).toLocaleString(),
     studentsMovedSource: (districtPieces ? 'district' : 'model') as Source,
-    movedBetweenOpenSchools,
-    shareBeyondBusMiles: result?.summary.shareBeyondBusMiles ?? null,
+    movedFromOpenSchools,
   };
 }
 
@@ -74,10 +73,9 @@ function ScoreTile({ tone = '', value, label, source }: { tone?: string; value: 
 
 export default function Scorecard(input: ScorecardInput) {
   const scorecard = calculateScorecard(input);
-  const { fullest, movedBetweenOpenSchools, shareBeyondBusMiles } = scorecard;
+  const { fullest, movedFromOpenSchools } = scorecard;
 
-  const openSchoolNote = movedBetweenOpenSchools ? `, plus ~${Math.round(movedBetweenOpenSchools)} between open schools` : '';
-  const busMilesValue = shareBeyondBusMiles === null ? '—' : `~${(shareBeyondBusMiles * 100).toFixed(1)}%`;
+  const movedFromOpenValue = movedFromOpenSchools === null ? '—' : `~${Math.round(movedFromOpenSchools).toLocaleString()}`;
 
   return (
     <>
@@ -85,8 +83,8 @@ export default function Scorecard(input: ScorecardInput) {
       <div className="stats score">
         <ScoreTile tone={utilizationTone(fullest?.value ?? 0)} value={fullest ? headline(fullest) : '—'} label={`Fullest: ${scorecard.fullestName}`} source={fullest?.source} />
         <ScoreTile tone={scorecard.overTargetCount ? 'warn' : ''} value={scorecard.overTargetCount} label={scorecard.overTargetLabel} source={scorecard.overTargetSource} />
-        <ScoreTile value={scorecard.studentsMovedLabel} label={`Students moved from closing schools${openSchoolNote}`} source={scorecard.studentsMovedSource} />
-        <ScoreTile value={busMilesValue} label="Moved kids 2.5+ mi away" source="model" />
+        <ScoreTile value={scorecard.studentsMovedLabel} label="Students moved from closing schools" source={scorecard.studentsMovedSource} />
+        <ScoreTile value={movedFromOpenValue} label="Students moved from non-closing schools" source="model" />
       </div>
     </>
   );

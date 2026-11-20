@@ -121,3 +121,21 @@
 @media (max-width: 700px) { .site .guide-shot { max-width: 360px; margin-left: auto; margin-right: auto; } }
 .site-main ol.guide-steps { margin: 6px 0 14px; padding-left: 22px; }
 .site-main ol.guide-steps li { margin: 4px 0; }
+.site .formula-details { margin: 10px 0 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.site .formula-details > summary { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; list-style: none; font-size: 15px; font-weight: 600; color: var(--accent); }
+.site .formula-details > summary::-webkit-details-marker { display: none; }
+.site .formula-details > summary::before { content: ''; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+.site .formula-details[open] > summary::before { transform: rotate(45deg); }
+.site .formula-details[open] > summary { border-bottom: 1px solid var(--line); }
+.site .formula-details .formulas { margin: 12px; }
+/* Feedback page: the district's own forms, set apart from the lab's form */
+.site .district-forms { margin: 0 0 32px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.site .district-forms .district-forms-title { margin: 0 0 6px; font-size: 17px; font-weight: 650; color: var(--ink); }
+.site .district-forms p { margin: 6px 0; font-size: 15px; }
+.site .district-forms ul { list-style: none; margin: 10px 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.site .district-forms li { margin: 0; }
+.site .district-forms a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--accent); border-radius: 999px; background: var(--bg);
+  color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none; }
+.site .district-forms a:hover { background: var(--sel); }
+.site .district-forms a svg { width: 14px; height: 14px; }
+.site .district-forms-note { color: var(--muted); font-size: 14px !important; }

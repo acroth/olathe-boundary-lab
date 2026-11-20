@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Blocks, ChevronLeft, ChevronRight, Info, MapPinned, MessageSquareText, PenLine, type LucideIcon } from 'lucide-react';
+import { Blocks, Info, MapPinned, MessageSquareText, PenLine, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -10,8 +10,6 @@ interface Props {
   active: RailPage;
   /** In the lab, Concept builder / Free draw switch modes in place; elsewhere they link back to the lab. */
   onMode?: (m: 'build' | 'draw') => void;
-  panelOpen?: boolean;
-  onTogglePanel?: () => void;
 }
 
 const LAB: { id: 'build' | 'draw'; label: string; icon: LucideIcon; href: string }[] = [
@@ -31,7 +29,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 /** Left navigation rail (bottom tab bar on phones). */
-export default function Rail({ active, onMode, panelOpen, onTogglePanel }: Props) {
+export default function Rail({ active, onMode }: Props) {
   return (
     <TooltipProvider>
       <nav aria-label="Main" className="rail fixed z-30 flex border-border bg-card
@@ -40,15 +38,6 @@ export default function Rail({ active, onMode, panelOpen, onTogglePanel }: Props
         <Link href="/" aria-label="Olathe Boundary Lab home" className="hidden h-[72px] w-full items-center justify-center border-b md:flex">
           <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary"><MapPinned className="size-5" strokeWidth={2.2} /></span>
         </Link>
-        {onTogglePanel && (
-          <div className="hidden pt-4 pb-1 md:block">
-            <Tip label={panelOpen ? 'Hide panel' : 'Show panel'}>
-              <button className={cn(item, 'size-9 rounded-full border')} onClick={onTogglePanel} aria-label={panelOpen ? 'Hide panel' : 'Show panel'} aria-expanded={panelOpen}>
-                {panelOpen ? <ChevronLeft className="!size-4" /> : <ChevronRight className="!size-4" />}
-              </button>
-            </Tip>
-          </div>
-        )}
         <div className="contents md:flex md:flex-col md:items-center md:gap-2 md:pt-3">
           {LAB.map(x => {
             const cls = cn(item, active === x.id && on);
@@ -60,7 +49,7 @@ export default function Rail({ active, onMode, panelOpen, onTogglePanel }: Props
             </Tip>;
           })}
         </div>
-        <div className="contents md:mt-auto md:flex md:flex-col md:items-center md:gap-2 md:border-t md:py-4 md:w-full">
+        <div className="contents md:flex md:flex-col md:items-center md:gap-2 md:pt-2">
           {PAGES.map(x => <Tip key={x.id} label={x.label}>
             <Link className={cn(item, active === x.id && on)} href={x.href} aria-current={active === x.id ? 'page' : undefined}><x.icon /><span className="text-[10.5px] leading-none font-medium md:sr-only">{x.label}</span></Link>
           </Tip>)}

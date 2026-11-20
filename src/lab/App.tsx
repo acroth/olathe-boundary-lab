@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapRef, ViewState } from 'react-map-gl/maplibre';
-import { Loader2, X } from 'lucide-react';
+import { CircleHelp, Loader2, X } from 'lucide-react';
 import Rail from '@/components/Rail';
 import { facesGeometry, LEVELS, loadStatic, type Level, type Static } from './data';
 import { useDrawCallbacks } from './hooks/useDrawCallbacks';
@@ -217,7 +217,7 @@ export default function App() {
 
   return (
     <div className={labClassName}>
-      {!isMobile && <Rail active={ui.mode} onMode={switchTool} panelOpen={ui.panelOpen} onTogglePanel={() => ui.set({ panelOpen: !ui.panelOpen })} />}
+      {!isMobile && <Rail active={ui.mode} onMode={switchTool} />}
       <main className="lab-main">
         <div className={'maps' + (ui.compare ? ' split' : '')}>
           <MapPanel {...sharedMapProps} result={planResults?.levels ?? null} numbers={planNumbers} closures={plan.closures} tool={inBuilder ? 'pan' : ui.tool} interactive drawCallbacks={drawCallbacks}
@@ -234,7 +234,14 @@ export default function App() {
             <button className="grab" aria-label="Resize panel" onClick={() => ui.set({ sheet: NEXT_SHEET_SIZE[ui.sheet] })}><span /></button>
             <header className="panel-head">
               <div className="min-w-0">
-                <h2 className="text-[15px] font-semibold tracking-tight">{isMobile && ui.drawer ? DRAWER_TITLE[ui.drawer] : panelTitle}</h2>
+                <h2 className="panel-title text-[15px] font-semibold tracking-tight">
+                  {isMobile && ui.drawer ? DRAWER_TITLE[ui.drawer] : panelTitle}
+                  {!inBuilder && (!isMobile || ui.drawer === 'draw') && (
+                    <a className="panel-help" href="/about#using-free-draw" target="_blank" rel="noopener" aria-label="How to use Free draw (opens in a new tab)">
+                      <CircleHelp aria-hidden />How to
+                    </a>
+                  )}
+                </h2>
                 {!isMobile && <p className="truncate text-xs text-muted-foreground">{panelSubtitle}</p>}
               </div>
               {isUpdating && <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="size-3.5 animate-spin" />Updating</span>}

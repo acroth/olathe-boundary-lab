@@ -3,7 +3,7 @@
 import { useState, type MutableRefObject } from 'react';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useStore } from 'zustand';
-import { Check, Redo2, Share2, Undo2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Redo2, Share2, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -111,6 +111,11 @@ export default function TopBar({ staticData, mapRef, planResults, padding }: Top
   return (
     <div className="topbar pointer-events-none absolute z-20">
       <div className="topbar-search pointer-events-auto min-w-0"><SearchBox staticData={staticData} mapRef={mapRef} padding={padding} /></div>
+      <div className="topbar-panel pointer-events-auto">
+        <Button variant="outline" size="sm" className="h-8 gap-1 rounded-full bg-card px-3 shadow-float" onClick={() => ui.set({ panelOpen: !ui.panelOpen })} aria-expanded={ui.panelOpen}>
+          {ui.panelOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}{ui.panelOpen ? 'Hide panel' : 'Show panel'}
+        </Button>
+      </div>
       <LevelSwitch />
       <div className="topbar-tools pointer-events-auto flex justify-center">
         <div className="relative flex h-12 shrink-0 items-center gap-0.5 rounded-2xl border bg-card px-1.5 shadow-float">

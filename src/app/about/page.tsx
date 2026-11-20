@@ -34,8 +34,8 @@ const SECTIONS: TocItem[] = [
     { id: 'capacity', title: 'Max functional capacity' },
   ] },
   { id: 'methodology', title: 'Methodology', children: [
-    { id: 'formulas', title: 'Formulas' },
     { id: 'accuracy', title: 'Accuracy' },
+    { id: 'formulas', title: 'Formulas' },
     { id: 'starting-counts', title: 'Starting counts' },
     { id: 'grades', title: 'Grades and class sections' },
   ] },
@@ -141,32 +141,46 @@ export default function About() {
 
         <H2 id="methodology" />
         <p>The model estimates students home by home, then totals them by school.</p>
-        <H3 id="formulas" />
-        <div className="formulas">
-          <Formula number={1} tex={String.raw`w(h) = \text{expected children at home } h`}
-            note={<>From the home&rsquo;s census block: its housing units and the ages of the children living there.</>} />
-          <Formula number={2} tex={String.raw`f(o,t) = \frac{E(o,t)}{\sum_{h \in o} w(h)} \cdot a(o) \cdot b(o,t)`}
-            note={<>Students per child for school <var>o</var> in year <var>t</var>: its projected enrollment <var>E</var> spread over the
-              children living in its area today, then scaled by <var>a</var> to match fall 2026 enrollment and by <var>b</var> to follow
-              the district&rsquo;s five-year tables.</>} />
-          <Formula number={3} tex={String.raw`N(s,t) = \sum_{h \to s} w(h)\, f\big(o(h),\, t\big) + F(s)`}
-            note={<>A school&rsquo;s students: every home now assigned to it, each keeping its <i>original</i> school&rsquo;s rate, plus
-              students placed in the building (<var>F</var>: Pre-K, and 118 Spanish immersion students at Arbor Creek).</>} />
-          <Formula number={4} tex={String.raw`U(s,t) = \frac{N(s,t)}{C(s)}`}
-            note={<>Utilization: students over max functional capacity <var>C</var>. The district&rsquo;s goal is 85% or less.</>} />
-          <Formula number={5} tex={String.raw`\min_{b} \; \sum_{c,\,s} \big(N(c,s) - D(c,s)\big)^2 \;+\; \lambda \sum_{o} \Big(S(o)\,\big(b(o) - 1\big)\Big)^2`}
-            note={<>Trend tuning: for each year through 2031&ndash;32, the <var>b</var> values that best match the district&rsquo;s
-              figures <var>D</var> across all of its concepts <var>c</var>. The second term keeps each <var>b</var> near 1 (&lambda; = 0.05;{' '}
-              <var>S</var> = the school&rsquo;s own students). After 2031&ndash;32, each <var>b</var> holds its 2031&ndash;32 value.</>} />
-          <Formula number={6} tex={String.raw`C(s) = \frac{\text{enrollment}(s,\ \text{2025–26})}{U(s,\ \text{2025–26})}`}
-            note={<>Capacity for schools without a published figure: 2025&ndash;26 enrollment divided by the utilization the July 2026
-              forecast reports for that year. Example: 452 &divide; 0.75 &asymp; 603.</>} />
-        </div>
         <H3 id="accuracy" />
         <p>Across the district&rsquo;s published plans for 2027&ndash;28 to 2031&ndash;32, the model averages 1.7 percentage points from the
           district&rsquo;s figures for elementary schools and 1.1 for middle schools, and is within 5 points 94% and 98% of the time.</p>
         <p>One district figure is excluded from the tuning: Frontier Trail&rsquo;s 933 students in middle school concept 4, which appears to
           count areas 620, 630 and 650 at both Frontier Trail and California Trail. The district&rsquo;s figure is still shown, with a note.</p>
+        <H3 id="formulas" />
+        <p>How the model gets from census homes to each school&rsquo;s projected students, and how capacity is estimated where the district hasn&rsquo;t published it.</p>
+        <details className="formula-details">
+          <summary>Show the formulas</summary>
+          <div className="formulas">
+            <Formula number={1} tex={String.raw`w(h) = \beta\, w_{\text{same}}(h) + (1-\beta)\, w_{\text{aged}}(h)`}
+              note={<>A relative weight for home <var>h</var>, blended from two views of its census block: children at the ages counted in
+                2020, and those children aged forward. &beta; is 0.5 for elementary and 0.4 for middle and high schools. Each school&rsquo;s
+                homes are scaled to sum to 100, and the five closing schools&rsquo; homes are reshaped to the district&rsquo;s student-dot
+                maps. Only the ratios matter, since formula 2 divides by the sum.</>} />
+            <Formula number={2} tex={String.raw`f(o,t) = a(o)\; b(o,t)\; \frac{E(o,t)}{\sum_{h:\,o(h)=o} w(h)}, \qquad a(o) = \frac{K(o,\ \text{2026})}{E(o,\ \text{2026})}`}
+              note={<>Students per unit of weight for school <var>o</var> in year <var>t</var>. <var>o</var>(<var>h</var>) is the school
+                home <var>h</var> belongs to today. <var>E</var> is the projected number of students living in that school&rsquo;s area:
+                the July 2026 forecast&rsquo;s utilization times capacity, with Black Bob&rsquo;s immersion students taken out.{' '}
+                <var>a</var> matches the district&rsquo;s fall 2026 count <var>K</var>, and <var>b</var> follows the district&rsquo;s
+                five-year tables (formula 5).</>} />
+            <Formula number={3} tex={String.raw`N(s,t) = \sum_{h:\,\sigma(h)=s} w(h)\; f\big(o(h),\, t\big) + F(s)`}
+              note={<>A school&rsquo;s students: every home the plan assigns to it (&sigma;(<var>h</var>) = <var>s</var>), each keeping its
+                original school&rsquo;s rate, plus students placed in the building, <var>F</var>: Pre-K when it&rsquo;s counted, and 118
+                Spanish immersion students at Arbor Creek.</>} />
+            <Formula number={4} tex={String.raw`U(s,t) = \frac{N(s,t)}{C(s)}`}
+              note={<>Utilization: students over max functional capacity <var>C</var>. The district&rsquo;s goal is 85% or less.</>} />
+            <Formula number={5} tex={String.raw`b(\cdot,t) = \arg\min_{b} \sum_{(c,s) \notin Q} \big(N_c(s,t) - D_c(s,t)\big)^2 + \sum_{o} \lambda(o) \Big(S(o,t)\,\big(b(o,t) - 1\big)\Big)^2`}
+              note={<>Trend tuning, a ridge regression run once for each year <var>t</var> from 2027&ndash;28 to 2031&ndash;32 (2026&ndash;27 is
+                already matched to fall counts). It picks the <var>b</var> values that best match the district&rsquo;s figures <var>D</var>{' '}
+                across its concepts <var>c</var>, leaving out figures that look like errors (<var>Q</var>: Frontier Trail&rsquo;s 933 in
+                middle school concept 4). The second term keeps each <var>b</var> near 1: &lambda; is 0.05 for open schools and 0.5 for closing
+                schools, whose counts are known, and <var>S</var> is the school&rsquo;s own students. Only schools in the district&rsquo;s
+                tables and the closing schools get a <var>b</var>; every other school stays at 1. After 2031&ndash;32, each <var>b</var>{' '}
+                holds its 2031&ndash;32 value.</>} />
+            <Formula number={6} tex={String.raw`C(s) = \frac{K(s,\ \text{2025–26})}{u(s,\ \text{2025–26})}`}
+              note={<>Capacity for schools without a published figure: 2025&ndash;26 enrollment <var>K</var> divided by <var>u</var>, the
+                utilization the July 2026 forecast reports for that year, as a fraction. Example: 452 &divide; 0.75 &asymp; 603.</>} />
+          </div>
+        </details>
         <H3 id="starting-counts" />
         <p>Each closing school starts from the number of students the district moves: Black Bob about 229, Heritage 233, Scarborough 237,
           Tomahawk 322, Walnut Grove 367 and Indian Trail 570. Distances are measured along streets and compared with the 2.5-mile busing
@@ -174,21 +188,26 @@ export default function About() {
         <H3 id="grades" />
         <p>Each school&rsquo;s details split its students by grade for the year chosen at the top, and count the class sections an
           elementary school would need.</p>
-        <div className="formulas">
-          <Formula number={7} tex={String.raw`G(s,t) = T(s,t) - F(s)`}
-            note={<>Students in K&ndash;5 classrooms: the school&rsquo;s total <var>T</var> for that year, less Pre-K and Spanish immersion
-              (<var>F</var>). The total is the hard stop: the district&rsquo;s figure while it publishes one, the model&rsquo;s estimate
-              (formula 3) after that.</>} />
-          <Formula number={8} tex={String.raw`n_g(s,t) = G(s,t) \cdot \frac{m_g(s)}{\sum_{k} m_k(s)}`}
-            note={<>Students in grade <var>g</var>: the classroom total split by the grade mix <var>m</var>. Where a district
-              parent-meeting slide shows the school&rsquo;s classes by grade after the move for that concept, <var>m</var> is those
-              counts. Otherwise it&rsquo;s the model&rsquo;s students by grade, with each home keeping its original school&rsquo;s
-              2025&ndash;26 grade mix from the Kansas State Department of Education.</>} />
-          <Formula number={9} tex={String.raw`k_g = \left\lceil \frac{n_g}{c_g} \right\rceil, \qquad \bar{n}_g = \frac{n_g}{k_g}`}
-            note={<>Sections: a new section opens whenever a grade passes the district&rsquo;s staffing guideline <var>c</var>
-              (kindergarten through grade 2: 24; grade 3: 26; grades 4 and 5: 28), with no combined-grade classes. The average class
-              size is the grade&rsquo;s students over its sections.</>} />
-        </div>
+        <details className="formula-details">
+          <summary>Show the formulas</summary>
+          <div className="formulas">
+            <Formula number={7} tex={String.raw`G(s,t) = \begin{cases} D(s,t) - P(s) - I(s) & \text{district figure} \\ N(s,t) - F(s) & \text{otherwise} \end{cases}`}
+              note={<>Students in K&ndash;5 classrooms. With the district&rsquo;s figure <var>D</var>, Pre-K (<var>P</var>) and Spanish immersion
+                (<var>I</var>) always come out, since the district&rsquo;s totals include Early Childhood. With the model&rsquo;s total{' '}
+                <var>N</var> (formula 3), <var>F</var> matches whether Pre-K is counted. The total is the hard stop: the district&rsquo;s
+                figure while it publishes one, the model&rsquo;s estimate after that.</>} />
+            <Formula number={8} tex={String.raw`n(g,s,t) = G(s,t)\; \frac{m(g,s,t)}{\sum_{k} m(k,s,t)}`}
+              note={<>Students in grade <var>g</var>: the classroom total split by the grade mix <var>m</var>. With a district figure,{' '}
+                <var>m</var> is the school&rsquo;s classes by grade after the move from a parent-meeting slide for that concept, where one
+                exists. Those are 2026&ndash;27 classes, used for every year. Otherwise, and always for model estimates, <var>m</var> is the
+                model&rsquo;s students by grade for that year, with each home keeping its original school&rsquo;s 2025&ndash;26 grade mix
+                from the Kansas State Department of Education.</>} />
+            <Formula number={9} tex={String.raw`k(g,s,t) = \left\lceil \frac{n(g,s,t)}{c(g)} \right\rceil, \qquad \bar{n}(g,s,t) = \frac{n(g,s,t)}{k(g,s,t)} \quad (k > 0)`}
+              note={<>Sections: a new section opens whenever a grade passes the district&rsquo;s staffing guideline <var>c</var>{' '}
+                (kindergarten through grade 2: 24; grade 3: 26; grades 4 and 5: 28), with no combined-grade classes. The average class
+                size is the grade&rsquo;s students over its sections, when it has any.</>} />
+          </div>
+        </details>
         <p>The staffing guidelines come from the &ldquo;Grade Breakdown&rdquo; slide in each closing school&rsquo;s parent-meeting deck.
           The slides&rsquo; grade counts set only the mix: some of their totals don&rsquo;t match the main presentations, which stay the
           hard stop.</p>

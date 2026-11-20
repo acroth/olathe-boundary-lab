@@ -42,6 +42,7 @@
 .lab .maps.split .map-wrap + .map-wrap { border-left: 1px solid var(--ui-border); }
 .topbar { top: 12px; left: 12px; right: 12px; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "search share" "level level" "tools tools"; align-items: start; }
 .topbar-search { grid-area: search; } .topbar-level { grid-area: level; } .topbar-tools { grid-area: tools; } .topbar-share { grid-area: share; }
+.topbar-panel { grid-area: panel; display: none; }
 .level-option { height: 44px; font-size: 16px; font-weight: 600; border-radius: 12px; padding: 0 18px; }
 .level-option[data-state=on] { background: var(--ui-primary); color: var(--ui-primary-fg); box-shadow: none; }
 .panel { position: absolute; z-index: 15; display: flex; flex-direction: column; background: var(--ui-card); color: var(--ui-fg);
@@ -69,9 +70,10 @@
 }
 @media (min-width: 768px) {
   .lab-main { inset: 0 0 0 72px; }
-  .topbar { top: 16px; left: 16px; right: 16px; gap: 8px 12px; grid-template-columns: minmax(150px, 1fr) auto auto; grid-template-areas: "search level share" ". tools ."; }
+  .topbar { top: 16px; left: 16px; right: 16px; gap: 8px 12px; grid-template-columns: minmax(150px, 1fr) auto auto; grid-template-areas: "search level share" "panel tools ."; }
+  .topbar-panel { display: block; }
   .level-option { height: 48px; min-width: 104px; font-size: 17px; }
-  .panel { top: 92px; left: 16px; bottom: 16px; width: 380px; border-radius: 20px; }
+  .panel { top: 120px; left: 16px; bottom: 16px; width: 380px; border-radius: 20px; }
   .lab.panel-closed .panel { display: none; }
   .legend-dock { top: auto; right: 16px; bottom: 36px; }
   /* centered under the level selector, but never over the panel */

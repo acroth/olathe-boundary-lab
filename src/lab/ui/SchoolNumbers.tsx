@@ -83,7 +83,7 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
             {showEstimates && compareResult && <div><dt>Peak year, compared plan ({meta.years[compareSchool?.peakYear ?? schoolResult.peakYear]})</dt><dd>{compareSchool?.open ? <>{percent(compareSchool.peak)} ({studentCount(compareSchool.total[compareSchool.peakYear])} students)<EstimateMark /></> : 'Closing'}</dd></div>}
           </dl>
           {school.level !== 'hs' && <GradeBreakdown staticData={staticData} school={school as any} schoolResult={schoolResult} year={schoolNumber.year}
-            total={schoolNumber.students} slideGrades={slideGradesFor(schoolNumber, school.name, school.level)} />}
+            total={schoolNumber.students} fromDistrict={schoolNumber.source === 'district'} slideGrades={slideGradesFor(schoolNumber, school.name, school.level)} />}
           {schoolNumber.questionable && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />{schoolNumber.questionable}</p>}
           {capacityNote && <p className="school-note">{capacityNote}</p>}
           {slide && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />At a parent meeting, the district showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} That slide adds the moving students to this school year's (2026&ndash;27) classes.{columnsNote} The number above is the district's projection for {meta.years[schoolNumber.year]}.</p>}
@@ -109,7 +109,6 @@ export function SchoolList({ staticData, numbers, schools, result, compareResult
   const [showAll, setShowAll] = useState(false);
 
   const openSchools = schools.flatMap(school => numbers.get(school) ?? []).sort((first, second) => second.value - first.value);
-  const closingSchools = schools.filter(school => !numbers.has(school));
   const canCollapse = openSchools.length > LONGEST_FULL_LIST;
   const shownSchools = showAll || !canCollapse ? openSchools : openSchools.slice(0, COLLAPSED_SCHOOL_COUNT);
 
@@ -129,7 +128,6 @@ export function SchoolList({ staticData, numbers, schools, result, compareResult
       {canCollapse && (
         <button className="show-all" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer schools' : `Show all ${openSchools.length} schools`}</button>
       )}
-      {closingSchools.length > 0 && <p className="list-note">Closing: {closingSchools.map(school => staticData.schools[school].name).join(', ')}</p>}
     </>
   );
 }

@@ -7,20 +7,26 @@ import type { School, Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { CircleHelp } from 'lucide-react';
 import { SLIDE_GRADE_ORDER } from '../parentSlides';
+import { useUI } from '../store';
 import EstimateMark from './EstimateMark';
 
 const GRADE_ORDER = ['K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 const byGrade = (first: string, second: string) => GRADE_ORDER.indexOf(first) - GRADE_ORDER.indexOf(second);
 
-export default function GradeBreakdown({ staticData, school, schoolResult, year, total, slideGrades }: {
+export default function GradeBreakdown({ staticData, school, schoolResult, year, total, fromDistrict, slideGrades }: {
   staticData: Static; school: School; schoolResult: LevelResult['schools'][number]; year: number;
   total: number;                     // the school's students that year, as shown above the table
+  fromDistrict: boolean;             // whether that total is the district's figure
   slideGrades?: number[] | null;     // K-5 counts from a parent-meeting slide (parentSlides.ts), when one covers this school
 }) {
   const { classSize } = staticData.meta;
   const isElementary = school.level === 'es';
   const grades = Object.keys(school.gradeShare).sort(byGrade);
-  const notInClasses = Math.min(total, schoolResult.inBuilding);   // Pre-K and immersion
+  // Pre-K and immersion. The district's totals always include Early Childhood, so its Pre-K comes out even when the
+  // "Count Pre-K" setting leaves it out of the model's totals (and of inBuilding).
+  const includePreK = useUI(state => state.includePreK);
+  const preKLeftOut = fromDistrict && !includePreK ? school.prek : 0;
+  const notInClasses = Math.min(total, schoolResult.inBuilding + preKLeftOut);
   const classroomStudents = total - notInClasses;
   const mix: Record<string, number> = slideGrades
     ? Object.fromEntries(SLIDE_GRADE_ORDER.map((grade, index) => [grade, slideGrades[index]]))

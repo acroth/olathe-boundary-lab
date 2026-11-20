@@ -5,7 +5,16 @@ import { schoolColor } from '../colors';
 import type { Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headline, type SchoolNumber } from '../numbers';
+import { PARENT_SLIDE_GRADES } from '../parentSlides';
 import EstimateMark from './EstimateMark';
+import GradeBreakdown from './GradeBreakdown';
+
+/** A parent-meeting slide's grade counts for this school, from a concept whose district figure applies to it. */
+function slideGradesFor(schoolNumber: SchoolNumber, name: string, level: string): number[] | null {
+  if (level !== 'es' || schoolNumber.source !== 'district') return null;
+  for (const concept of schoolNumber.districtConcepts) if (PARENT_SLIDE_GRADES[concept]?.[name]) return PARENT_SLIDE_GRADES[concept][name];
+  return null;
+}
 
 const COLLAPSED_SCHOOL_COUNT = 5, LONGEST_FULL_LIST = 6;   // a list of six is short enough to show whole
 const NEAR_GOAL_POINTS = 5;
@@ -73,6 +82,8 @@ function SchoolRow({ staticData, schoolNumber, result, compareResult, expanded, 
               : <div><dt>Peak year ({meta.years[schoolResult.peakYear]})</dt><dd>{percent(schoolResult.peak)} ({studentCount(schoolResult.total[schoolResult.peakYear])} students)<EstimateMark /></dd></div>}
             {showEstimates && compareResult && <div><dt>Peak year, compared plan ({meta.years[compareSchool?.peakYear ?? schoolResult.peakYear]})</dt><dd>{compareSchool?.open ? <>{percent(compareSchool.peak)} ({studentCount(compareSchool.total[compareSchool.peakYear])} students)<EstimateMark /></> : 'Closing'}</dd></div>}
           </dl>
+          {school.level !== 'hs' && <GradeBreakdown staticData={staticData} school={school as any} schoolResult={schoolResult} year={schoolNumber.year}
+            total={schoolNumber.students} slideGrades={slideGradesFor(schoolNumber, school.name, school.level)} />}
           {schoolNumber.questionable && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />{schoolNumber.questionable}</p>}
           {capacityNote && <p className="school-note">{capacityNote}</p>}
           {slide && <p className="school-note"><TriangleAlert className="school-warning" aria-hidden />At a parent meeting, the district showed {slide.students.toLocaleString()} students here, or {percent(slide.percent)} full.{printedNote} That slide adds the moving students to this school year's (2026&ndash;27) classes.{columnsNote} The number above is the district's projection for {meta.years[schoolNumber.year]}.</p>}

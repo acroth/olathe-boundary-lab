@@ -13,7 +13,7 @@ import { buildPlan } from './planBuilder';
 import { blankPlan } from './startingPlans';
 import { shownOverlay, usePlan, useUI } from './store';
 import Legend from './ui/Legend';
-import { DRAWER_TITLE, MapButtons, MobileSearch, MobileTabs, MobileTopBar } from './ui/mobile/MobileChrome';
+import { DRAWER_TITLE, MapButtons, MobilePlanHeader, MobileSearch, MobileTabs, MobileTopBar } from './ui/mobile/MobileChrome';
 import MapToolbar from './ui/MapToolbar';
 import Sidebar from './ui/Sidebar';
 import TopBar from './ui/TopBar';
@@ -73,7 +73,7 @@ function boundsOfClosures(staticData: Static, level: Level): [[number, number], 
   return east > west ? [[west, south], [east, north]] : null;
 }
 
-const MOBILE_TOP_CLEARANCE = 64, MOBILE_DRAW_TOP_CLEARANCE = 140, MOBILE_TABS_CLEARANCE = 92;
+const MOBILE_TOP_CLEARANCE = 94, MOBILE_DRAW_TOP_CLEARANCE = 170, MOBILE_TABS_CLEARANCE = 92;
 
 /** Map padding that keeps fitted areas clear of the floating panel, top bar and legend (phones: top bar, tabs and drawer). */
 export function mapPadding() {
@@ -227,7 +227,7 @@ export default function App() {
           )}
         </div>
         {isMobile
-          ? <MobileTopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} />
+          ? <><MobileTopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} /><MobilePlanHeader staticData={staticData} /></>
           : <TopBar staticData={staticData} mapRef={mapRef} planResults={planResults} padding={mapPadding} />}
         {(!isMobile || ui.drawer) && (
           <aside className="panel" aria-label={isMobile && ui.drawer ? DRAWER_TITLE[ui.drawer] : panelTitle}>

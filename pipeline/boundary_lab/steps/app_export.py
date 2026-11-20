@@ -161,7 +161,8 @@ def run() -> None:
     homes_layout, home_count = export_homes(school_number, nearest_node)
     streets_layout, edge_count, street_names = export_streets(nodes)
     meta = dict(
-        years=SCHOOL_YEARS, firstPlanYear=FIRST_PLAN_YEAR, classSize={'K': 22, '1': 22, '2': 22, '3': 24, '4': 26, '5': 26},
+        # classSize: the district's staffing guidelines ("2026 <school> Grade Breakdown" in each Nov 2026 parent-meeting deck)
+        years=SCHOOL_YEARS, firstPlanYear=FIRST_PLAN_YEAR, classSize={'K': 24, '1': 24, '2': 24, '3': 26, '4': 28, '5': 28},
         streetClasses=ROAD_CLASSES, streetNames=street_names,
         homes=dict(count=home_count, layout=homes_layout), streets=dict(nodes=len(nodes), edges=edge_count, layout=streets_layout),
         busMiles=2.5, target=0.85, sources=SOURCES)

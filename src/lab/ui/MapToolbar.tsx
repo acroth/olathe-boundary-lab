@@ -1,5 +1,5 @@
 'use client';
-import { Check, Eraser, Hand, MousePointerClick, Spline } from 'lucide-react';
+import { Check, CircleHelp, Eraser, Hand, MousePointerClick, Spline } from 'lucide-react';
 import type { Static } from '../data';
 import { usePlan, useUI, type PickBy, type Tool } from '../store';
 import { UNASSIGNED, schoolColor } from '../colors';
@@ -60,6 +60,9 @@ export default function MapToolbar({ staticData, visibleSchools }: { staticData:
           </select>
         </label>
         {tool === 'trace' && <Button size="sm" className="h-9" onClick={() => ui.set({ doneTick: ui.doneTick + 1 })}><Check />Done</Button>}
+        <a className="drawbar-help" href="/about#using-free-draw" target="_blank" rel="noopener" aria-label="How to use Free draw (opens in a new tab)">
+          <CircleHelp aria-hidden /><span>How to</span>
+        </a>
       </div>
       <ToggleGroup type="single" value={tool} className="w-full" aria-label="Tool" onValueChange={value => value && chooseTool(value as Tool)}>
         {TOOLS.map(candidate => <ToggleGroupItem key={candidate.id} value={candidate.id} className="h-8"><candidate.icon />{candidate.label}</ToggleGroupItem>)}

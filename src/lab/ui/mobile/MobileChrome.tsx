@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { Results } from '../../App';
-import type { Static } from '../../data';
+import type { Level, Static } from '../../data';
 import { publishedConcept, publishedOption } from '../../numbers';
-import { blankPlan } from '../../startingPlans';
-import { usePlan, useUI, type MobileDrawer } from '../../store';
+import { BLANK_START, blankPlan, currentStartingPlan } from '../../startingPlans';
+import { usePlan, useUI, type MobileDrawer, type Plan } from '../../store';
 import { LegendList, legendTitle } from '../Legend';
 import { LevelSwitch, UndoRedo, useShare } from '../TopBar';
 import LayersMenu from '../topBar/LayersMenu';
@@ -78,18 +78,28 @@ export function MapButtons({ staticData, visibleSchools, onRecenter }: { staticD
   );
 }
 
-/** The Concept tab's label: the district concept on the map at this level, or "Custom" for anything else. */
-function conceptLabel(staticData: Static): string {
-  const ui = useUI.getState(), plan = usePlan.getState().plan;
-  if (ui.level === 'hs') return 'Concepts';
-  const concept = ui.level === 'ms' ? publishedConcept(staticData, plan) : publishedOption(staticData, plan);
-  return concept ? `Concept ${concept}` : 'Custom';
+/** What's on the map at this level: a district concept, a custom plan, or (high schools) today's boundaries. */
+function planLabel(staticData: Static, plan: Plan, level: Level): string {
+  if (level === 'hs') return 'Current boundaries';
+  const concept = level === 'ms' ? publishedConcept(staticData, plan) : publishedOption(staticData, plan);
+  if (concept) return `Concept ${concept}`;
+  return currentStartingPlan(staticData, plan, level) === BLANK_START ? 'Current boundaries' : 'Custom plan';
 }
 
-/** Concept, Schools and Draw. Each opens its drawer; tapping the open one closes it. */
+/** A small header under the top row naming the plan on the map and the year shown, so it's clear what you're looking at. */
+export function MobilePlanHeader({ staticData }: { staticData: Static }) {
+  const level = useUI(state => state.level), year = useUI(state => state.year);
+  const plan = usePlan(state => state.plan);
+  return (
+    <p className="mobile-plan-header pointer-events-none absolute z-10" aria-live="polite">
+      {planLabel(staticData, plan, level)}<span className="mobile-plan-year">{staticData.meta.years[year]}</span>
+    </p>
+  );
+}
+
+/** Concepts, Schools and Free Draw. Each opens its drawer and is highlighted only while that drawer is open; tapping it again closes it. */
 export function MobileTabs({ staticData }: { staticData: Static }) {
   const ui = useUI();
-  usePlan(state => state.plan);   // the Concept label follows the plan
 
   const toggle = (drawer: MobileDrawer, extra: Partial<typeof ui> = {}) => {
     const closing = ui.drawer === drawer && Object.keys(extra).length === 0;
@@ -103,9 +113,9 @@ export function MobileTabs({ staticData }: { staticData: Static }) {
   };
 
   const tabs: { id: MobileDrawer; label: string; icon: typeof Blocks; active: boolean; onClick: () => void }[] = [
-    { id: 'concepts', label: conceptLabel(staticData), icon: Blocks, active: ui.mode === 'build' && ui.drawer !== 'schools', onClick: openConcepts },
+    { id: 'concepts', label: 'Concepts', icon: Blocks, active: ui.drawer === 'concepts', onClick: openConcepts },
     { id: 'schools', label: 'Schools', icon: TableProperties, active: ui.drawer === 'schools', onClick: () => toggle('schools') },
-    { id: 'draw', label: 'Free Draw', icon: PenLine, active: ui.mode === 'draw' && ui.drawer !== 'schools', onClick: openDraw },
+    { id: 'draw', label: 'Free Draw', icon: PenLine, active: ui.drawer === 'draw', onClick: openDraw },
   ];
 
   return (

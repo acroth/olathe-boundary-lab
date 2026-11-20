@@ -337,7 +337,7 @@ describe('the headline number', () => {
   });
 
   it('marks the source on every label', () => {
-    const base = { school: 0, year: 2, model: 0.81, students: 400, parentSlide: null, districtPeak: null, questionable: null };
+    const base = { school: 0, year: 2, model: 0.81, students: 400, parentSlide: null, districtPeak: null, questionable: null, districtConcepts: [] };
     expect(headline({ ...base, source: 'model', value: 0.81, district: null, agreement: null })).toBe('81.0%');
     expect(headline({ ...base, source: 'district', value: 0.84, district: 0.84, agreement: 'close' })).toBe('84.0%');
   });

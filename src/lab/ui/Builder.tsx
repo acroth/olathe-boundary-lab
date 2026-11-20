@@ -2,7 +2,7 @@
 import type { Combos, ComboConcept, Level, Static } from '../data';
 import type { LevelResult } from '../model/engine';
 import { headlineSummary, type SchoolNumber } from '../numbers';
-import type { Build, Plan } from '../store';
+import { useUI, type Build, type Plan } from '../store';
 import EstimateMark from './EstimateMark';
 import Fold from './Fold';
 import { SchoolList } from './SchoolNumbers';
@@ -52,7 +52,7 @@ function SchoolsSection({ staticData, numbers, visibleSchools, result, onSchoolS
   const goalPercent = staticData.meta.target * 100;
   return (
     <section className="panel-section">
-      <h3 className="panel-heading">How full each school would be</h3>
+      <h3 className="panel-heading">Projected Functional Capacity</h3>
       <p className="section-note">{summary.sourceLabel} The district's goal is {goalPercent}% full or less.</p>
       {result && <SchoolList staticData={staticData} numbers={numbers} schools={summary.schools.map(schoolNumber => schoolNumber.school)} result={result} onSchoolSelect={onSchoolSelect} />}
     </section>
@@ -71,11 +71,32 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
     onBuildChange({ ...build, sel: nextConcepts, moves: null });
   };
 
-  const movingPieces = combos.schools.flatMap((school, schoolIndex) => {
+  // The district's per-destination counts are the students who move when the change takes effect (2027-28). Later years have no
+  // district counts, so each part shows the model's estimate of its students that year, like the school list does.
+  const year = useUI(state => state.year), moveYear = staticData.meta.firstPlanYear;
+  const useDistrictCounts = year <= moveYear;
+
+  /** Where the chosen concept sends a closing school's students: the concept's own description of each part, with how many move. */
+  const destinations = (school: Combos['schools'][number], schoolIndex: number) => {
     const concept = selectedConcept(school.concepts, selectedConcepts[schoolIndex]);
-    const pieces = concept.pieces.filter(piece => (piece.district ?? 0) > 0 || piece.model26 > 0);
-    return pieces.map(piece => ({ school, piece, modelStudents: elementaryResult?.schools[piece.school]?.movedInByOriginFall2026[school.i] }));
-  });
+    const clausesOf = (summary: string) => (summary.includes(': ') ? summary.split(': ')[1] : summary).split(/;\s*/).map(clause => clause.replace(/\.$/, ''));
+    const note = concept.summary.includes(': ') ? concept.summary.split(': ')[0] : '';
+    // "otherwise as concept 2": the rest of the description comes from that concept
+    const borrowed = concept.summary.match(/as concept (\d)/)?.[1];
+    const borrowedClauses = borrowed ? clausesOf(school.concepts.find(other => String(other.id) === borrowed)?.summary ?? '') : [];
+    const clauses = [...clausesOf(concept.summary).filter(clause => !/as concept \d/.test(clause)), ...borrowedClauses];
+    const parts = concept.pieces.filter(piece => (piece.district ?? 0) > 0 || piece.model26 > 0).map(piece => {
+      const index = clauses.findIndex(candidate => candidate.includes(piece.to));
+      const clause = index >= 0 ? clauses[index] : `To ${piece.to}`;
+      // a home keeps its original school's rate, so a later year scales the fall 2026 count by that school's rate that year
+      const fall2026 = elementaryResult?.schools[piece.school]?.movedInByOriginFall2026[school.i];
+      const rates = staticData.schools[school.i].factor;
+      const modelStudents = fall2026 === undefined ? undefined : fall2026 * (rates[year] / rates[moveYear - 1]);
+      const district = useDistrictCounts ? piece.district : null;
+      return { to: piece.to, order: index >= 0 ? index : clauses.length, text: clause.charAt(0).toUpperCase() + clause.slice(1), district, modelStudents };
+    });
+    return { note, parts: parts.sort((first, second) => first.order - second.order) };
+  };
 
   const { part = 'all' } = props;
   const schoolsSection = <SchoolsSection staticData={staticData} numbers={numbers} visibleSchools={visibleSchools} result={elementaryResult} onSchoolSelect={onSchoolSelect} />;
@@ -90,15 +111,16 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
             <button key={option} className={matchingOption === option ? 'on' : ''} aria-pressed={matchingOption === option} onClick={() => onBuildChange({ ...build, sel: [...concepts], moves: null })}>{option}</button>
           ))}
         </div>
-        {!matchingOption && <p className="section-note picker-note">You're viewing a custom mix of the district's concepts.</p>}
+        {!matchingOption && <p className="section-note picker-note">You're viewing a custom combination of the district's concepts.</p>}
         <Scorecard staticData={staticData} plan={plan} result={elementaryResult} numbers={numbers} visibleSchools={visibleSchools} />
       </section>
 
       {part === 'all' && schoolsSection}
 
       <section className="panel-section folds">
-        <Fold title="Mix and match closing schools">
-          <p className="section-note">Choose where each closing school's students would go.</p>
+        <Fold title="Concepts by closing school">
+          <p className="section-note">The board votes on each closing school separately. Pick a concept for each to see the combined result.
+            Counts are students in each part in {staticData.meta.years[year]}.</p>
           {combos.schools.map((school, schoolIndex) => (
             <div key={school.name} className="closing-school">
               <div className="closing-school-top">
@@ -109,23 +131,26 @@ function ElementaryBuilder(props: BuilderProps & { combos: Combos }) {
                   ))}
                 </div>
               </div>
-              <p className="section-note">{selectedConcept(school.concepts, selectedConcepts[schoolIndex]).summary}</p>
+              {(() => {
+                const { note, parts } = destinations(school, schoolIndex);
+                return (
+                  <>
+                    {note && <p className="section-note">{note}.</p>}
+                    <ul className="destination-list">
+                      {parts.map(part => (
+                        <li key={part.to}>
+                          <span>{part.text}</span>
+                          <b>{part.district !== null
+                            ? `${part.district} students`
+                            : part.modelStudents === undefined ? '—' : <>{Math.round(part.modelStudents)} students<EstimateMark /></>}</b>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                );
+              })()}
             </div>
           ))}
-        </Fold>
-        <Fold title="Where students would go">
-          <table className="simple-table">
-            <thead><tr><th>From → to</th><th>District</th><th>Estimate</th></tr></thead>
-            <tbody>
-              {movingPieces.map(({ school, piece, modelStudents }) => (
-                <tr key={school.name + piece.to}>
-                  <td>{school.name} → {piece.to}</td>
-                  <td>{piece.district ?? '—'}</td>
-                  <td>{modelStudents === undefined ? '—' : <>{Math.round(modelStudents)}<EstimateMark /></>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </Fold>
       </section>
 

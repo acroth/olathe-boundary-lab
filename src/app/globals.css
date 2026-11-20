@@ -74,8 +74,9 @@
   .panel { top: 92px; left: 16px; bottom: 16px; width: 380px; border-radius: 20px; }
   .lab.panel-closed .panel { display: none; }
   .legend-dock { top: auto; right: 16px; bottom: 36px; }
-  .drawbar { top: 136px; left: 412px; right: auto; width: min(520px, calc(100% - 428px - 16px)); }
-  .lab.panel-closed .drawbar { left: 16px; width: min(520px, calc(100% - 32px)); }
+  /* centered under the level selector, but never over the panel */
+  .drawbar { top: 136px; right: auto; width: min(540px, calc(100% - 428px - 16px)); left: max(412px, calc(50% - 270px)); }
+  .lab.panel-closed .drawbar { width: min(540px, calc(100% - 32px)); left: max(16px, calc(50% - 270px)); }
   .lab .toast { top: auto; bottom: 28px; }
   .lab.panel-open .maplibregl-ctrl-bottom-left { left: 412px; }
 }
@@ -105,6 +106,10 @@
 
 /* Phones: map-first layout (src/lab/ui/mobile/MobileChrome.tsx). The map fills the screen; the bottom tabs open drawers. */
 .lab.mobile .lab-main { inset: 0; }
+.mobile-plan-header { top: 60px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; margin: 0; padding: 4px 12px; white-space: nowrap;
+  background: var(--ui-card); border: 1px solid var(--ui-border); border-radius: 999px; box-shadow: var(--ui-shadow); font-size: 12.5px; font-weight: 600; color: var(--ui-fg); }
+.mobile-plan-year { color: var(--ui-muted-fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+.mobile-plan-year::before { content: '·'; margin-right: 6px; }
 .mobile-top { top: 10px; left: 10px; right: 10px; display: flex; align-items: center; gap: 6px; }
 .mobile-chip { display: flex; flex: none; align-items: center; height: 44px; padding: 0 3px; background: var(--ui-card); border: 1px solid var(--ui-border); border-radius: 14px; box-shadow: var(--ui-shadow); }
 .mobile-chip button { height: 36px; }
@@ -136,9 +141,9 @@
 .lab.mobile .panel-head { padding: 4px 10px 8px 18px; }
 .drawer-close { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; color: var(--ui-muted-fg); background: none; border: 0; }
 .drawer-close:hover { background: var(--ui-muted); }
-.lab.mobile.mode-draw .drawbar { display: flex; top: 62px; bottom: auto; left: 10px; right: 10px; }
+.lab.mobile.mode-draw .drawbar { display: flex; top: 94px; bottom: auto; left: 10px; right: 10px; }
 .lab.mobile .drawbar [data-slot="toggle-group-item"] { height: 30px; padding: 0 4px; font-size: 12.5px; }
 .lab.mobile .drawbar select { font-size: 13.5px; }
-.lab.mobile .toast { top: 64px; } .lab.mobile.mode-draw .toast { top: 150px; }
+.lab.mobile .toast { top: 96px; } .lab.mobile.mode-draw .toast { top: 182px; }
 .lab.mobile .maplibregl-ctrl-bottom-left, .lab.mobile .maplibregl-ctrl-bottom-right { bottom: calc(84px + env(safe-area-inset-bottom)); }
 .lab.mobile .maplibregl-ctrl-bottom-left { left: 58px; }

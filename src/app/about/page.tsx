@@ -21,6 +21,12 @@ const SECTIONS: TocItem[] = [
     { id: 'free-draw', title: 'Free draw' },
     { id: 'sharing', title: 'Sharing and exports' },
   ] },
+  { id: 'using-free-draw', title: 'Using Free draw', children: [
+    { id: 'guide-pick-areas', title: 'Pick areas' },
+    { id: 'guide-trace', title: 'Trace' },
+    { id: 'guide-follow-streets', title: 'Follow streets' },
+    { id: 'guide-remove', title: 'Remove' },
+  ] },
   { id: 'numbers', title: 'Reading the numbers', children: [
     { id: 'district-figures', title: 'District figures' },
     { id: 'model-estimates', title: 'Model estimates' },
@@ -31,6 +37,7 @@ const SECTIONS: TocItem[] = [
     { id: 'formulas', title: 'Formulas' },
     { id: 'accuracy', title: 'Accuracy' },
     { id: 'starting-counts', title: 'Starting counts' },
+    { id: 'grades', title: 'Grades and class sections' },
   ] },
   { id: 'sources', title: 'Data sources' },
   { id: 'limitations', title: 'Limitations' },
@@ -39,6 +46,16 @@ const SECTIONS: TocItem[] = [
 const titles = new Map(SECTIONS.flatMap(section => [section, ...(section.children ?? [])]).map(item => [item.id, item.title]));
 const H2 = ({ id }: { id: string }) => <h2 id={id}>{titles.get(id)}</h2>;
 const H3 = ({ id }: { id: string }) => <h3 id={id}>{titles.get(id)}</h3>;
+
+/** A Free draw screenshot (scripts/draw-guide.mjs): the phone capture on narrow screens, the desktop one otherwise. */
+function GuideShot({ name, alt }: { name: string; alt: string }) {
+  return (
+    <picture>
+      <source media="(max-width: 700px)" srcSet={`/guide/phone-${name}.webp`} />
+      <img className="guide-shot" src={`/guide/desktop-${name}.webp`} alt={alt} loading="lazy" />
+    </picture>
+  );
+}
 
 /** One numbered formula, typeset from LaTeX when the page is built, and what it means. */
 function Formula({ number, tex, note }: { number: number; tex: string; note: React.ReactNode }) {
@@ -65,7 +82,8 @@ export default function About() {
           School, and has published several concepts for redrawing the affected boundaries. The lab places those concepts on one map and
           shows how full each school would be under each of them.</p>
         <H3 id="concept-builder" />
-        <p>View any of the district&rsquo;s concepts, or combine them school by school to see how a mix would play out.</p>
+        <p>View any of the district&rsquo;s concepts. Because the board votes on each closing school separately, you can also pick a concept
+          for each closing school and see the combined result.</p>
         <H3 id="free-draw" />
         <p>Start from current boundaries or a district concept, then reassign planning areas or trace new lines along streets. School
           capacity updates as you draw.</p>
@@ -73,12 +91,46 @@ export default function About() {
         <p>Every view has a link that reproduces it exactly. Plans can also be saved in the browser or exported as boundaries (GeoJSON),
           numbers (CSV) or a map image.</p>
 
+        <H2 id="using-free-draw" />
+        <p>Free draw lets you redraw boundaries yourself. Open it from the rail on the left, or the Free Draw tab on a phone. These examples
+          start from district concept 1 around Brougham.</p>
+        <GuideShot name="start-from" alt="The Start from menu in the Free draw panel, set to District concept 1" />
+        <p>Choose a starting point: current boundaries, with the closing schools&rsquo; areas left for you to assign, or one of the
+          district&rsquo;s concepts.</p>
+        <H3 id="guide-pick-areas" />
+        <GuideShot name="pick-areas-1" alt="Selecting Green Springs, choosing Pick areas, and tapping planning area 850" />
+        <ol className="guide-steps">
+          <li>Select the school that should get the area.</li>
+          <li>Choose <b>Pick areas</b>. You can pick numbered planning areas or whole school areas.</li>
+          <li>Tap an area on the map.</li>
+        </ol>
+        <GuideShot name="pick-areas-2" alt="Planning area 850 now colored as part of Green Springs" />
+        <p>The area takes the school&rsquo;s color, and every number updates.</p>
+        <H3 id="guide-trace" />
+        <GuideShot name="trace-1" alt="A traced line from one boundary line to another, ready for Done" />
+        <ol className="guide-steps">
+          <li>Choose <b>Trace</b> and tap on a boundary line. The point turns red when it&rsquo;s on a line.</li>
+          <li>Tap your way across, and end on another boundary line. One line can cross several areas.</li>
+          <li>Tap <b>Done</b>.</li>
+        </ol>
+        <GuideShot name="trace-2" alt="The areas the line crossed, split into highlighted pieces" />
+        <p>The areas the line crossed are split into highlighted pieces. Tap each piece that should go to the selected school, then tap
+          Done.</p>
+        <H3 id="guide-follow-streets" />
+        <GuideShot name="follow-streets" alt="The Follow streets switch turned on, with a blue ring on a street intersection" />
+        <p>Lines go straight between taps. Turn on <b>Follow streets</b> to snap each tap to the nearest intersection and route the line
+          along the roads. A blue ring shows where your tap will land.</p>
+        <H3 id="guide-remove" />
+        <GuideShot name="remove" alt="Choosing Remove and tapping an area that was changed" />
+        <p>Choose <b>Remove</b> and tap an area you changed to undo just that change. Undo and redo step back and forward through every
+          change.</p>
+
         <H2 id="numbers" />
         <H3 id="district-figures" />
         <p>District figures always come first. When a plan matches one the district published, the lab shows the district&rsquo;s projections
           for 2026&ndash;27 through 2031&ndash;32.</p>
         <H3 id="model-estimates" />
-        <p>Custom mixes, hand-drawn plans and years after 2031&ndash;32 use the lab&rsquo;s model. These numbers are marked
+        <p>Custom combinations, hand-drawn plans and years after 2031&ndash;32 use the lab&rsquo;s model. These numbers are marked
           with <SquareFunction className="about-icon" aria-label="function icon" /> beside the number.</p>
         <H3 id="figure-notes" />
         <p><TriangleAlert className="about-icon warn" aria-label="warning icon" /> marks a school with a note about its district figure, such
@@ -119,6 +171,27 @@ export default function About() {
         <p>Each closing school starts from the number of students the district moves: Black Bob about 229, Heritage 233, Scarborough 237,
           Tomahawk 322, Walnut Grove 367 and Indian Trail 570. Distances are measured along streets and compared with the 2.5-mile busing
           threshold.</p>
+        <H3 id="grades" />
+        <p>Each school&rsquo;s details split its students by grade for the year chosen at the top, and count the class sections an
+          elementary school would need.</p>
+        <div className="formulas">
+          <Formula number={7} tex={String.raw`G(s,t) = T(s,t) - F(s)`}
+            note={<>Students in K&ndash;5 classrooms: the school&rsquo;s total <var>T</var> for that year, less Pre-K and Spanish immersion
+              (<var>F</var>). The total is the hard stop: the district&rsquo;s figure while it publishes one, the model&rsquo;s estimate
+              (formula 3) after that.</>} />
+          <Formula number={8} tex={String.raw`n_g(s,t) = G(s,t) \cdot \frac{m_g(s)}{\sum_{k} m_k(s)}`}
+            note={<>Students in grade <var>g</var>: the classroom total split by the grade mix <var>m</var>. Where a district
+              parent-meeting slide shows the school&rsquo;s classes by grade after the move for that concept, <var>m</var> is those
+              counts. Otherwise it&rsquo;s the model&rsquo;s students by grade, with each home keeping its original school&rsquo;s
+              2025&ndash;26 grade mix from the Kansas State Department of Education.</>} />
+          <Formula number={9} tex={String.raw`k_g = \left\lceil \frac{n_g}{c_g} \right\rceil, \qquad \bar{n}_g = \frac{n_g}{k_g}`}
+            note={<>Sections: a new section opens whenever a grade passes the district&rsquo;s staffing guideline <var>c</var>
+              (kindergarten through grade 2: 24; grade 3: 26; grades 4 and 5: 28), with no combined-grade classes. The average class
+              size is the grade&rsquo;s students over its sections.</>} />
+        </div>
+        <p>The staffing guidelines come from the &ldquo;Grade Breakdown&rdquo; slide in each closing school&rsquo;s parent-meeting deck.
+          The slides&rsquo; grade counts set only the mix: some of their totals don&rsquo;t match the main presentations, which stay the
+          hard stop.</p>
 
         <H2 id="sources" />
         <div className="src-wrap">
@@ -126,7 +199,7 @@ export default function About() {
             <thead><tr><th>Source</th><th>Type</th><th>Used for</th></tr></thead>
             <tbody>
               <tr><td>Boundary presentations and parent-meeting decks, Nov 2026</td><td>{D}</td>
-                <td>Capacities, fall 2026 enrollment, five-year tables, students moving, concept maps</td></tr>
+                <td>Capacities, fall 2026 enrollment, five-year tables, students moving, concept maps, grades after the move, staffing guidelines</td></tr>
               <tr><td>District 2026 planning-area map</td><td>{D}</td><td>Planning areas (610, 750 and so on)</td></tr>
               <tr><td>Demographic Analytics Advisors forecast, July 2026</td><td>{D}</td><td>Enrollment trends (<var>E</var>), and years after 2031&ndash;32</td></tr>
               <tr><td><a href="https://www.ksde.gov" rel="noopener">Kansas State Department of Education</a>, 2025&ndash;26 headcounts</td><td>{P}</td><td>Enrollment and grade mix</td></tr>

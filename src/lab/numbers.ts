@@ -28,6 +28,7 @@ export interface SchoolNumber {
   parentSlide: { students: number; percent: number; printedPercent?: number; columnsAddUpTo?: number } | null;   // a parent-meeting slide that showed this school fuller
   districtPeak: { utilization: number; students: number; year: number } | null;   // the fullest year in the district's table (2026-27 to 2031-32)
   questionable: string | null;   // why the district's figure here looks like an error
+  districtConcepts: string[];    // the published concepts whose figures apply to this school (empty for estimates)
 }
 
 interface PublishedTable {
@@ -104,7 +105,7 @@ function matchingTable(tables: Record<string, PublishedTable>, differsFrom: Reco
   if (!matches.length) return null;
   const figures = JSON.stringify(matches[0].table[school.name]) + matches[0].cap[school.name];
   if (matches.some(table => JSON.stringify(table.table[school.name]) + table.cap[school.name] !== figures)) return null;
-  return { table: matches[0], single: matches.length === 1 };
+  return { table: matches[0], single: matches.length === 1, concepts: matches.map(table => table.concept) };
 }
 
 function publishedTable(staticData: Static, plan: Plan, level: Level): PublishedTable | null {
@@ -145,7 +146,7 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
     const schoolResult = result.schools[school.i];
     if (school.level !== level || !schoolResult?.open) continue;
 
-    const match = wholePlan ? { table: wholePlan, single: true } : tables ? matchingTable(tables, differsFrom!, school) : null;
+    const match = wholePlan ? { table: wholePlan, single: true, concepts: [wholePlan.concept] } : tables ? matchingTable(tables, differsFrom!, school) : null;
     const published = match?.table ?? null, notesApply = !!match?.single;
     const students = districtStudents(published, school.name, year);
     const district = students === null ? null : students / published!.cap[school.name];
@@ -159,6 +160,7 @@ export function schoolNumbers(staticData: Static, plan: Plan, result: LevelResul
       parentSlide: slide ? { ...slide, percent: slide.students / school.capacity } : null,
       districtPeak: district === null ? null : districtPeak(published, school.name),
       questionable: district !== null && published && notesApply ? QUESTIONABLE_FIGURES[level]?.[Number(published.concept)]?.[school.name] ?? null : null,
+      districtConcepts: district !== null && match ? match.concepts : [],
     });
   }
   return numbers;

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 /** The district's own feedback forms for the boundary process, open until Nov 22, 2026. */
 const DISTRICT_FORMS = [
   { label: 'Elementary boundaries', href: 'https://forms.cloud.microsoft/pages/responsepage.aspx?id=f8IlL4QKYEmIamhcur6jq1-pb6cuHtxPpY860Es0rc9UN0M1WTNXN1ZCOEwzUDdGQlpHOVc0RlNOOC4u&route=shorturl' },
-  { label: 'Middle school boundaries', href: 'https://forms.cloud.microsoft/pages/responsepage.aspx?id=f8IlL4QKYEmIamhcur6jq1-pb6cuHtxPpY860Es0rc9UN0M1WTNXN1ZCOEwzUDdGQlpHOVc0RlNOOC4u&route=shorturl' },
+  { label: 'Middle school boundaries', href: 'https://forms.cloud.microsoft/pages/responsepage.aspx?id=f8IlL4QKYEmIamhcur6jq1-pb6cuHtxPpY860Es0rc9UM08wREpVMk8xM0VRUkU3MFhQNlhTTkY5Ny4u&route=shorturl' },
 ];
 
 export default async function Contact({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {

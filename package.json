@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "calibrate": "vite-node pipeline/tools/calibrate/calibrate.ts",
-    "guide": "node scripts/draw-guide.mjs"
+    "guide": "node scripts/draw-guide.mjs",
+    "social": "node scripts/social-image.mjs"
   },
   "dependencies": {
     "@protomaps/basemaps": "^5.5.0",

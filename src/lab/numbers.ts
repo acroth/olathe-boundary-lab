@@ -174,9 +174,9 @@ export function headline(schoolNumber: SchoolNumber): string {
 }
 
 function describeSources(districtCount: number, modelCount: number, year: string): string {
-  if (!districtCount) return `Our estimates for ${year}.`;
+  if (!districtCount) return `Estimates for ${year}.`;
   if (!modelCount) return `District numbers for ${year}.`;
-  return `District numbers for ${year}, with our estimates where it has none.`;
+  return `District numbers for ${year}, with estimates where it has none.`;
 }
 
 /** The visible schools' headline numbers, fullest first, with what the scorecard and legend say about them. */

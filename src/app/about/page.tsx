@@ -57,12 +57,18 @@ function GuideShot({ name, alt }: { name: string; alt: string }) {
   );
 }
 
-/** One numbered formula, typeset from LaTeX when the page is built, and what it means. */
-function Formula({ number, tex, note }: { number: number; tex: string; note: React.ReactNode }) {
-  const html = katex.renderToString(tex, { displayMode: true, throwOnError: true, output: 'htmlAndMathml' });
+const typeset = (tex: string) => katex.renderToString(tex, { displayMode: true, throwOnError: true, output: 'htmlAndMathml' });
+
+/** One numbered formula, typeset from LaTeX when the page is built, and what it means. `narrow` is the same formula broken
+ *  over several lines, shown on phones in place of a version too wide for the screen. */
+function Formula({ number, tex, narrow, note }: { number: number; tex: string; narrow?: string; note: React.ReactNode }) {
   return (
     <div className="formula-row">
-      <div className="formula"><span className="formula-number">{number}.</span><div className="formula-math" dangerouslySetInnerHTML={{ __html: html }} /></div>
+      <div className="formula">
+        <span className="formula-number">{number}.</span>
+        <div className={'formula-math' + (narrow ? ' wide-only' : '')} dangerouslySetInnerHTML={{ __html: typeset(tex) }} />
+        {narrow && <div className="formula-math narrow-only" dangerouslySetInnerHTML={{ __html: typeset(narrow) }} />}
+      </div>
       <p className="formula-note">{note}</p>
     </div>
   );
@@ -157,6 +163,7 @@ export default function About() {
                 homes are scaled to sum to 100, and the five closing schools&rsquo; homes are reshaped to the district&rsquo;s student-dot
                 maps. Only the ratios matter, since formula 2 divides by the sum.</>} />
             <Formula number={2} tex={String.raw`f(o,t) = a(o)\; b(o,t)\; \frac{E(o,t)}{\sum_{h:\,o(h)=o} w(h)}, \qquad a(o) = \frac{K(o,\ \text{2026})}{E(o,\ \text{2026})}`}
+            narrow={String.raw`\begin{aligned} f(o,t) &= a(o)\; b(o,t)\; \frac{E(o,t)}{\sum_{h:\,o(h)=o} w(h)} \\ a(o) &= \frac{K(o,\ \text{2026})}{E(o,\ \text{2026})} \end{aligned}`}
               note={<>Students per unit of weight for school <var>o</var> in year <var>t</var>. <var>o</var>(<var>h</var>) is the school
                 home <var>h</var> belongs to today. <var>E</var> is the projected number of students living in that school&rsquo;s area:
                 the July 2026 forecast&rsquo;s utilization times capacity, with Black Bob&rsquo;s immersion students taken out.{' '}
@@ -169,6 +176,7 @@ export default function About() {
             <Formula number={4} tex={String.raw`U(s,t) = \frac{N(s,t)}{C(s)}`}
               note={<>Utilization: students over max functional capacity <var>C</var>. The district&rsquo;s goal is 85% or less.</>} />
             <Formula number={5} tex={String.raw`b(\cdot,t) = \arg\min_{b} \sum_{(c,s) \notin Q} \big(N_c(s,t) - D_c(s,t)\big)^2 + \sum_{o} \lambda(o) \Big(S(o,t)\,\big(b(o,t) - 1\big)\Big)^2`}
+            narrow={String.raw`\begin{aligned} & b(\cdot,t) = \arg\min_{b}\; L(b) \\ & L = \sum_{(c,s) \notin Q} \big(N_c(s,t) - D_c(s,t)\big)^2 \\ & \quad + \sum_{o} \lambda(o) \Big(S(o,t)\,\big(b(o,t) - 1\big)\Big)^2 \end{aligned}`}
               note={<>Trend tuning, a ridge regression run once for each year <var>t</var> from 2027&ndash;28 to 2031&ndash;32 (2026&ndash;27 is
                 already matched to fall counts). It picks the <var>b</var> values that best match the district&rsquo;s figures <var>D</var>{' '}
                 across its concepts <var>c</var>, leaving out figures that look like errors (<var>Q</var>: Frontier Trail&rsquo;s 933 in
@@ -192,6 +200,7 @@ export default function About() {
           <summary>Show the formulas</summary>
           <div className="formulas">
             <Formula number={7} tex={String.raw`G(s,t) = \begin{cases} D(s,t) - P(s) - I(s) & \text{district figure} \\ N(s,t) - F(s) & \text{otherwise} \end{cases}`}
+            narrow={String.raw`\begin{aligned} &\text{District figure:} \\ &\quad G(s,t) = D(s,t) - P(s) - I(s) \\ &\text{Otherwise:} \\ &\quad G(s,t) = N(s,t) - F(s) \end{aligned}`}
               note={<>Students in K&ndash;5 classrooms. With the district&rsquo;s figure <var>D</var>, Pre-K (<var>P</var>) and Spanish immersion
                 (<var>I</var>) always come out, since the district&rsquo;s totals include Early Childhood. With the model&rsquo;s total{' '}
                 <var>N</var> (formula 3), <var>F</var> matches whether Pre-K is counted. The total is the hard stop: the district&rsquo;s
@@ -203,6 +212,7 @@ export default function About() {
                 model&rsquo;s students by grade for that year, with each home keeping its original school&rsquo;s 2025&ndash;26 grade mix
                 from the Kansas State Department of Education.</>} />
             <Formula number={9} tex={String.raw`k(g,s,t) = \left\lceil \frac{n(g,s,t)}{c(g)} \right\rceil, \qquad \bar{n}(g,s,t) = \frac{n(g,s,t)}{k(g,s,t)} \quad (k > 0)`}
+            narrow={String.raw`\begin{aligned} k(g,s,t) &= \left\lceil \frac{n(g,s,t)}{c(g)} \right\rceil \\ \bar{n}(g,s,t) &= \frac{n(g,s,t)}{k(g,s,t)} \quad (k > 0) \end{aligned}`}
               note={<>Sections: a new section opens whenever a grade passes the district&rsquo;s staffing guideline <var>c</var>{' '}
                 (kindergarten through grade 2: 24; grade 3: 26; grades 4 and 5: 28), with no combined-grade classes. The average class
                 size is the grade&rsquo;s students over its sections, when it has any.</>} />

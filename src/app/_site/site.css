@@ -139,3 +139,16 @@
 .site .district-forms a:hover { background: var(--sel); }
 .site .district-forms a svg { width: 14px; height: 14px; }
 .site .district-forms-note { color: var(--muted); font-size: 14px !important; }
+/* Formulas: never wider than the page; on phones the long ones switch to their stacked versions */
+.site .formulas { grid-template-columns: minmax(0, 1fr); }
+.site .formula-row, .site .formula { min-width: 0; }
+.site .formula-math.narrow-only { display: none; }
+@media (max-width: 600px) {
+  .site .formula-math.wide-only { display: none; }
+  .site .formula-math.narrow-only { display: block; }
+  .site .formula { flex-direction: column; align-items: flex-start; gap: 0; }
+  .site .formula-math { max-width: 100%; padding-right: 4px; font-size: 15px; }
+  .site .formula-details .formulas { margin: 8px; }
+  .site .formula-row { padding: 10px 10px 12px; }
+  .site .formula-math .katex-display { margin: 2px 0; }
+}
